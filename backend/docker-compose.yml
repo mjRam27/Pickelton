@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pickelton-postgres
+    environment:
+      POSTGRES_DB: pickelton
+      POSTGRES_USER: pickelton
+      POSTGRES_PASSWORD: pickelton
+    ports:
+      - "5432:5432"
+    volumes:
+      - pickelton_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pickelton -d pickelton"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pickelton-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/pickelton
+      DB_USERNAME: pickelton
+      DB_PASSWORD: pickelton
+      JWT_SECRET: change-this-secret-to-a-long-random-string-at-least-32-bytes
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+
+volumes:
+  pickelton_postgres_data:

@@ -1,0 +1,1 @@
+package com.pickelton.backend.leaderboard.repository;
