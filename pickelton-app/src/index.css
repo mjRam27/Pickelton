@@ -1,0 +1,45 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --font-headline: "Lexend", sans-serif;
+  --font-body: "Manrope", sans-serif;
+
+  --color-background: #0e0e0e;
+  --color-primary: #95aaff;
+  --color-secondary: #b8f600;
+  --color-tertiary: #ffaced;
+  
+  --color-surface-low: #131313;
+  --color-surface-high: #20201f;
+  --color-surface-highest: #262626;
+  
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: #adaaaa;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-body selection:bg-secondary selection:text-black;
+  }
+}
+
+.kinetic-glass {
+  @apply bg-surface-high/40 backdrop-blur-xl border border-white/5;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.text-glow-secondary {
+  text-shadow: 0 0 15px rgba(184, 246, 0, 0.4);
+}
+
+.text-glow-primary {
+  text-shadow: 0 0 15px rgba(149, 170, 255, 0.4);
+}
