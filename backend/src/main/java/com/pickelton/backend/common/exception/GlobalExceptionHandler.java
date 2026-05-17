@@ -1,78 +1,77 @@
 package com.pickelton.backend.common.exception;
 
-import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
+
+import com.pickelton.backend.common.response.ApiResponse;
+import com.pickelton.backend.common.response.ErrorResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.pickelton.backend.common.response.ErrorResponse;
-
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException exception, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException exception, HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
-        Map<String, String> errors = new LinkedHashMap<>();
-        for (FieldError error : exception.getBindingResult().getFieldErrors()) {
-            errors.put(error.getField(), error.getDefaultMessage());
-        }
-        return build(HttpStatus.BAD_REQUEST, "Validation failed", request, errors);
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+        List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+            .map(fe -> new ErrorResponse.FieldError(fe.getField(), fe.getDefaultMessage()))
+            .toList();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse.of("Validation failed", fieldErrors));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException exception, HttpServletRequest request) {
-        Map<String, String> errors = new LinkedHashMap<>();
-        exception.getConstraintViolations().forEach(violation -> errors.put(
-            violation.getPropertyPath().toString(),
-            violation.getMessage()
-        ));
-        return build(HttpStatus.BAD_REQUEST, "Validation failed", request, errors);
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        List<ErrorResponse.FieldError> fieldErrors = ex.getConstraintViolations().stream()
+            .map(v -> new ErrorResponse.FieldError(v.getPropertyPath().toString(), v.getMessage()))
+            .toList();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse.of("Validation failed", fieldErrors));
     }
 
-    @ExceptionHandler({AuthenticationException.class, AccessDeniedException.class})
-    public ResponseEntity<ErrorResponse> handleSecurity(RuntimeException exception, HttpServletRequest request) {
-        return build(HttpStatus.UNAUTHORIZED, exception.getMessage(), request, null);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access denied"));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthentication(AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException exception, HttpServletRequest request) {
-        return build(HttpStatus.CONFLICT, "Database constraint violation", request, null);
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(ApiResponse.error("Database constraint violation"));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneric(Exception exception, HttpServletRequest request) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request, null);
-    }
-
-    private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, HttpServletRequest request,
-                                                Map<String, String> validationErrors) {
-        return ResponseEntity.status(status).body(new ErrorResponse(
-            status.getReasonPhrase(),
-            message,
-            request.getRequestURI(),
-            validationErrors,
-            OffsetDateTime.now()
-        ));
+    public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex, HttpServletRequest request) {
+        String traceId = MDC.get("traceId");
+        log.error("Unhandled exception traceId={} method={} path={}",
+            traceId, request.getMethod(), request.getRequestURI(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse.error("Internal server error"));
     }
 }

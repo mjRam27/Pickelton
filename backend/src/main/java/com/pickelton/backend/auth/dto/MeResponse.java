@@ -1,6 +1,7 @@
 package com.pickelton.backend.auth.dto;
 
-import com.pickelton.backend.user.dto.UserResponse;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
-public record MeResponse(UserResponse user) {
+public record MeResponse(UUID id, String name, String email, String sportType, OffsetDateTime createdAt) {
 }

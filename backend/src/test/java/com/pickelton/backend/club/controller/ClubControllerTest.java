@@ -6,22 +6,35 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import com.pickelton.backend.club.dto.ClubResponse;
 import com.pickelton.backend.club.service.ClubService;
 import com.pickelton.backend.common.response.PageResponse;
-import com.pickelton.backend.enums.SportType;
+import com.pickelton.backend.config.RateLimitInterceptor;
 import com.pickelton.backend.user.dto.UserResponse;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ClubController.class)
+@WebMvcTest(value = ClubController.class,
+    excludeAutoConfiguration = {
+        org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class
+    })
+@AutoConfigureMockMvc(addFilters = false)
+@TestPropertySource(properties = {
+    "jwt.secret=test-secret-test-secret-test-secret-1234567890",
+    "jwt.expiration-ms=3600000",
+    "allowed.origins=http://localhost:3000"
+})
 class ClubControllerTest {
 
     @Autowired
@@ -29,6 +42,9 @@ class ClubControllerTest {
 
     @MockBean
     private ClubService clubService;
+
+    @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
 
     @Test
     void getClubsShouldReturnPaginatedResponse() throws Exception {
@@ -40,22 +56,23 @@ class ClubControllerTest {
     }
 
     private PageResponse<ClubResponse> samplePageResponse() {
+        OffsetDateTime now = OffsetDateTime.now();
         return new PageResponse<>(
             List.of(new ClubResponse(
                 UUID.randomUUID(),
                 "Pickelton Club",
                 "Community club",
                 "Bangalore",
-                new UserResponse(UUID.randomUUID(), "Admin", "admin@example.com", SportType.PICKLEBALL,
-                    LocalDateTime.now(), LocalDateTime.now()),
+                new UserResponse(UUID.randomUUID(), "Admin", "admin@example.com", "PICKLEBALL", now, now),
                 12L,
-                LocalDateTime.now(),
-                LocalDateTime.now()
+                now,
+                now
             )),
             0,
             20,
             1,
-            1
+            1,
+            true
         );
     }
 }

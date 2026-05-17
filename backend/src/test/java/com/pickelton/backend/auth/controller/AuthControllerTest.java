@@ -6,23 +6,35 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pickelton.backend.auth.dto.AuthResponse;
 import com.pickelton.backend.auth.dto.LoginRequest;
 import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.service.AuthService;
-import com.pickelton.backend.enums.SportType;
-import com.pickelton.backend.user.dto.UserResponse;
-import java.time.LocalDateTime;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(AuthController.class)
+import com.pickelton.backend.config.RateLimitInterceptor;
+
+@WebMvcTest(value = AuthController.class,
+    excludeAutoConfiguration = {
+        org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class
+    })
+@AutoConfigureMockMvc(addFilters = false)
+@TestPropertySource(properties = {
+    "jwt.secret=test-secret-test-secret-test-secret-1234567890",
+    "jwt.expiration-ms=3600000",
+    "allowed.origins=http://localhost:3000"
+})
 class AuthControllerTest {
 
     @Autowired
@@ -34,18 +46,21 @@ class AuthControllerTest {
     @MockBean
     private AuthService authService;
 
+    @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
     @Test
     void registerShouldReturnToken() throws Exception {
         when(authService.register(any(RegisterRequest.class))).thenReturn(sampleAuthResponse());
 
-        RegisterRequest request = new RegisterRequest("Alex", "alex@example.com", "password123", SportType.BADMINTON);
+        RegisterRequest request = new RegisterRequest("Alex", "alex@example.com", "password123", "BADMINTON");
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk())
+            .andExpect(status().isCreated())
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.accessToken").value("token"));
+            .andExpect(jsonPath("$.data.token").value("token"));
     }
 
     @Test
@@ -54,19 +69,14 @@ class AuthControllerTest {
 
         LoginRequest request = new LoginRequest("alex@example.com", "password123");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.tokenType").value("Bearer"));
+            .andExpect(jsonPath("$.data.token").value("token"));
     }
 
     private AuthResponse sampleAuthResponse() {
-        return new AuthResponse(
-            "Bearer",
-            "token",
-            new UserResponse(UUID.randomUUID(), "Alex", "alex@example.com", SportType.BADMINTON,
-                LocalDateTime.now(), LocalDateTime.now())
-        );
+        return new AuthResponse("token", UUID.randomUUID(), "Alex", "alex@example.com");
     }
 }

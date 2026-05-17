@@ -55,7 +55,7 @@ public class ClubService {
         var responses = clubPage.getContent().stream()
             .map(club -> clubMapper.toResponse(club, clubMemberRepository.countByClubId(club.getId())))
             .toList();
-        return new PageResponse<>(responses, clubPage.getNumber(), clubPage.getSize(), clubPage.getTotalElements(), clubPage.getTotalPages());
+        return new PageResponse<>(responses, clubPage.getNumber(), clubPage.getSize(), clubPage.getTotalElements(), clubPage.getTotalPages(), clubPage.isLast());
     }
 
     @Transactional(readOnly = true)

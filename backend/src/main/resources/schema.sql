@@ -1,0 +1,87 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    sport_type VARCHAR(50),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS clubs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_by UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS club_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    club_id UUID NOT NULL REFERENCES clubs(id),
+    role VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (user_id, club_id)
+);
+
+CREATE TABLE IF NOT EXISTS tournaments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    sport_type VARCHAR(50),
+    max_players INT NOT NULL DEFAULT 32,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    club_id UUID REFERENCES clubs(id),
+    created_by UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS registrations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    tournament_id UUID NOT NULL REFERENCES tournaments(id),
+    status VARCHAR(20) NOT NULL DEFAULT 'REGISTERED',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (user_id, tournament_id)
+);
+
+CREATE TABLE IF NOT EXISTS matches (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tournament_id UUID NOT NULL REFERENCES tournaments(id),
+    player1_id UUID NOT NULL REFERENCES users(id),
+    player2_id UUID NOT NULL REFERENCES users(id),
+    score1 INT NOT NULL DEFAULT 0,
+    score2 INT NOT NULL DEFAULT 0,
+    winner_id UUID REFERENCES users(id),
+    status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
+    round INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS score_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    match_id UUID NOT NULL REFERENCES matches(id),
+    player_id UUID NOT NULL REFERENCES users(id),
+    old_score INT NOT NULL,
+    new_score INT NOT NULL,
+    updated_by UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_club_members_user_id ON club_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_club_members_club_id ON club_members(club_id);
+CREATE INDEX IF NOT EXISTS idx_tournaments_club_id ON tournaments(club_id);
+CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments(status);
+CREATE INDEX IF NOT EXISTS idx_registrations_tournament_id ON registrations(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_matches_tournament_id ON matches(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
+CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);

@@ -59,7 +59,8 @@ public class TournamentService {
             tournamentPage.getNumber(),
             tournamentPage.getSize(),
             tournamentPage.getTotalElements(),
-            tournamentPage.getTotalPages()
+            tournamentPage.getTotalPages(),
+            tournamentPage.isLast()
         );
     }
 
