@@ -12,22 +12,21 @@ import { getApiMessage } from "@/services/api";
 import { login } from "@/services/auth";
 
 type LoginForm = {
-  identifier: string;
+  email: string;
   password: string;
 };
 
 type LoginErrors = Partial<Record<keyof LoginForm, string>>;
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phonePattern = /^\+?[1-9][0-9]{7,14}$/;
 
 function validateLogin(values: LoginForm): LoginErrors {
   const errors: LoginErrors = {};
 
-  if (!values.identifier.trim()) {
-    errors.identifier = "Phone number or email is required.";
-  } else if (!emailPattern.test(values.identifier) && !phonePattern.test(values.identifier)) {
-    errors.identifier = "Enter a valid email or international phone number.";
+  if (!values.email.trim()) {
+    errors.email = "Email is required.";
+  } else if (!emailPattern.test(values.email)) {
+    errors.email = "Enter a valid email address.";
   }
 
   if (!values.password) {
@@ -39,7 +38,7 @@ function validateLogin(values: LoginForm): LoginErrors {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [values, setValues] = useState<LoginForm>({ identifier: "", password: "" });
+  const [values, setValues] = useState<LoginForm>({ email: "", password: "" });
   const [touched, setTouched] = useState<Partial<Record<keyof LoginForm, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState("");
@@ -62,12 +61,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      if (!emailPattern.test(values.identifier)) {
-        setStatus("Phone login validation passed. Backend phone/email identifier lookup can connect here next.");
-        return;
-      }
-
-      const response = await login({ email: values.identifier.trim(), password: values.password });
+      const response = await login({ email: values.email.trim(), password: values.password });
       const user = response.data;
       if (!user.phoneVerified) {
         router.push("/verify-phone");
@@ -119,14 +113,16 @@ export default function LoginPage() {
 
       <form className="space-y-5" onSubmit={handleSubmit} noValidate>
         <TextField
-          label="Phone number / Email"
-          name="identifier"
-          autoComplete="username"
-          placeholder="+919876543210 or you@example.com"
-          value={values.identifier}
-          error={showError("identifier")}
-          onBlur={() => setTouched((current) => ({ ...current, identifier: true }))}
-          onChange={(event) => updateField("identifier", event.target.value)}
+          label="Email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          helperText="Current backend login accepts email. Phone login can be added when the backend exposes identifier login."
+          value={values.email}
+          error={showError("email")}
+          onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+          onChange={(event) => updateField("email", event.target.value)}
         />
 
         <PasswordField
