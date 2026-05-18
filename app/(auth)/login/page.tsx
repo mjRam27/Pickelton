@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Trophy } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -36,6 +37,7 @@ function validateLogin(values: LoginForm): LoginErrors {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [values, setValues] = useState<LoginForm>({ email: "", password: "" });
   const [touched, setTouched] = useState<Partial<Record<keyof LoginForm, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -59,8 +61,13 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      await login(values);
-      setStatus("Validation passed. Backend login successful.");
+      const response = await login(values);
+      const user = response.data;
+      if (!user.phoneVerified) {
+        router.push("/verify-phone");
+        return;
+      }
+      router.push("/profile");
     } catch (error) {
       setStatus(getApiMessage(error, "Validation passed. Backend connection can be added next."));
     } finally {
@@ -78,6 +85,10 @@ export default function LoginPage() {
           New to Pickelton?{" "}
           <Link className="text-primary transition hover:text-secondary" href="/signup">
             Create your account
+          </Link>
+          <span className="mx-2 text-on-surface-variant/60">/</span>
+          <Link className="text-primary transition hover:text-secondary" href="/auth/google">
+            Google login
           </Link>
         </p>
       }

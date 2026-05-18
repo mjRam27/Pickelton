@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Plus, Trophy } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField } from "@/components/ui/SelectField";
 import { TextField } from "@/components/ui/TextField";
 import { getApiMessage } from "@/services/api";
+import { AuthUser, getMe, getStoredUser } from "@/services/auth";
+import { getMyHostVerification, HostVerification } from "@/services/host";
 import { createTournament } from "@/services/tournaments";
 
 type TournamentForm = {
@@ -86,6 +88,8 @@ export default function CreateTournamentPage() {
   const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [host, setHost] = useState<HostVerification | null>(null);
 
   const errors = useMemo(() => validateTournament(values), [values]);
   const showError = (field: keyof TournamentForm) => (touched[field] || submitted ? errors[field] : undefined);
@@ -95,10 +99,29 @@ export default function CreateTournamentPage() {
     setStatus("");
   }
 
+  useEffect(() => {
+    setUser(getStoredUser());
+    getMe()
+      .then((response) => setUser(response.data))
+      .catch(() => undefined);
+    getMyHostVerification()
+      .then((response) => setHost(response.data))
+      .catch(() => undefined);
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);
     setStatus("");
+
+    if (!user?.phoneVerified) {
+      setStatus("Verify phone OTP before creating a tournament.");
+      return;
+    }
+    if (host?.status !== "APPROVED") {
+      setStatus("Tournament creation requires approved host verification.");
+      return;
+    }
 
     if (Object.keys(errors).length > 0) return;
 
@@ -148,6 +171,21 @@ export default function CreateTournamentPage() {
             This screen now matches the provided backend tournament create contract, including optional club ID and
             entry fee.
           </p>
+
+          <div className="mt-8 rounded-lg bg-black/45 p-4">
+            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-on-surface-variant">
+              Required flow
+            </p>
+            <p className="mt-2 text-sm font-bold leading-6 text-on-surface">
+              Register/Login &gt; Verify OTP &gt; Submit KYC &gt; Admin approval &gt; Create tournament
+            </p>
+            <p className={`mt-3 font-headline text-2xl font-black ${host?.status === "APPROVED" ? "text-secondary" : "text-error"}`}>
+              Host status: {host?.status ?? "NOT_SUBMITTED"}
+            </p>
+            <Link className="mt-3 inline-flex text-sm font-extrabold text-primary hover:text-secondary" href="/host/status">
+              Check host status
+            </Link>
+          </div>
 
           <div className="mt-8 grid max-w-lg gap-3 sm:grid-cols-3">
             {[

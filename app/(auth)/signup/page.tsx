@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Trophy } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -74,6 +75,7 @@ function validateSignup(values: SignupForm): SignupErrors {
 }
 
 export default function SignupPage() {
+  const router = useRouter();
   const [values, setValues] = useState<SignupForm>({
     name: "",
     email: "",
@@ -111,7 +113,7 @@ export default function SignupPage() {
         dateOfBirth: values.dateOfBirth,
         password: values.password
       });
-      setStatus("Account form is ready to connect.");
+      router.push("/verify-phone");
     } catch (error) {
       setStatus(getApiMessage(error, "Account form is ready to connect."));
     } finally {

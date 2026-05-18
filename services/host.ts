@@ -17,7 +17,23 @@ export type SubmitHostVerificationPayload = {
   dataProcessingConsent: boolean;
 };
 
+export type HostVerification = SubmitHostVerificationPayload & {
+  id: string;
+  userId: string;
+  status: "NOT_SUBMITTED" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "EXPIRED";
+  submittedAt?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export async function submitHostVerification(payload: SubmitHostVerificationPayload) {
   const response = await api.post("/api/v1/host-verifications/me", payload);
+  return response.data;
+}
+
+export async function getMyHostVerification() {
+  const response = await api.get("/api/v1/host-verifications/me");
   return response.data;
 }

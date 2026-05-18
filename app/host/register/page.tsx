@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { ArrowLeft, BadgeCheck, ShieldCheck } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField } from "@/components/ui/SelectField";
 import { TextField } from "@/components/ui/TextField";
 import { getApiMessage } from "@/services/api";
+import { AuthUser, getMe, getStoredUser } from "@/services/auth";
 import { submitHostVerification } from "@/services/host";
 
 type HostForm = {
@@ -112,6 +113,7 @@ export default function HostRegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   const errors = useMemo(() => validateHost(values), [values]);
   const showError = (field: keyof HostForm) => (touched[field] || submitted ? errors[field] : undefined);
@@ -121,10 +123,32 @@ export default function HostRegisterPage() {
     setStatus("");
   }
 
+  useEffect(() => {
+    const stored = getStoredUser();
+    setUser(stored);
+    if (stored?.phoneNumber) {
+      setValues((current) => ({ ...current, phoneNumber: stored.phoneNumber }));
+    }
+
+    getMe()
+      .then((response) => {
+        setUser(response.data);
+        if (response.data?.phoneNumber) {
+          setValues((current) => ({ ...current, phoneNumber: response.data.phoneNumber }));
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);
     setStatus("");
+
+    if (!user?.phoneVerified) {
+      setStatus("Verify phone OTP before submitting host KYC.");
+      return;
+    }
 
     if (Object.keys(errors).length > 0) return;
 
@@ -183,6 +207,19 @@ export default function HostRegisterPage() {
             This form matches the Spring Boot host verification contract and prepares the account to create official
             Pickelton tournaments.
           </p>
+          <div className="mt-8 rounded-lg bg-black/45 p-4">
+            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-on-surface-variant">
+              Phone verification gate
+            </p>
+            <p className={`mt-2 font-headline text-2xl font-black ${user?.phoneVerified ? "text-secondary" : "text-error"}`}>
+              {user?.phoneVerified ? "Ready for KYC" : "Verify OTP first"}
+            </p>
+            {!user?.phoneVerified ? (
+              <Link className="mt-3 inline-flex text-sm font-extrabold text-primary hover:text-secondary" href="/verify-phone">
+                Go to OTP verification
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <form
@@ -226,6 +263,8 @@ export default function HostRegisterPage() {
                 label="Phone number"
                 name="phoneNumber"
                 placeholder="+919876543210"
+                readOnly
+                helperText="Prefilled from logged-in account. KYC phone must match verified phone."
                 value={values.phoneNumber}
                 error={showError("phoneNumber")}
                 onBlur={() => setTouched((current) => ({ ...current, phoneNumber: true }))}
