@@ -30,9 +30,9 @@ export default function DashboardPage() {
     <main className="kinetic-grid min-h-screen">
       <AppNav />
       <section className="mx-auto max-w-6xl px-5 pb-12 pt-8 sm:px-8 lg:px-0">
-        <div className="surface-panel overflow-hidden rounded-xl p-5 outline outline-1 outline-white/5 sm:p-8">
+        <div className="surface-panel kinetic-orbit overflow-hidden rounded-xl p-5 outline outline-1 outline-white/5 sm:p-8">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <div>
+            <div className="float-in">
               <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-secondary">Pickleball command center</p>
               <h1 className="mt-4 max-w-3xl font-headline text-5xl font-black leading-[0.94] text-on-surface sm:text-7xl">
                 Browse, book, host, score.
@@ -63,11 +63,15 @@ export default function DashboardPage() {
                 [Activity, "18", "Live matches"],
                 [Clock3, "42", "Slots today"],
                 [RadioTower, "06", "Host reviews"]
-              ].map(([Icon, value, label]) => (
-                <div key={String(label)} className="motion-card rounded-lg bg-black/45 p-4 outline outline-1 outline-white/5">
+              ].map(([Icon, value, label], index) => (
+                <div
+                  key={String(label)}
+                  className="motion-card lift-loop rounded-lg bg-black/45 p-4 outline outline-1 outline-white/5"
+                  style={{ animationDelay: `${index * 180}ms` }}
+                >
                   <div className="flex items-center justify-between gap-3">
                     <Icon className="h-5 w-5 text-secondary" aria-hidden="true" />
-                    <span className="text-[0.65rem] font-extrabold uppercase tracking-[0.16em] text-on-surface-variant">
+                    <span className="live-pulse rounded-full bg-secondary/12 px-2 py-1 text-[0.65rem] font-extrabold uppercase tracking-[0.16em] text-secondary">
                       Active
                     </span>
                   </div>
@@ -76,6 +80,30 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-hidden rounded-lg bg-black/40 py-3 outline outline-1 outline-white/5">
+          <div className="ticker-track flex w-[200%] gap-6 whitespace-nowrap text-xs font-extrabold uppercase tracking-[0.16em] text-on-surface-variant">
+            {[
+              "Live scoring ready",
+              "Host verification gate",
+              "Court booking",
+              "Payment acknowledgement",
+              "Participant reminders",
+              "Super admin review",
+              "Live scoring ready",
+              "Host verification gate",
+              "Court booking",
+              "Payment acknowledgement",
+              "Participant reminders",
+              "Super admin review"
+            ].map((item, index) => (
+              <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-secondary" />
+                {item}
+              </span>
+            ))}
           </div>
         </div>
 
