@@ -128,6 +128,10 @@ export default function SignupPage() {
       subtitle="Create the account that will later connect to clubs, tournament registrations, and match history."
       footer={
         <p className="text-center text-sm font-semibold text-on-surface-variant">
+          <Link className="text-primary transition hover:text-secondary" href="/dashboard">
+            Browse app
+          </Link>
+          <span className="mx-2 text-on-surface-variant/60">/</span>
           Already have an account?{" "}
           <Link className="text-primary transition hover:text-secondary" href="/login">
             Log in

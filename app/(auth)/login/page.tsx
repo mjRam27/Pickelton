@@ -88,6 +88,10 @@ export default function LoginPage() {
       subtitle="Sign in to manage clubs, tournaments, and the live scoring flow that keeps every rally visible."
       footer={
         <p className="text-center text-sm font-semibold text-on-surface-variant">
+          <Link className="text-primary transition hover:text-secondary" href="/dashboard">
+            Browse app
+          </Link>
+          <span className="mx-2 text-on-surface-variant/60">/</span>
           New to Pickelton?{" "}
           <Link className="text-primary transition hover:text-secondary" href="/signup">
             Create your account
