@@ -76,6 +76,13 @@ docker compose up --build
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 
+### Host Verification
+
+- `POST /api/v1/host-verifications/me`
+- `GET /api/v1/host-verifications/me`
+
+Tournament creation requires an approved host verification record.
+
 ### Clubs
 
 - `POST /api/clubs`

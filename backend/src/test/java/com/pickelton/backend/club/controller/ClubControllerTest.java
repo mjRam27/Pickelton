@@ -1,5 +1,6 @@
 package com.pickelton.backend.club.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -14,7 +15,10 @@ import com.pickelton.backend.club.dto.ClubResponse;
 import com.pickelton.backend.club.service.ClubService;
 import com.pickelton.backend.common.response.PageResponse;
 import com.pickelton.backend.config.RateLimitInterceptor;
+import com.pickelton.backend.security.JwtBlacklistService;
+import com.pickelton.backend.security.JwtUtil;
 import com.pickelton.backend.user.dto.UserResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -45,6 +49,17 @@ class ClubControllerTest {
 
     @MockBean
     private RateLimitInterceptor rateLimitInterceptor;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private JwtBlacklistService jwtBlacklistService;
+
+    @BeforeEach
+    void allowRequestsThroughRateLimit() throws Exception {
+        when(rateLimitInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+    }
 
     @Test
     void getClubsShouldReturnPaginatedResponse() throws Exception {

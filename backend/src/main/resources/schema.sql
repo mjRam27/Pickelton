@@ -42,6 +42,36 @@ CREATE TABLE IF NOT EXISTS tournaments (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS host_verifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id),
+    legal_name VARCHAR(160) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    phone_number VARCHAR(32) NOT NULL,
+    country_code VARCHAR(2) NOT NULL DEFAULT 'IN',
+    address_line1 VARCHAR(180) NOT NULL,
+    address_line2 VARCHAR(180),
+    city VARCHAR(100) NOT NULL,
+    state_region VARCHAR(100),
+    postal_code VARCHAR(32) NOT NULL,
+    id_document_type VARCHAR(40) NOT NULL,
+    id_document_country VARCHAR(2) NOT NULL DEFAULT 'IN',
+    id_document_number_last4 VARCHAR(4) NOT NULL,
+    document_image_url VARCHAR(1000) NOT NULL,
+    selfie_with_document_url VARCHAR(1000) NOT NULL,
+    terms_accepted BOOLEAN NOT NULL,
+    data_processing_consent BOOLEAN NOT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'PENDING_REVIEW',
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reviewed_at TIMESTAMPTZ,
+    reviewed_by UUID REFERENCES users(id),
+    rejection_reason TEXT,
+    risk_score NUMERIC(5, 2),
+    metadata_json TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS registrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id),
@@ -80,6 +110,8 @@ CREATE INDEX IF NOT EXISTS idx_club_members_user_id ON club_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_club_members_club_id ON club_members(club_id);
 CREATE INDEX IF NOT EXISTS idx_tournaments_club_id ON tournaments(club_id);
 CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments(status);
+CREATE INDEX IF NOT EXISTS idx_host_verifications_user_id ON host_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_host_verifications_status ON host_verifications(status);
 CREATE INDEX IF NOT EXISTS idx_registrations_tournament_id ON registrations(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_matches_tournament_id ON matches(tournament_id);

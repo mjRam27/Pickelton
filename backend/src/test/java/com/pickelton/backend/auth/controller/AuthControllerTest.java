@@ -14,6 +14,7 @@ import com.pickelton.backend.auth.dto.LoginRequest;
 import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,6 +24,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.pickelton.backend.config.RateLimitInterceptor;
+import com.pickelton.backend.security.JwtBlacklistService;
+import com.pickelton.backend.security.JwtUtil;
 
 @WebMvcTest(value = AuthController.class,
     excludeAutoConfiguration = {
@@ -48,6 +51,17 @@ class AuthControllerTest {
 
     @MockBean
     private RateLimitInterceptor rateLimitInterceptor;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private JwtBlacklistService jwtBlacklistService;
+
+    @BeforeEach
+    void allowRequestsThroughRateLimit() throws Exception {
+        when(rateLimitInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+    }
 
     @Test
     void registerShouldReturnToken() throws Exception {

@@ -7,6 +7,8 @@ import com.pickelton.backend.club.repository.ClubRepository;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.common.response.PageResponse;
 import com.pickelton.backend.common.service.CurrentUserService;
+import com.pickelton.backend.common.exception.BadRequestException;
+import com.pickelton.backend.host.service.HostVerificationService;
 import com.pickelton.backend.mapper.TournamentMapper;
 import com.pickelton.backend.tournament.dto.CreateTournamentRequest;
 import com.pickelton.backend.tournament.dto.TournamentResponse;
@@ -25,10 +27,15 @@ public class TournamentService {
     private final TournamentRepository tournamentRepository;
     private final ClubRepository clubRepository;
     private final CurrentUserService currentUserService;
+    private final HostVerificationService hostVerificationService;
     private final TournamentMapper tournamentMapper;
 
     public TournamentResponse createTournament(CreateTournamentRequest request) {
         var currentUser = currentUserService.getCurrentUser();
+        if (!hostVerificationService.isApprovedHost(currentUser)) {
+            throw new BadRequestException("Approved host verification is required to create tournaments");
+        }
+
         Club club = null;
         if (request.clubId() != null) {
             club = clubRepository.findById(request.clubId())
