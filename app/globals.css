@@ -49,6 +49,24 @@ textarea {
   backdrop-filter: blur(20px);
 }
 
+.surface-panel {
+  background:
+    linear-gradient(145deg, rgba(32, 32, 31, 0.92), rgba(12, 12, 12, 0.88)),
+    rgba(26, 26, 26, 0.9);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.34);
+}
+
+.motion-card {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    outline-color 180ms ease;
+}
+
+.motion-card:hover {
+  transform: translateY(-2px);
+}
+
 .field-focus {
   box-shadow: 0 0 0 3px rgba(149, 170, 255, 0.15);
 }
