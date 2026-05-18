@@ -12,7 +12,10 @@ public class UserMapper {
             user.getId(),
             user.getName(),
             user.getEmail(),
-            user.getSportType(),
+            user.getPhoneNumber(),
+            user.getDateOfBirth(),
+            user.isEmailVerified(),
+            user.isPhoneVerified(),
             user.getCreatedAt(),
             user.getUpdatedAt()
         );

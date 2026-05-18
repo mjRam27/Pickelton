@@ -35,6 +35,12 @@ public class HostVerificationService {
 
     public HostVerificationResponse submitMine(SubmitHostVerificationRequest request) {
         User currentUser = currentUserService.getCurrentUser();
+        if (!currentUser.isPhoneVerified()) {
+            throw new BadRequestException("Verify your phone number before submitting host verification");
+        }
+        if (!currentUser.getPhoneNumber().equals(request.phoneNumber())) {
+            throw new BadRequestException("Host verification phone number must match your verified account phone number");
+        }
         HostVerification verification = hostVerificationRepository.findByUserId(currentUser.getId())
             .orElseGet(() -> HostVerification.builder().user(currentUser).build());
 
@@ -108,7 +114,7 @@ public class HostVerificationService {
     }
 
     private void applyRequest(HostVerification verification, SubmitHostVerificationRequest request) {
-        verification.setLegalName(request.legalName());
+        verification.setFullName(request.fullName());
         verification.setDateOfBirth(request.dateOfBirth());
         verification.setPhoneNumber(request.phoneNumber());
         verification.setCountryCode("IN");
@@ -130,7 +136,7 @@ public class HostVerificationService {
         return new HostVerificationResponse(
             verification.getId(),
             verification.getUser().getId(),
-            verification.getLegalName(),
+            verification.getFullName(),
             verification.getDateOfBirth(),
             verification.getPhoneNumber(),
             verification.getAddressLine1(),

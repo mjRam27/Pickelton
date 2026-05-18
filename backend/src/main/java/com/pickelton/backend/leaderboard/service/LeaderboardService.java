@@ -88,7 +88,6 @@ public class LeaderboardService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getSportType(),
                 played,
                 won,
                 lost,

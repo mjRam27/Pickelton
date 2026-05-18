@@ -28,7 +28,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/pickelton
       DB_USERNAME: pickelton
       DB_PASSWORD: pickelton
-      JWT_SECRET: change-this-secret-to-a-long-random-string-at-least-32-bytes
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY:-}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
       SERVER_PORT: 8080
     ports:
       - "8080:8080"

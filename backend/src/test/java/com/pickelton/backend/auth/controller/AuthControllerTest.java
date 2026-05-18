@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.UUID;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pickelton.backend.auth.dto.AuthResponse;
@@ -34,7 +35,6 @@ import com.pickelton.backend.security.JwtUtil;
     })
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
-    "jwt.secret=test-secret-test-secret-test-secret-1234567890",
     "jwt.expiration-ms=3600000",
     "allowed.origins=http://localhost:3000"
 })
@@ -67,7 +67,13 @@ class AuthControllerTest {
     void registerShouldReturnToken() throws Exception {
         when(authService.register(any(RegisterRequest.class))).thenReturn(sampleAuthResponse());
 
-        RegisterRequest request = new RegisterRequest("Alex", "alex@example.com", "password123", "BADMINTON");
+        RegisterRequest request = new RegisterRequest(
+            "Alex",
+            "alex@example.com",
+            "+919876543210",
+            LocalDate.of(1998, 1, 1),
+            "password123"
+        );
 
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -91,6 +97,15 @@ class AuthControllerTest {
     }
 
     private AuthResponse sampleAuthResponse() {
-        return new AuthResponse("token", UUID.randomUUID(), "Alex", "alex@example.com");
+        return new AuthResponse(
+            "token",
+            UUID.randomUUID(),
+            "Alex",
+            "alex@example.com",
+            "+919876543210",
+            LocalDate.of(1998, 1, 1),
+            false,
+            false
+        );
     }
 }

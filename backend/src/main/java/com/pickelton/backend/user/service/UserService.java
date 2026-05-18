@@ -48,6 +48,10 @@ public class UserService {
         return userRepository.findByEmail(email.toLowerCase().trim()).orElse(null);
     }
 
+    public User findNullableByGoogleSubject(String googleSubject) {
+        return userRepository.findByGoogleSubject(googleSubject).orElse(null);
+    }
+
     public UserDTO getMyProfile(UUID userId) {
         return toDto(findById(userId));
     }
@@ -59,8 +63,9 @@ public class UserService {
         if (request.name() != null && !request.name().isBlank()) {
             user.setName(request.name());
         }
-        if (request.sportType() != null) {
-            user.setSportType(request.sportType().isBlank() ? null : request.sportType());
+        if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
+            user.setPhoneNumber(request.phoneNumber());
+            user.setPhoneVerified(false);
         }
         return toDto(userRepository.save(user));
     }
@@ -76,6 +81,15 @@ public class UserService {
     }
 
     private UserDTO toDto(User user) {
-        return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getSportType(), user.getCreatedAt());
+        return new UserDTO(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getPhoneNumber(),
+            user.getDateOfBirth(),
+            user.isEmailVerified(),
+            user.isPhoneVerified(),
+            user.getCreatedAt()
+        );
     }
 }

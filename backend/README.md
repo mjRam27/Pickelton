@@ -38,9 +38,11 @@ Copy `.env.example` to `.env` and provide values for:
 - `DB_URL`
 - `DB_USERNAME`
 - `DB_PASSWORD`
-- `JWT_SECRET`
+- `JWT_PRIVATE_KEY`
+- `JWT_PUBLIC_KEY`
 
 `application.yml` reads these values from environment variables.
+JWTs are signed with RS256. For local development only, the backend generates an ephemeral RSA key pair if the JWT keys are missing.
 
 ## Run Locally
 
@@ -72,9 +74,12 @@ docker compose up --build
 
 ### Auth
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/google`
+- `POST /api/v1/auth/verification-code`
+- `POST /api/v1/auth/verify-code`
+- `GET /api/v1/auth/me`
 
 ### Host Verification
 
@@ -84,6 +89,7 @@ docker compose up --build
 - `PATCH /api/v1/admin/host-verifications/{id}/review`
 
 Tournament creation requires an approved host verification record.
+Host verification submission requires the user's account phone number to be verified.
 Admin review endpoints require the `X-Admin-Key` header matching `ADMIN_API_KEY`.
 
 ### Clubs

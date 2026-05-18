@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record SubmitHostVerificationRequest(
-    @NotBlank @Size(max = 160) String legalName,
+    @NotBlank @Size(max = 160) String fullName,
     @NotNull @Past LocalDate dateOfBirth,
     @NotBlank @Size(max = 32) String phoneNumber,
     @NotBlank @Size(max = 180) String addressLine1,

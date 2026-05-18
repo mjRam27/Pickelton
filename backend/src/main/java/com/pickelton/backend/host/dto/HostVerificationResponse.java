@@ -10,7 +10,7 @@ import com.pickelton.backend.enums.IdDocumentType;
 public record HostVerificationResponse(
     UUID id,
     UUID userId,
-    String legalName,
+    String fullName,
     LocalDate dateOfBirth,
     String phoneNumber,
     String addressLine1,

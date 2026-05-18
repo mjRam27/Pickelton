@@ -1,9 +1,11 @@
 package com.pickelton.backend.auth.controller;
 
 import com.pickelton.backend.auth.dto.AuthResponse;
+import com.pickelton.backend.auth.dto.GoogleLoginRequest;
 import com.pickelton.backend.auth.dto.LoginRequest;
 import com.pickelton.backend.auth.dto.MeResponse;
 import com.pickelton.backend.auth.dto.RegisterRequest;
+import com.pickelton.backend.auth.dto.VerifyCodeRequest;
 import com.pickelton.backend.auth.service.AuthService;
 import com.pickelton.backend.common.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +38,11 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(authService.login(request), "Login successful"));
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(authService.googleLogin(request), "Google login successful"));
+    }
+
     @PostMapping("/logout")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
@@ -44,6 +51,20 @@ public class AuthController {
             authService.logout(header.substring(7));
         }
         return ResponseEntity.ok(ApiResponse.ok(null, "Logged out"));
+    }
+
+    @PostMapping("/verification-code")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> requestPhoneVerificationCode() {
+        authService.requestPhoneVerificationCode();
+        return ResponseEntity.ok(ApiResponse.ok(null, "Phone verification code sent"));
+    }
+
+    @PostMapping("/verify-code")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        authService.verifyPhoneCode(request);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Phone verification completed"));
     }
 
     @GetMapping("/me")

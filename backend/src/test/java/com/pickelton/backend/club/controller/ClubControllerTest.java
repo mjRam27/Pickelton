@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,7 +36,6 @@ import org.springframework.test.web.servlet.MockMvc;
     })
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
-    "jwt.secret=test-secret-test-secret-test-secret-1234567890",
     "jwt.expiration-ms=3600000",
     "allowed.origins=http://localhost:3000"
 })
@@ -78,7 +78,17 @@ class ClubControllerTest {
                 "Pickelton Club",
                 "Community club",
                 "Bangalore",
-                new UserResponse(UUID.randomUUID(), "Admin", "admin@example.com", "PICKLEBALL", now, now),
+                new UserResponse(
+                    UUID.randomUUID(),
+                    "Admin",
+                    "admin@example.com",
+                    "+919876543210",
+                    LocalDate.of(1990, 1, 1),
+                    true,
+                    true,
+                    now,
+                    now
+                ),
                 12L,
                 now,
                 now

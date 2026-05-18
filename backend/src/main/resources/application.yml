@@ -13,6 +13,9 @@ spring:
     username: ${DATABASE_USERNAME:${DB_USERNAME:postgres}}
     password: ${DATABASE_PASSWORD:${DB_PASSWORD}}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      data-source-properties:
+        prepareThreshold: 0
 
   jpa:
     hibernate:
@@ -35,7 +38,8 @@ server:
   port: ${SERVER_PORT:8080}
 
 jwt:
-  secret: ${JWT_SECRET}
+  private-key: ${JWT_PRIVATE_KEY:}
+  public-key: ${JWT_PUBLIC_KEY:}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 allowed:
@@ -43,6 +47,9 @@ allowed:
 
 admin:
   api-key: ${ADMIN_API_KEY:}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
 
 logging:
   pattern:

@@ -1,5 +1,7 @@
 package com.pickelton.backend.user.entity;
 
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pickelton.backend.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -32,6 +34,21 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "sport_type", length = 50)
-    private String sportType;
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
+
+    @Column(name = "phone_number", nullable = false, unique = true, length = 32)
+    private String phoneNumber;
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
+    @Column(name = "phone_verified", nullable = false)
+    private boolean phoneVerified;
+
+    @Column(name = "auth_provider", nullable = false, length = 30)
+    private String authProvider;
+
+    @Column(name = "google_subject", unique = true, length = 255)
+    private String googleSubject;
 }

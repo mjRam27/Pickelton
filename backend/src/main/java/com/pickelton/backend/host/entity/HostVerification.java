@@ -38,8 +38,8 @@ public class HostVerification extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(name = "legal_name", nullable = false, length = 160)
-    private String legalName;
+    @Column(name = "full_name", nullable = false, length = 160)
+    private String fullName;
 
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
