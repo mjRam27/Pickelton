@@ -14,6 +14,11 @@ import { createTournament } from "@/services/tournaments";
 type TournamentForm = {
   name: string;
   description: string;
+  location: string;
+  registrationOpenDate: string;
+  registrationCloseDate: string;
+  category: string;
+  info: string;
   sportType: string;
   tournamentType: string;
   maxPlayers: string;
@@ -37,6 +42,15 @@ const tournamentTypeOptions = [
   { label: "Official", value: "OFFICIAL" }
 ];
 
+const categoryOptions = [
+  { label: "Choose category", value: "" },
+  { label: "Open", value: "OPEN" },
+  { label: "Beginner", value: "BEGINNER" },
+  { label: "Intermediate", value: "INTERMEDIATE" },
+  { label: "Advanced", value: "ADVANCED" },
+  { label: "Team doubles", value: "TEAM_DOUBLES" }
+];
+
 function validateTournament(values: TournamentForm): TournamentErrors {
   const errors: TournamentErrors = {};
   const maxPlayers = Number(values.maxPlayers);
@@ -51,6 +65,8 @@ function validateTournament(values: TournamentForm): TournamentErrors {
 
   if (!values.sportType) errors.sportType = "Choose a sport type.";
   if (!values.tournamentType) errors.tournamentType = "Choose a tournament type.";
+  if (!values.location.trim()) errors.location = "Location is required.";
+  if (!values.category) errors.category = "Choose a tournament category.";
 
   if (!values.maxPlayers) {
     errors.maxPlayers = "Max players is required.";
@@ -70,6 +86,23 @@ function validateTournament(values: TournamentForm): TournamentErrors {
     errors.startDate = "Choose a future date and time.";
   }
 
+  if (!values.registrationOpenDate) {
+    errors.registrationOpenDate = "Registration open date is required.";
+  }
+  if (!values.registrationCloseDate) {
+    errors.registrationCloseDate = "Registration close date is required.";
+  }
+  if (values.registrationOpenDate && values.registrationCloseDate) {
+    const openDate = new Date(values.registrationOpenDate);
+    const closeDate = new Date(values.registrationCloseDate);
+    if (closeDate <= openDate) {
+      errors.registrationCloseDate = "Close date must be after open date.";
+    }
+    if (selectedDate && closeDate >= selectedDate) {
+      errors.registrationCloseDate = "Registration must close before tournament starts.";
+    }
+  }
+
   return errors;
 }
 
@@ -77,6 +110,11 @@ export default function CreateTournamentPage() {
   const [values, setValues] = useState<TournamentForm>({
     name: "",
     description: "",
+    location: "",
+    registrationOpenDate: "",
+    registrationCloseDate: "",
+    category: "",
+    info: "",
     sportType: "",
     tournamentType: "",
     maxPlayers: "",
@@ -127,9 +165,19 @@ export default function CreateTournamentPage() {
 
     setIsLoading(true);
     try {
+      const organizerDescription = [
+        values.description.trim(),
+        `Location: ${values.location.trim()}`,
+        `Category: ${values.category}`,
+        `Registration: ${values.registrationOpenDate} to ${values.registrationCloseDate}`,
+        values.info.trim() ? `Info: ${values.info.trim()}` : ""
+      ]
+        .filter(Boolean)
+        .join("\n");
+
       await createTournament({
         name: values.name.trim(),
-        description: values.description.trim() || undefined,
+        description: organizerDescription || undefined,
         sportType: values.sportType,
         tournamentType: values.tournamentType,
         maxPlayers: Number(values.maxPlayers),
@@ -238,6 +286,27 @@ export default function CreateTournamentPage() {
             />
 
             <div className="grid gap-5 sm:grid-cols-2">
+              <TextField
+                label="Location"
+                name="location"
+                placeholder="Indiranagar Sports Arena"
+                value={values.location}
+                error={showError("location")}
+                onBlur={() => setTouched((current) => ({ ...current, location: true }))}
+                onChange={(event) => updateField("location", event.target.value)}
+              />
+              <SelectField
+                label="Category"
+                name="category"
+                options={categoryOptions}
+                value={values.category}
+                error={showError("category")}
+                onBlur={() => setTouched((current) => ({ ...current, category: true }))}
+                onChange={(event) => updateField("category", event.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
               <SelectField
                 label="Sport type"
                 name="sportType"
@@ -303,6 +372,35 @@ export default function CreateTournamentPage() {
                 onChange={(event) => updateField("clubId", event.target.value)}
               />
             </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <TextField
+                label="Registration opens"
+                name="registrationOpenDate"
+                type="datetime-local"
+                value={values.registrationOpenDate}
+                error={showError("registrationOpenDate")}
+                onBlur={() => setTouched((current) => ({ ...current, registrationOpenDate: true }))}
+                onChange={(event) => updateField("registrationOpenDate", event.target.value)}
+              />
+              <TextField
+                label="Registration closes"
+                name="registrationCloseDate"
+                type="datetime-local"
+                value={values.registrationCloseDate}
+                error={showError("registrationCloseDate")}
+                onBlur={() => setTouched((current) => ({ ...current, registrationCloseDate: true }))}
+                onChange={(event) => updateField("registrationCloseDate", event.target.value)}
+              />
+            </div>
+
+            <TextField
+              label="Info for participants"
+              name="info"
+              placeholder="Rules, payment notes, reminders, acknowledgement details"
+              value={values.info}
+              onChange={(event) => updateField("info", event.target.value)}
+            />
 
             {status ? (
               <p

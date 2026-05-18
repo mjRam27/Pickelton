@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, ShieldCheck } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -12,8 +13,11 @@ import { submitHostVerification } from "@/services/host";
 
 type HostForm = {
   fullName: string;
+  teamName: string;
   dateOfBirth: string;
   phoneNumber: string;
+  secretQuestion: string;
+  secretAnswer: string;
   addressLine1: string;
   addressLine2: string;
   city: string;
@@ -29,7 +33,7 @@ type HostForm = {
 
 type HostErrors = Partial<Record<keyof HostForm, string>>;
 
-const phonePattern = /^\+?[1-9][0-9]{7,14}$/;
+const phonePattern = /^\+91[6-9][0-9]{9}$/;
 const lastFourPattern = /^[A-Za-z0-9]{4}$/;
 
 const idDocumentOptions = [
@@ -39,6 +43,13 @@ const idDocumentOptions = [
   { label: "Voter ID", value: "VOTER_ID" },
   { label: "Passport", value: "PASSPORT" },
   { label: "Driving license", value: "DRIVING_LICENSE" }
+];
+
+const secretQuestionOptions = [
+  { label: "Choose secret question", value: "" },
+  { label: "What is your favorite sport?", value: "FAVORITE_SPORT" },
+  { label: "What is your favorite pickleball venue?", value: "FAVORITE_VENUE" },
+  { label: "What city did you first play in?", value: "FIRST_PLAY_CITY" }
 ];
 
 function isValidUrl(value: string) {
@@ -57,16 +68,22 @@ function validateHost(values: HostForm): HostErrors {
   today.setHours(0, 0, 0, 0);
 
   if (!values.fullName.trim()) errors.fullName = "Full name is required.";
+  if (values.teamName.trim().length > 120) errors.teamName = "Team name must be 120 characters or fewer.";
   if (!values.dateOfBirth) {
     errors.dateOfBirth = "Date of birth is required.";
-  } else if (birthday && birthday >= today) {
-    errors.dateOfBirth = "Date of birth must be in the past.";
+  } else if (birthday) {
+    let age = today.getFullYear() - birthday.getFullYear();
+    const monthDiff = today.getMonth() - birthday.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) age -= 1;
+    if (age < 18 || age > 80) errors.dateOfBirth = "Host age must be between 18 and 80.";
   }
   if (!values.phoneNumber.trim()) {
     errors.phoneNumber = "Phone number is required.";
   } else if (!phonePattern.test(values.phoneNumber)) {
-    errors.phoneNumber = "Use a valid phone number.";
+    errors.phoneNumber = "Use a valid India phone number, for example +919876543210.";
   }
+  if (!values.secretQuestion) errors.secretQuestion = "Choose a secret question.";
+  if (!values.secretAnswer.trim()) errors.secretAnswer = "Secret answer is required.";
   if (!values.addressLine1.trim()) errors.addressLine1 = "Address line 1 is required.";
   if (!values.city.trim()) errors.city = "City is required.";
   if (!values.postalCode.trim()) errors.postalCode = "Postal code is required.";
@@ -93,10 +110,14 @@ function validateHost(values: HostForm): HostErrors {
 }
 
 export default function HostRegisterPage() {
+  const router = useRouter();
   const [values, setValues] = useState<HostForm>({
     fullName: "",
+    teamName: "",
     dateOfBirth: "",
     phoneNumber: "",
+    secretQuestion: "",
+    secretAnswer: "",
     addressLine1: "",
     addressLine2: "",
     city: "",
@@ -170,7 +191,7 @@ export default function HostRegisterPage() {
         termsAccepted: values.termsAccepted,
         dataProcessingConsent: values.dataProcessingConsent
       });
-      setStatus("Host verification submitted.");
+      router.push("/host/welcome");
     } catch (error) {
       setStatus(getApiMessage(error, "Host registration form validated. Login/backend connection may be needed."));
     } finally {
@@ -248,6 +269,18 @@ export default function HostRegisterPage() {
                 onChange={(event) => updateField("fullName", event.target.value)}
               />
               <TextField
+                label="Team name"
+                name="teamName"
+                placeholder="Optional"
+                value={values.teamName}
+                error={showError("teamName")}
+                onBlur={() => setTouched((current) => ({ ...current, teamName: true }))}
+                onChange={(event) => updateField("teamName", event.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <TextField
                 label="Date of birth"
                 name="dateOfBirth"
                 type="date"
@@ -256,9 +289,6 @@ export default function HostRegisterPage() {
                 onBlur={() => setTouched((current) => ({ ...current, dateOfBirth: true }))}
                 onChange={(event) => updateField("dateOfBirth", event.target.value)}
               />
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
               <TextField
                 label="Phone number"
                 name="phoneNumber"
@@ -270,6 +300,29 @@ export default function HostRegisterPage() {
                 onBlur={() => setTouched((current) => ({ ...current, phoneNumber: true }))}
                 onChange={(event) => updateField("phoneNumber", event.target.value)}
               />
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <SelectField
+                label="Secret question"
+                name="secretQuestion"
+                options={secretQuestionOptions}
+                value={values.secretQuestion}
+                error={showError("secretQuestion")}
+                onBlur={() => setTouched((current) => ({ ...current, secretQuestion: true }))}
+                onChange={(event) => updateField("secretQuestion", event.target.value)}
+              />
+              <TextField
+                label="Secret answer"
+                name="secretAnswer"
+                value={values.secretAnswer}
+                error={showError("secretAnswer")}
+                onBlur={() => setTouched((current) => ({ ...current, secretAnswer: true }))}
+                onChange={(event) => updateField("secretAnswer", event.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
               <TextField
                 label="Postal code"
                 name="postalCode"
