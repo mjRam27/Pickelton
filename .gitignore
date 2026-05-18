@@ -15,7 +15,19 @@ yarn-error.log*
 pnpm-debug.log*
 
 # local env files
+.env
+.env.*
 .env*.local
+!.env.example
+
+# keys and secrets
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+*.keystore
+secrets/
 
 # OS
 .DS_Store
