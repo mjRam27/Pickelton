@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import com.pickelton.backend.enums.HostVerificationStatus;
 import com.pickelton.backend.host.entity.HostVerification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface HostVerificationRepository extends JpaRepository<HostVerification, UUID> {
@@ -12,4 +14,6 @@ public interface HostVerificationRepository extends JpaRepository<HostVerificati
     Optional<HostVerification> findByUserId(UUID userId);
 
     boolean existsByUserIdAndStatus(UUID userId, HostVerificationStatus status);
+
+    Page<HostVerification> findByStatusOrderBySubmittedAtAsc(HostVerificationStatus status, Pageable pageable);
 }

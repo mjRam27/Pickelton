@@ -1,7 +1,5 @@
 package com.pickelton.backend.auth.service;
 
-import java.util.Optional;
-
 import com.pickelton.backend.auth.dto.AuthResponse;
 import com.pickelton.backend.auth.dto.LoginRequest;
 import com.pickelton.backend.auth.dto.MeResponse;
@@ -54,11 +52,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         String email = request.email().toLowerCase().trim();
-        Optional<User> maybeUser = userRepository.findByEmail(email);
-        if (maybeUser.isEmpty()) {
+        User user = userService.findNullableByEmail(email);
+        if (user == null) {
             throw new BadRequestException(INVALID_CREDENTIALS);
         }
-        User user = maybeUser.get();
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadRequestException(INVALID_CREDENTIALS);
         }

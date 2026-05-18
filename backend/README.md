@@ -80,8 +80,11 @@ docker compose up --build
 
 - `POST /api/v1/host-verifications/me`
 - `GET /api/v1/host-verifications/me`
+- `GET /api/v1/admin/host-verifications/pending`
+- `PATCH /api/v1/admin/host-verifications/{id}/review`
 
 Tournament creation requires an approved host verification record.
+Admin review endpoints require the `X-Admin-Key` header matching `ADMIN_API_KEY`.
 
 ### Clubs
 

@@ -3,7 +3,7 @@ package com.pickelton.backend.security;
 import java.util.Collections;
 
 import com.pickelton.backend.user.entity.User;
-import com.pickelton.backend.user.repository.UserRepository;
+import com.pickelton.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,12 +14,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email.toLowerCase())
-            .orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
+        User user = userService.findNullableByEmail(email.toLowerCase());
+        if (user == null) {
+            throw new UsernameNotFoundException("Invalid credentials");
+        }
 
         return org.springframework.security.core.userdetails.User.builder()
             .username(user.getId().toString())
