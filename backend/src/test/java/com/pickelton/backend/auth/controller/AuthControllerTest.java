@@ -1,18 +1,25 @@
 package com.pickelton.backend.auth.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.UUID;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pickelton.backend.auth.dto.AuthResponse;
+import com.pickelton.backend.auth.dto.GoogleLoginRequest;
 import com.pickelton.backend.auth.dto.LoginRequest;
+import com.pickelton.backend.auth.dto.MeResponse;
 import com.pickelton.backend.auth.dto.RegisterRequest;
+import com.pickelton.backend.auth.dto.VerifyCodeRequest;
 import com.pickelton.backend.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,6 +103,92 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.data.token").value("token"));
     }
 
+    @Test
+    void googleLoginShouldReturnToken() throws Exception {
+        when(authService.googleLogin(any(GoogleLoginRequest.class))).thenReturn(sampleAuthResponse());
+
+        GoogleLoginRequest request = new GoogleLoginRequest(
+            "google-id-token",
+            "+919876543210",
+            LocalDate.of(1998, 1, 1)
+        );
+
+        mockMvc.perform(post("/api/v1/auth/google")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.token").value("token"));
+    }
+
+    @Test
+    void logoutWithBearerTokenShouldCallService() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout")
+                .header("Authorization", "Bearer token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Logged out"));
+
+        verify(authService).logout("token");
+    }
+
+    @Test
+    void logoutWithoutBearerTokenShouldNotCallService() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Logged out"));
+
+        verify(authService, never()).logout(any());
+    }
+
+    @Test
+    void requestPhoneVerificationCodeShouldReturnOk() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/verification-code"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Phone verification code sent"));
+
+        verify(authService).requestPhoneVerificationCode();
+    }
+
+    @Test
+    void verifyCodeShouldReturnOk() throws Exception {
+        VerifyCodeRequest request = new VerifyCodeRequest("123456");
+
+        mockMvc.perform(post("/api/v1/auth/verify-code")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Phone verification completed"));
+
+        verify(authService).verifyPhoneCode(any(VerifyCodeRequest.class));
+    }
+
+    @Test
+    void meShouldReturnCurrentUserProfile() throws Exception {
+        when(authService.me()).thenReturn(sampleMeResponse());
+
+        mockMvc.perform(get("/api/v1/auth/me"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.email").value("alex@example.com"))
+            .andExpect(jsonPath("$.data.phoneVerified").value(false));
+    }
+
+    @Test
+    void verifyCodeShouldReturnBadRequestWhenCodeIsBlank() throws Exception {
+        VerifyCodeRequest request = new VerifyCodeRequest("");
+
+        mockMvc.perform(post("/api/v1/auth/verify-code")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verify(authService, never()).verifyPhoneCode(any(VerifyCodeRequest.class));
+    }
+
     private AuthResponse sampleAuthResponse() {
         return new AuthResponse(
             "token",
@@ -106,6 +199,19 @@ class AuthControllerTest {
             LocalDate.of(1998, 1, 1),
             false,
             false
+        );
+    }
+
+    private MeResponse sampleMeResponse() {
+        return new MeResponse(
+            UUID.randomUUID(),
+            "Alex",
+            "alex@example.com",
+            "+919876543210",
+            LocalDate.of(1998, 1, 1),
+            false,
+            false,
+            OffsetDateTime.now()
         );
     }
 }
