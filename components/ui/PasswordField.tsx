@@ -31,7 +31,7 @@ export function PasswordField({
         <input
           id={inputId}
           type={isVisible ? "text" : "password"}
-          className={`min-h-12 w-full rounded-lg bg-black/72 px-4 py-3 pr-12 text-sm font-semibold text-on-surface placeholder:text-on-surface-variant/70 outline outline-1 outline-outline/40 transition focus:field-focus focus:outline-primary/70 ${error ? "outline-error/80" : ""} ${className}`}
+          className={`min-h-12 w-full rounded-lg bg-black/38 px-4 py-3 pr-12 text-sm font-semibold text-on-surface placeholder:text-on-surface-variant/65 outline outline-1 outline-white/10 transition hover:outline-primary/30 focus:field-focus focus:outline-primary/70 ${error ? "outline-error/80" : ""} ${className}`}
           aria-invalid={Boolean(error)}
           aria-describedby={helperText || error ? `${inputId}-hint` : undefined}
           {...props}

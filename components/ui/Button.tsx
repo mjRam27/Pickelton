@@ -13,7 +13,7 @@ const variants = {
   primary:
     "bg-secondary text-on-secondary shadow-glow hover:bg-secondary-dim disabled:bg-[#6b840f] disabled:text-[#253005]",
   secondary:
-    "bg-primary text-[#001a63] hover:bg-primary-container disabled:bg-[#46527b] disabled:text-[#101827]",
+    "bg-primary text-background hover:bg-primary-container disabled:bg-[#6e654b] disabled:text-[#1b1810]",
   ghost:
     "bg-transparent text-primary hover:bg-primary/10 disabled:text-on-surface-variant"
 };

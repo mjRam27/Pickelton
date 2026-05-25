@@ -42,7 +42,7 @@ export default function ProfilePage() {
               This screen reads `/api/v1/auth/me` and shows whether the account can continue to host verification.
             </p>
           </div>
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-[#001a63]">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-background">
             <UserRound className="h-5 w-5" aria-hidden="true" />
           </span>
         </div>
@@ -83,7 +83,7 @@ export default function ProfilePage() {
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Refresh
           </Button>
-          <Link href="/verify-phone" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-extrabold uppercase tracking-[0.08em] text-[#001a63]">
+          <Link href="/verify-phone" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-extrabold uppercase tracking-[0.08em] text-background">
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             OTP
           </Link>

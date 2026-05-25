@@ -73,7 +73,7 @@ export default function HostStatusPage() {
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Refresh
           </Button>
-          <Link href="/host/register" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-extrabold uppercase tracking-[0.08em] text-[#001a63]">
+          <Link href="/host/register" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-extrabold uppercase tracking-[0.08em] text-background">
             KYC form
           </Link>
           <Link href="/tournaments/create" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-secondary px-5 py-3 text-sm font-extrabold uppercase tracking-[0.08em] text-on-secondary">

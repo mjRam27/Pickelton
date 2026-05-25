@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CheckCircle2, RadioTower, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 
 type AuthShellProps = {
@@ -11,15 +12,14 @@ type AuthShellProps = {
 
 export function AuthShell({ eyebrow, title, subtitle, children, footer }: AuthShellProps) {
   return (
-    <main className="kinetic-grid flex min-h-screen items-center justify-center px-5 py-8 sm:px-8">
-      <section className="grid w-full max-w-6xl gap-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-stretch">
-        <aside className="relative overflow-hidden rounded-xl bg-surface-low p-8 shadow-ambient sm:p-10">
-          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary/10 blur-3xl" />
+    <main className="flex min-h-screen items-center justify-center bg-background px-5 py-8 sm:px-8">
+      <section className="grid w-full max-w-6xl gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-stretch">
+        <aside className="relative overflow-hidden rounded-xl bg-surface-low p-7 shadow-ambient outline outline-1 outline-white/10 sm:p-10">
           <div className="relative z-10 flex h-full min-h-[420px] flex-col justify-between">
             <div>
               <Link
                 href="/login"
-                className="inline-flex items-center rounded-full bg-primary/12 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-primary"
+                className="inline-flex items-center rounded-full bg-primary/12 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-primary outline outline-1 outline-primary/20"
               >
                 Pickelton
               </Link>
@@ -33,20 +33,33 @@ export function AuthShell({ eyebrow, title, subtitle, children, footer }: AuthSh
                 {subtitle}
               </p>
             </div>
-            <div className="mt-12 grid grid-cols-3 gap-3 text-center">
-              {["Clubs", "Matches", "Live"].map((item, index) => (
-                <div key={item} className="rounded-lg bg-black/40 px-3 py-4">
-                  <p className="font-headline text-2xl font-black text-primary">0{index + 1}</p>
-                  <p className="mt-1 text-[0.68rem] font-extrabold uppercase tracking-[0.14em] text-on-surface-variant">
-                    {item}
-                  </p>
+
+            <div className="mt-12 space-y-3">
+              {[
+                [CheckCircle2, "Create profile", "Basic player details and secure password."],
+                [ShieldCheck, "Verify phone", "OTP verification keeps match entries trustworthy."],
+                [RadioTower, "Enter the app", "Scoring, tournaments, clubs, and booking unlock next."]
+              ].map(([Icon, item, text], index) => (
+                <div key={String(item)} className="grid grid-cols-[auto_1fr] gap-3 rounded-lg bg-black/30 p-4 outline outline-1 outline-white/10">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-on-surface">{String(item)}</p>
+                      <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.14em] text-on-surface-variant">
+                        0{index + 1}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium leading-5 text-on-surface-variant">{String(text)}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </aside>
 
-        <div className="glass-panel rounded-xl p-5 shadow-ambient outline outline-1 outline-white/5 sm:p-8">
+        <div className="rounded-xl bg-surface-low p-5 shadow-ambient outline outline-1 outline-white/10 sm:p-8">
           <div className="mx-auto max-w-xl">{children}</div>
           <div className="mx-auto mt-6 max-w-xl">{footer}</div>
         </div>

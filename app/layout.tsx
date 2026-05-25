@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Lexend, Manrope } from "next/font/google";
+import { AuthGate } from "@/components/app/AuthGate";
 import "./globals.css";
 
 const lexend = Lexend({
@@ -26,7 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${lexend.variable} ${manrope.variable}`}>{children}</body>
+      <body className={`${lexend.variable} ${manrope.variable}`}>
+        <AuthGate>{children}</AuthGate>
+      </body>
     </html>
   );
 }

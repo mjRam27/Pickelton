@@ -104,7 +104,7 @@ export default function AdminHostsPage() {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="hidden text-xs font-bold text-on-surface-variant sm:inline">{date}</span>
-                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[#001a63]">
+                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-extrabold uppercase tracking-[0.08em] text-background">
                     {status === "Rejected" ? <ShieldX className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
                     Review
                   </button>

@@ -31,7 +31,7 @@ export default function HostWelcomePage() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/host/status"
-            className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-extrabold uppercase tracking-[0.08em] text-[#001a63]"
+            className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-extrabold uppercase tracking-[0.08em] text-background"
           >
             Check host status
           </Link>

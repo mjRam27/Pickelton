@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Trophy } from "lucide-react";
+import { ArrowRight, LockKeyhole, ShieldCheck, UserRoundPlus } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
@@ -113,7 +113,7 @@ export default function SignupPage() {
         dateOfBirth: values.dateOfBirth,
         password: values.password
       });
-      router.push("/verify-phone");
+      router.push("/");
     } catch (error) {
       setStatus(getApiMessage(error, "Account form is ready to connect."));
     } finally {
@@ -123,15 +123,11 @@ export default function SignupPage() {
 
   return (
     <AuthShell
-      eyebrow="Join the arena"
-      title="Build your player profile."
-      subtitle="Create the account that will later connect to clubs, tournament registrations, and match history."
+      eyebrow="Start with your account"
+      title="Join Pickelton before the first serve."
+      subtitle="Create your player profile once, then use it for clubs, tournaments, bookings, and live match scoring."
       footer={
         <p className="text-center text-sm font-semibold text-on-surface-variant">
-          <Link className="text-primary transition hover:text-secondary" href="/dashboard">
-            Browse app
-          </Link>
-          <span className="mx-2 text-on-surface-variant/60">/</span>
           Already have an account?{" "}
           <Link className="text-primary transition hover:text-secondary" href="/login">
             Log in
@@ -142,40 +138,53 @@ export default function SignupPage() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-secondary">Signup</p>
-          <h2 className="mt-2 font-headline text-3xl font-black text-on-surface">Create account</h2>
+          <h2 className="mt-2 font-headline text-3xl font-black text-on-surface">Create your account</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-on-surface-variant">
+            It takes under a minute. The court can wait, dramatically.
+          </p>
         </div>
-        <Link
-          href="/host/register"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary/12 text-primary transition hover:bg-primary/20"
-          aria-label="Go to tournament host form"
-        >
-          <Trophy className="h-5 w-5" />
-        </Link>
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/12 text-primary outline outline-1 outline-primary/20">
+          <UserRoundPlus className="h-5 w-5" aria-hidden="true" />
+        </span>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit} noValidate>
-        <TextField
-          label="Full name"
-          name="name"
-          autoComplete="name"
-          placeholder="Srajanya Shetty"
-          value={values.name}
-          error={showError("name")}
-          onBlur={() => setTouched((current) => ({ ...current, name: true }))}
-          onChange={(event) => updateField("name", event.target.value)}
-        />
+        <div className="rounded-xl bg-black/25 p-4 outline outline-1 outline-white/10">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-secondary/12 text-secondary">
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="font-bold text-on-surface">Player details</p>
+              <p className="text-xs font-semibold text-on-surface-variant">Used for tournament and club identity.</p>
+            </div>
+          </div>
 
-        <TextField
-          label="Email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          value={values.email}
-          error={showError("email")}
-          onBlur={() => setTouched((current) => ({ ...current, email: true }))}
-          onChange={(event) => updateField("email", event.target.value)}
-        />
+          <div className="space-y-5">
+            <TextField
+              label="Full name"
+              name="name"
+              autoComplete="name"
+              placeholder="Srajanya Shetty"
+              value={values.name}
+              error={showError("name")}
+              onBlur={() => setTouched((current) => ({ ...current, name: true }))}
+              onChange={(event) => updateField("name", event.target.value)}
+            />
+
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={values.email}
+              error={showError("email")}
+              onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+              onChange={(event) => updateField("email", event.target.value)}
+            />
+          </div>
+        </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
           <TextField
@@ -199,28 +208,40 @@ export default function SignupPage() {
           />
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <PasswordField
-            label="Password"
-            name="password"
-            autoComplete="new-password"
-            placeholder="8+ characters"
-            helperText="Minimum 8 characters."
-            value={values.password}
-            error={showError("password")}
-            onBlur={() => setTouched((current) => ({ ...current, password: true }))}
-            onChange={(event) => updateField("password", event.target.value)}
-          />
-          <PasswordField
-            label="Confirm"
-            name="confirmPassword"
-            autoComplete="new-password"
-            placeholder="Repeat password"
-            value={values.confirmPassword}
-            error={showError("confirmPassword")}
-            onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
-            onChange={(event) => updateField("confirmPassword", event.target.value)}
-          />
+        <div className="rounded-xl bg-black/25 p-4 outline outline-1 outline-white/10">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/12 text-primary">
+              <LockKeyhole className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="font-bold text-on-surface">Secure access</p>
+              <p className="text-xs font-semibold text-on-surface-variant">Keep it private, keep it playable.</p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <PasswordField
+              label="Password"
+              name="password"
+              autoComplete="new-password"
+              placeholder="8+ characters"
+              helperText="Minimum 8 characters."
+              value={values.password}
+              error={showError("password")}
+              onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+              onChange={(event) => updateField("password", event.target.value)}
+            />
+            <PasswordField
+              label="Confirm"
+              name="confirmPassword"
+              autoComplete="new-password"
+              placeholder="Repeat password"
+              value={values.confirmPassword}
+              error={showError("confirmPassword")}
+              onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
+              onChange={(event) => updateField("confirmPassword", event.target.value)}
+            />
+          </div>
         </div>
 
         {status ? (

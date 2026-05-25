@@ -61,13 +61,8 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const response = await login({ email: values.email.trim(), password: values.password });
-      const user = response.data;
-      if (!user.phoneVerified) {
-        router.push("/verify-phone");
-        return;
-      }
-      router.push("/profile");
+      await login({ email: values.email.trim(), password: values.password });
+      router.push("/");
     } catch (error) {
       setStatus(getApiMessage(error, "Validation passed. Backend connection can be added next."));
     } finally {
@@ -82,10 +77,6 @@ export default function LoginPage() {
       subtitle="Sign in to manage clubs, tournaments, and the live scoring flow that keeps every rally visible."
       footer={
         <p className="text-center text-sm font-semibold text-on-surface-variant">
-          <Link className="text-primary transition hover:text-secondary" href="/dashboard">
-            Browse app
-          </Link>
-          <span className="mx-2 text-on-surface-variant/60">/</span>
           New to Pickelton?{" "}
           <Link className="text-primary transition hover:text-secondary" href="/signup">
             Create your account
