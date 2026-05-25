@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pickelton.backend.auth.dto.AuthResponse;
 import com.pickelton.backend.auth.dto.LoginRequest;
+import com.pickelton.backend.auth.dto.RefreshTokenRequest;
 import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -96,9 +97,24 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.data.token").value("token"));
     }
 
+    @Test
+    void refreshShouldRotateSessionAndReturnTokens() throws Exception {
+        when(authService.refresh(any(RefreshTokenRequest.class))).thenReturn(sampleAuthResponse());
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new RefreshTokenRequest("old-refresh"))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.token").value("token"))
+            .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"));
+    }
+
     private AuthResponse sampleAuthResponse() {
         return new AuthResponse(
             "token",
+            "refresh-token",
+            900000,
+            2592000000L,
             UUID.randomUUID(),
             "Alex",
             "alex@example.com",

@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.OffsetDateTime;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +17,7 @@ import com.pickelton.backend.common.response.PageResponse;
 import com.pickelton.backend.config.RateLimitInterceptor;
 import com.pickelton.backend.security.JwtBlacklistService;
 import com.pickelton.backend.security.JwtUtil;
-import com.pickelton.backend.user.dto.UserResponse;
+import com.pickelton.backend.user.dto.PublicUserSummary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +62,7 @@ class ClubControllerTest {
 
     @Test
     void getClubsShouldReturnPaginatedResponse() throws Exception {
-        when(clubService.getClubs(anyInt(), anyInt())).thenReturn(samplePageResponse());
+        when(clubService.getClubs(any(), anyInt(), anyInt())).thenReturn(samplePageResponse());
 
         mockMvc.perform(get("/api/clubs").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -78,16 +77,11 @@ class ClubControllerTest {
                 "Pickelton Club",
                 "Community club",
                 "Bangalore",
-                new UserResponse(
+                new PublicUserSummary(
                     UUID.randomUUID(),
                     "Admin",
-                    "admin@example.com",
-                    "+919876543210",
-                    LocalDate.of(1990, 1, 1),
-                    true,
-                    true,
-                    now,
-                    now
+                    null,
+                    "Bangalore"
                 ),
                 12L,
                 now,

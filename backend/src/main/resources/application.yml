@@ -40,7 +40,13 @@ server:
 jwt:
   private-key: ${JWT_PRIVATE_KEY:}
   public-key: ${JWT_PUBLIC_KEY:}
-  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  expiration-ms: ${JWT_EXPIRATION_MS:900000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}
+
+otp:
+  expiration-minutes: ${OTP_EXPIRATION_MINUTES:10}
+  resend-cooldown-seconds: ${OTP_RESEND_COOLDOWN_SECONDS:60}
+  max-attempts: ${OTP_MAX_ATTEMPTS:5}
 
 allowed:
   origins: ${ALLOWED_ORIGINS:http://localhost:3000}

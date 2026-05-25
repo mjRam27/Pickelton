@@ -51,4 +51,13 @@ public class User extends BaseEntity {
 
     @Column(name = "google_subject", unique = true, length = 255)
     private String googleSubject;
+
+    @Column(length = 280)
+    private String bio;
+
+    @Column(name = "avatar_url", length = 1000)
+    private String avatarUrl;
+
+    @Column(length = 100)
+    private String city;
 }

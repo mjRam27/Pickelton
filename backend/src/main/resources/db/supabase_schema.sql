@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
     phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
     auth_provider VARCHAR(30) NOT NULL DEFAULT 'LOCAL',
     google_subject VARCHAR(255) UNIQUE,
+    bio VARCHAR(280),
+    avatar_url VARCHAR(1000),
+    city VARCHAR(100),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -100,7 +103,7 @@ CREATE TABLE IF NOT EXISTS matches (
     score2 INT NOT NULL DEFAULT 0,
     winner_id UUID REFERENCES users(id),
     status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
-    round INT NOT NULL DEFAULT 1,
+    round VARCHAR(50) NOT NULL DEFAULT 'Round 1',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT chk_match_players_different CHECK (player1_id <> player2_id)
@@ -113,7 +116,8 @@ CREATE TABLE IF NOT EXISTS score_history (
     old_score INT NOT NULL,
     new_score INT NOT NULL,
     updated_by UUID NOT NULL REFERENCES users(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 DO $$
@@ -137,6 +141,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAU
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(30) NOT NULL DEFAULT 'LOCAL';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS google_subject VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(280);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(1000);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(100);
 
 UPDATE users SET date_of_birth = DATE '1970-01-01' WHERE date_of_birth IS NULL;
 UPDATE users SET phone_number = '+1000' || replace(id::text, '-', '') WHERE phone_number IS NULL OR phone_number = '';
@@ -173,6 +180,11 @@ UPDATE tournaments SET start_date = NOW() WHERE start_date IS NULL;
 ALTER TABLE tournaments ALTER COLUMN tournament_type SET NOT NULL;
 ALTER TABLE tournaments ALTER COLUMN sport_type SET NOT NULL;
 ALTER TABLE tournaments ALTER COLUMN start_date SET NOT NULL;
+
+ALTER TABLE matches ALTER COLUMN round DROP DEFAULT;
+ALTER TABLE matches ALTER COLUMN round TYPE VARCHAR(50) USING round::VARCHAR;
+ALTER TABLE matches ALTER COLUMN round SET DEFAULT 'Round 1';
+ALTER TABLE score_history ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 DO $$
 BEGIN

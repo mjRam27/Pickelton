@@ -14,6 +14,8 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
 
     List<Match> findByTournamentId(UUID tournamentId);
 
+    List<Match> findByTournamentIdOrderByCreatedAtAsc(UUID tournamentId);
+
     @Query("""
         SELECT COUNT(m) FROM Match m
         WHERE m.status = :status
@@ -36,4 +38,11 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
         WHERE m.player1.id = :userId OR m.player2.id = :userId
         """)
     long countTotalMatchesByUserId(@Param("userId") UUID userId);
+
+    @Query("""
+        SELECT COUNT(m) FROM Match m
+        WHERE m.status = :status
+          AND (m.player1.id = :userId OR m.player2.id = :userId)
+        """)
+    long countTotalMatchesByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") MatchStatus status);
 }

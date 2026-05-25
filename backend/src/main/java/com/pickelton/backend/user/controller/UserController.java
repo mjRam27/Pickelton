@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.pickelton.backend.common.response.ApiResponse;
 import com.pickelton.backend.common.service.CurrentUserService;
 import com.pickelton.backend.user.dto.UpdateUserRequest;
+import com.pickelton.backend.user.dto.PublicUserResponse;
 import com.pickelton.backend.user.dto.UserDTO;
 import com.pickelton.backend.user.dto.UserStatsDTO;
 import com.pickelton.backend.user.service.UserService;
@@ -45,5 +46,11 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<UserStatsDTO>> stats(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(userService.getUserStats(id)));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<PublicUserResponse>> publicProfile(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.getPublicProfile(id)));
     }
 }

@@ -1,23 +1,18 @@
 package com.pickelton.backend.mapper;
 
-import com.pickelton.backend.user.dto.UserResponse;
+import com.pickelton.backend.user.dto.PublicUserSummary;
 import com.pickelton.backend.user.entity.User;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
 
-    public UserResponse toResponse(User user) {
-        return new UserResponse(
+    public PublicUserSummary toPublicSummary(User user) {
+        return new PublicUserSummary(
             user.getId(),
             user.getName(),
-            user.getEmail(),
-            user.getPhoneNumber(),
-            user.getDateOfBirth(),
-            user.isEmailVerified(),
-            user.isPhoneVerified(),
-            user.getCreatedAt(),
-            user.getUpdatedAt()
+            user.getAvatarUrl(),
+            user.getCity()
         );
     }
 }

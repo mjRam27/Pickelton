@@ -7,6 +7,7 @@ import com.pickelton.backend.config.CacheConfig;
 import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.match.repository.MatchRepository;
 import com.pickelton.backend.user.dto.UpdateUserRequest;
+import com.pickelton.backend.user.dto.PublicUserResponse;
 import com.pickelton.backend.user.dto.UserDTO;
 import com.pickelton.backend.user.dto.UserStatsDTO;
 import com.pickelton.backend.user.entity.User;
@@ -26,7 +27,7 @@ public class UserService {
     private final MatchRepository matchRepository;
 
     @Transactional
-    @CacheEvict(cacheNames = {CacheConfig.USERS_BY_ID, CacheConfig.USERS_BY_EMAIL}, allEntries = true)
+    @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
     public User save(User user) {
         return userRepository.save(user);
     }
@@ -37,13 +38,11 @@ public class UserService {
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    @Cacheable(cacheNames = CacheConfig.USERS_BY_EMAIL, key = "#email.toLowerCase()")
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    @Cacheable(cacheNames = CacheConfig.USERS_BY_EMAIL, key = "#email.toLowerCase()", unless = "#result == null")
     public User findNullableByEmail(String email) {
         return userRepository.findByEmail(email.toLowerCase().trim()).orElse(null);
     }
@@ -56,16 +55,42 @@ public class UserService {
         return toDto(findById(userId));
     }
 
+    public PublicUserResponse getPublicProfile(UUID userId) {
+        User user = findById(userId);
+        return new PublicUserResponse(
+            user.getId(),
+            user.getName(),
+            user.getBio(),
+            user.getAvatarUrl(),
+            user.getCity(),
+            getUserStats(userId),
+            user.getCreatedAt()
+        );
+    }
+
     @Transactional
-    @CacheEvict(cacheNames = {CacheConfig.USERS_BY_ID, CacheConfig.USERS_BY_EMAIL}, allEntries = true)
+    @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
     public UserDTO updateMyProfile(UUID userId, UpdateUserRequest request) {
         User user = findById(userId);
         if (request.name() != null && !request.name().isBlank()) {
             user.setName(request.name());
         }
-        if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
+        if (request.phoneNumber() != null && !request.phoneNumber().isBlank()
+            && !request.phoneNumber().equals(user.getPhoneNumber())) {
+            if (userRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), userId)) {
+                throw new com.pickelton.backend.common.exception.BadRequestException("Phone number is already registered");
+            }
             user.setPhoneNumber(request.phoneNumber());
             user.setPhoneVerified(false);
+        }
+        if (request.bio() != null) {
+            user.setBio(request.bio().trim());
+        }
+        if (request.avatarUrl() != null) {
+            user.setAvatarUrl(request.avatarUrl().trim());
+        }
+        if (request.city() != null) {
+            user.setCity(request.city().trim());
         }
         return toDto(userRepository.save(user));
     }
@@ -76,7 +101,7 @@ public class UserService {
         }
         long wins = matchRepository.countWinsByUserId(userId, MatchStatus.COMPLETED);
         long losses = matchRepository.countLossesByUserId(userId, MatchStatus.COMPLETED);
-        long total = matchRepository.countTotalMatchesByUserId(userId);
+        long total = matchRepository.countTotalMatchesByUserIdAndStatus(userId, MatchStatus.COMPLETED);
         return new UserStatsDTO(userId, wins, losses, total);
     }
 
@@ -89,6 +114,9 @@ public class UserService {
             user.getDateOfBirth(),
             user.isEmailVerified(),
             user.isPhoneVerified(),
+            user.getBio(),
+            user.getAvatarUrl(),
+            user.getCity(),
             user.getCreatedAt()
         );
     }

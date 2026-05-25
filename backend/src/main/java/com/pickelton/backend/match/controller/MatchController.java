@@ -1,6 +1,7 @@
 package com.pickelton.backend.match.controller;
 
 import java.util.UUID;
+import java.util.List;
 
 import com.pickelton.backend.common.response.ApiResponse;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
@@ -35,8 +36,18 @@ public class MatchController {
         return ResponseEntity.ok(ApiResponse.success("Match fetched", matchService.getMatch(id)));
     }
 
+    @GetMapping("/tournament/{tournamentId}")
+    public ResponseEntity<ApiResponse<List<MatchResponse>>> getTournamentMatches(@PathVariable UUID tournamentId) {
+        return ResponseEntity.ok(ApiResponse.ok(matchService.getTournamentMatches(tournamentId)));
+    }
+
     @PatchMapping("/{id}/score")
     public ResponseEntity<ApiResponse<MatchResponse>> updateScore(@PathVariable UUID id, @Valid @RequestBody UpdateMatchScoreRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Match score updated", matchService.updateScore(id, request)));
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<MatchResponse>> cancelMatch(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(matchService.cancelMatch(id), "Match cancelled"));
     }
 }

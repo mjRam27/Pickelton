@@ -25,7 +25,6 @@ public class RegistrationMapper {
             registration.getId(),
             registration.getUser().getId(),
             registration.getUser().getName(),
-            registration.getUser().getEmail(),
             RegistrationStatus.REGISTERED
         );
     }

@@ -12,6 +12,8 @@ import com.pickelton.backend.match.repository.MatchRepository;
 import com.pickelton.backend.registration.repository.RegistrationRepository;
 import com.pickelton.backend.tournament.repository.TournamentRepository;
 import com.pickelton.backend.user.entity.User;
+import com.pickelton.backend.enums.RegistrationStatus;
+import com.pickelton.backend.enums.MatchStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,10 +34,12 @@ public class LeaderboardService {
 
         Map<UUID, Stats> statsMap = new HashMap<>();
 
-        registrationRepository.findByTournamentId(tournamentId)
+        registrationRepository.findByTournamentIdAndStatus(tournamentId, RegistrationStatus.REGISTERED)
             .forEach(registration -> statsMap.putIfAbsent(registration.getUser().getId(), new Stats(registration.getUser())));
 
-        matchRepository.findByTournamentId(tournamentId).forEach(match -> {
+        matchRepository.findByTournamentId(tournamentId).stream()
+            .filter(match -> match.getStatus() == MatchStatus.COMPLETED)
+            .forEach(match -> {
             if (match.getPlayer1() != null) {
                 statsMap.putIfAbsent(match.getPlayer1().getId(), new Stats(match.getPlayer1()));
                 statsMap.get(match.getPlayer1().getId()).played++;
@@ -87,7 +91,6 @@ public class LeaderboardService {
             return new LeaderboardEntryResponse(
                 user.getId(),
                 user.getName(),
-                user.getEmail(),
                 played,
                 won,
                 lost,

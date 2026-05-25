@@ -91,6 +91,10 @@ public class JwtUtil {
         return validateToken(token);
     }
 
+    public long getExpirationMs() {
+        return expirationMs;
+    }
+
     private Claims parseClaims(String token) {
         return Jwts.parser()
             .verifyWith(verificationKey)

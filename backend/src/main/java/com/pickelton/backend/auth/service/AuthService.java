@@ -4,6 +4,7 @@ import com.pickelton.backend.auth.dto.AuthResponse;
 import com.pickelton.backend.auth.dto.GoogleLoginRequest;
 import com.pickelton.backend.auth.dto.LoginRequest;
 import com.pickelton.backend.auth.dto.MeResponse;
+import com.pickelton.backend.auth.dto.RefreshTokenRequest;
 import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.dto.VerifyCodeRequest;
 import com.pickelton.backend.common.exception.BadRequestException;
@@ -35,6 +36,7 @@ public class AuthService {
     private final CurrentUserService currentUserService;
     private final VerificationCodeService verificationCodeService;
     private final GoogleIdentityService googleIdentityService;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthResponse register(RegisterRequest request) {
         String email = request.email().toLowerCase().trim();
@@ -58,8 +60,7 @@ public class AuthService {
 
         User saved = userService.save(user);
         verificationCodeService.issuePhone(saved.getId(), saved.getPhoneNumber());
-        String token = jwtUtil.generateToken(saved.getId(), saved.getEmail());
-        return toAuthResponse(token, saved);
+        return issueSession(saved);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -71,13 +72,13 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadRequestException(INVALID_CREDENTIALS);
         }
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
-        return toAuthResponse(token, user);
+        return issueSession(user);
     }
 
     public AuthResponse googleLogin(GoogleLoginRequest request) {
         GoogleIdentityService.GoogleIdentity identity = googleIdentityService.verify(request.idToken());
         User user = userService.findNullableByGoogleSubject(identity.subject());
+        boolean newUser = false;
         if (user == null) {
             user = userService.findNullableByEmail(identity.email());
         }
@@ -102,28 +103,34 @@ public class AuthService {
                 .authProvider("GOOGLE")
                 .googleSubject(identity.subject())
                 .build();
+            newUser = true;
         } else if (user.getGoogleSubject() == null || user.getGoogleSubject().isBlank()) {
             user.setGoogleSubject(identity.subject());
             user.setEmailVerified(true);
             user.setAuthProvider(user.getAuthProvider() == null ? "GOOGLE" : user.getAuthProvider());
         }
         User saved = userService.save(user);
-        if (!saved.isPhoneVerified()) {
+        if (newUser) {
             verificationCodeService.issuePhone(saved.getId(), saved.getPhoneNumber());
         }
-        String token = jwtUtil.generateToken(saved.getId(), saved.getEmail());
-        return toAuthResponse(token, saved);
+        return issueSession(saved);
     }
 
-    public void logout(String token) {
+    public AuthResponse refresh(RefreshTokenRequest request) {
+        java.util.UUID userId = refreshTokenService.consumeForRotation(request.refreshToken());
+        User user = userService.findById(userId);
+        return issueSession(user);
+    }
+
+    public void logout(String token, String refreshToken) {
         if (token == null || token.isBlank()) {
             return;
         }
-        try {
-            blacklistService.blacklist(token, jwtUtil.extractExpiration(token));
-        } catch (Exception ex) {
-            log.debug("Logout called with invalid token");
+        if (!jwtUtil.validateToken(token)) {
+            throw new BadRequestException("Invalid access token");
         }
+        blacklistService.blacklist(token, jwtUtil.extractExpiration(token));
+        refreshTokenService.revoke(refreshToken);
     }
 
     @Transactional(readOnly = true)
@@ -153,9 +160,14 @@ public class AuthService {
         userService.save(user);
     }
 
-    private AuthResponse toAuthResponse(String token, User user) {
+    private AuthResponse issueSession(User user) {
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
+        RefreshTokenService.IssuedRefreshToken refreshToken = refreshTokenService.issue(user.getId());
         return new AuthResponse(
             token,
+            refreshToken.token(),
+            jwtUtil.getExpirationMs(),
+            refreshToken.expiresInMs(),
             user.getId(),
             user.getName(),
             user.getEmail(),

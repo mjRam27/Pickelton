@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
     phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
     auth_provider VARCHAR(30) NOT NULL DEFAULT 'LOCAL',
     google_subject VARCHAR(255) UNIQUE,
+    bio VARCHAR(280),
+    avatar_url VARCHAR(1000),
+    city VARCHAR(100),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -100,7 +103,7 @@ CREATE TABLE IF NOT EXISTS matches (
     score2 INT NOT NULL DEFAULT 0,
     winner_id UUID REFERENCES users(id),
     status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
-    round INT NOT NULL DEFAULT 1,
+    round VARCHAR(50) NOT NULL DEFAULT 'Round 1',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -112,7 +115,8 @@ CREATE TABLE IF NOT EXISTS score_history (
     old_score INT NOT NULL,
     new_score INT NOT NULL,
     updated_by UUID NOT NULL REFERENCES users(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_club_members_user_id ON club_members(user_id);

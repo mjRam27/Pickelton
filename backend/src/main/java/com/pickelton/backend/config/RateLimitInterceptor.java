@@ -2,45 +2,49 @@ package com.pickelton.backend.config;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pickelton.backend.common.exception.ServiceUnavailableException;
 import com.pickelton.backend.common.response.ApiResponse;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RateLimitInterceptor implements HandlerInterceptor {
 
-    private static final Bandwidth AUTH_LIMIT = Bandwidth.builder()
-        .capacity(20)
-        .refillIntervally(20, Duration.ofMinutes(1))
-        .build();
+    private static final long AUTH_LIMIT = 20;
+    private static final long OTP_LIMIT = 8;
+    private static final long DEFAULT_LIMIT = 100;
+    private static final Duration WINDOW = Duration.ofMinutes(1);
 
-    private static final Bandwidth DEFAULT_LIMIT = Bandwidth.builder()
-        .capacity(100)
-        .refillIntervally(100, Duration.ofMinutes(1))
-        .build();
-
-    private final ConcurrentMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
         throws IOException {
-        String key = bucketKey(request);
-        Bucket bucket = buckets.computeIfAbsent(key, k -> Bucket.builder().addLimit(limitFor(request)).build());
-
-        if (bucket.tryConsume(1)) {
+        String key = "rate-limit:" + scope(request) + ":" + clientIp(request);
+        long count;
+        try {
+            Long incremented = redisTemplate.opsForValue().increment(key);
+            count = incremented == null ? 1 : incremented;
+            if (count == 1) {
+                redisTemplate.expire(key, WINDOW);
+            }
+        } catch (Exception ex) {
+            log.warn("Redis rate-limit check failed: {}", ex.getMessage());
+            throw new ServiceUnavailableException("Request protection service unavailable");
+        }
+        if (count <= limitFor(request)) {
             return true;
         }
 
@@ -50,20 +54,24 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return false;
     }
 
-    private Bandwidth limitFor(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        if (path.startsWith("/api/v1/auth/login") || path.startsWith("/api/v1/auth/register")) {
-            return AUTH_LIMIT;
-        }
-        return DEFAULT_LIMIT;
+    private long limitFor(HttpServletRequest request) {
+        return switch (scope(request)) {
+            case "otp" -> OTP_LIMIT;
+            case "auth" -> AUTH_LIMIT;
+            default -> DEFAULT_LIMIT;
+        };
     }
 
-    private String bucketKey(HttpServletRequest request) {
-        String ip = clientIp(request);
+    private String scope(HttpServletRequest request) {
         String path = request.getRequestURI();
-        String scope = (path.startsWith("/api/v1/auth/login") || path.startsWith("/api/v1/auth/register"))
-            ? "auth" : "default";
-        return scope + ":" + ip;
+        if (path.startsWith("/api/v1/auth/verification-code") || path.startsWith("/api/v1/auth/verify-code")) {
+            return "otp";
+        }
+        if (path.startsWith("/api/v1/auth/login") || path.startsWith("/api/v1/auth/register")
+            || path.startsWith("/api/v1/auth/google") || path.startsWith("/api/v1/auth/refresh")) {
+            return "auth";
+        }
+        return "default";
     }
 
     private String clientIp(HttpServletRequest request) {

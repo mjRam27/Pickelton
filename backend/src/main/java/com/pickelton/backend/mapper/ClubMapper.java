@@ -19,7 +19,7 @@ public class ClubMapper {
             club.getName(),
             club.getDescription(),
             club.getLocation(),
-            userMapper.toResponse(club.getCreatedBy()),
+            userMapper.toPublicSummary(club.getCreatedBy()),
             memberCount,
             club.getCreatedAt(),
             club.getUpdatedAt()

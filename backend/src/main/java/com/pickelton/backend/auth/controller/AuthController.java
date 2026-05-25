@@ -3,7 +3,9 @@ package com.pickelton.backend.auth.controller;
 import com.pickelton.backend.auth.dto.AuthResponse;
 import com.pickelton.backend.auth.dto.GoogleLoginRequest;
 import com.pickelton.backend.auth.dto.LoginRequest;
+import com.pickelton.backend.auth.dto.LogoutRequest;
 import com.pickelton.backend.auth.dto.MeResponse;
+import com.pickelton.backend.auth.dto.RefreshTokenRequest;
 import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.dto.VerifyCodeRequest;
 import com.pickelton.backend.auth.service.AuthService;
@@ -43,12 +45,20 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(authService.googleLogin(request), "Google login successful"));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(authService.refresh(request), "Token refreshed"));
+    }
+
     @PostMapping("/logout")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> logout(
+        HttpServletRequest request,
+        @RequestBody(required = false) LogoutRequest logoutRequest
+    ) {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
-            authService.logout(header.substring(7));
+            authService.logout(header.substring(7), logoutRequest == null ? null : logoutRequest.refreshToken());
         }
         return ResponseEntity.ok(ApiResponse.ok(null, "Logged out"));
     }

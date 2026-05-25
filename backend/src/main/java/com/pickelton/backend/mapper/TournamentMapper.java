@@ -23,7 +23,7 @@ public class TournamentMapper {
             tournament.getSportType(),
             tournament.getTournamentType(),
             tournament.getStatus(),
-            userMapper.toResponse(tournament.getCreatedBy()),
+            userMapper.toPublicSummary(tournament.getCreatedBy()),
             club != null ? club.getId() : null,
             club != null ? club.getName() : null,
             tournament.getEntryFee(),
