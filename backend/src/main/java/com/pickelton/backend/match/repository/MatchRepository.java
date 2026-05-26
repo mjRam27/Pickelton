@@ -1,6 +1,7 @@
 package com.pickelton.backend.match.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.pickelton.backend.enums.MatchStatus;
@@ -15,6 +16,25 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
     List<Match> findByTournamentId(UUID tournamentId);
 
     List<Match> findByTournamentIdOrderByCreatedAtAsc(UUID tournamentId);
+
+    @Query("""
+        SELECT DISTINCT m FROM Match m
+        LEFT JOIN FETCH m.teams t
+        LEFT JOIN FETCH t.players tp
+        LEFT JOIN FETCH tp.user
+        WHERE m.id = :id
+        """)
+    Optional<Match> findByIdWithTeams(@Param("id") UUID id);
+
+    @Query("""
+        SELECT DISTINCT m FROM Match m
+        LEFT JOIN FETCH m.teams t
+        LEFT JOIN FETCH t.players tp
+        LEFT JOIN FETCH tp.user
+        WHERE m.tournament.id = :tournamentId
+        ORDER BY m.createdAt ASC
+        """)
+    List<Match> findByTournamentIdOrderByCreatedAtAscWithTeams(@Param("tournamentId") UUID tournamentId);
 
     @Query("""
         SELECT COUNT(m) FROM Match m

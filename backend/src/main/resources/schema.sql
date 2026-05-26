@@ -96,16 +96,47 @@ CREATE TABLE IF NOT EXISTS registrations (
 
 CREATE TABLE IF NOT EXISTS matches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tournament_id UUID NOT NULL REFERENCES tournaments(id),
+    tournament_id UUID REFERENCES tournaments(id),
     player1_id UUID NOT NULL REFERENCES users(id),
     player2_id UUID NOT NULL REFERENCES users(id),
+    mode VARCHAR(20) NOT NULL DEFAULT 'TOURNAMENT',
+    game_type VARCHAR(20) NOT NULL DEFAULT 'SINGLES',
+    scorekeeper_id UUID REFERENCES users(id),
+    points_to_win INT NOT NULL DEFAULT 11,
+    best_of INT NOT NULL DEFAULT 1,
+    win_by_two BOOLEAN NOT NULL DEFAULT TRUE,
     score1 INT NOT NULL DEFAULT 0,
     score2 INT NOT NULL DEFAULT 0,
     winner_id UUID REFERENCES users(id),
     status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
     round VARCHAR(50) NOT NULL DEFAULT 'Round 1',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (points_to_win >= 11),
+    CHECK (best_of IN (1, 3, 5)),
+    CHECK (mode IN ('CASUAL', 'TOURNAMENT')),
+    CHECK (game_type IN ('SINGLES', 'DOUBLES'))
+);
+
+CREATE TABLE IF NOT EXISTS match_teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    match_id UUID NOT NULL REFERENCES matches(id),
+    team_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (match_id, team_no),
+    CHECK (team_no IN (1, 2))
+);
+
+CREATE TABLE IF NOT EXISTS match_team_players (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES match_teams(id),
+    user_id UUID NOT NULL REFERENCES users(id),
+    slot_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (team_id, user_id),
+    UNIQUE (team_id, slot_no)
 );
 
 CREATE TABLE IF NOT EXISTS score_history (
@@ -129,4 +160,10 @@ CREATE INDEX IF NOT EXISTS idx_registrations_tournament_id ON registrations(tour
 CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_matches_tournament_id ON matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
+CREATE INDEX IF NOT EXISTS idx_matches_mode ON matches(mode);
+CREATE INDEX IF NOT EXISTS idx_matches_game_type ON matches(game_type);
+CREATE INDEX IF NOT EXISTS idx_matches_scorekeeper_id ON matches(scorekeeper_id);
+CREATE INDEX IF NOT EXISTS idx_match_teams_match_id ON match_teams(match_id);
+CREATE INDEX IF NOT EXISTS idx_match_team_players_team_id ON match_team_players(team_id);
+CREATE INDEX IF NOT EXISTS idx_match_team_players_user_id ON match_team_players(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
