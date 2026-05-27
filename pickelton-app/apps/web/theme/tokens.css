@@ -1,0 +1,12 @@
+/* pickelton-app/apps/web/theme/tokens.css */
+:root {
+  --bg: #080a0a;
+  --surface: #101313;
+  --raised: #171a1a;
+  --border: #252b2a;
+  --text: #f6f8f6;
+  --muted: #87908d;
+  --lime: #b8f527;
+  --info: #7d93ff;
+  --danger: #ff5168;
+}
