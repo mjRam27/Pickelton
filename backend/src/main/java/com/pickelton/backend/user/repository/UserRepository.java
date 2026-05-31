@@ -3,7 +3,10 @@ package com.pickelton.backend.user.repository;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.pickelton.backend.user.entity.User;
 
@@ -18,4 +21,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByPhoneNumber(String phoneNumber);
 
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, UUID id);
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%'))
+           OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))
+           OR u.phoneNumber LIKE CONCAT('%', :query, '%')
+        ORDER BY u.name ASC
+        """)
+    java.util.List<User> searchByNameEmailOrPhone(@Param("query") String query, Pageable pageable);
 }

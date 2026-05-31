@@ -19,7 +19,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LiveMatchStateService {
 
-    private static final String KEY_PREFIX = "match:";
+    private static final String SCORECARD_KEY_PREFIX = "match:scorecard:";
+    private static final String LEGACY_KEY_PREFIX = "match:";
     private static final String SCORE_CHANNEL = "match.score-updates";
 
     private final StringRedisTemplate redisTemplate;
@@ -29,26 +30,17 @@ public class LiveMatchStateService {
     private long cacheTtlMinutes;
 
     public Optional<LiveMatchStateResponse> get(UUID matchId) {
-        try {
-            String value = redisTemplate.opsForValue().get(key(matchId));
-            return value == null ? Optional.empty()
-                : Optional.of(objectMapper.readValue(value, LiveMatchStateResponse.class));
-        } catch (RuntimeException ex) {
-            log.warn("Redis live-state read failed for match {}: {}", matchId, ex.getMessage());
-            return Optional.empty();
-        } catch (JsonProcessingException ex) {
-            log.warn("Redis live-state JSON was invalid for match {}: {}", matchId, ex.getMessage());
-            return Optional.empty();
+        Optional<LiveMatchStateResponse> scorecard = read(scorecardKey(matchId));
+        if (scorecard.isPresent()) {
+            return scorecard;
         }
+        return read(legacyKey(matchId));
     }
 
     public void cache(LiveMatchStateResponse state) {
-        try {
-            redisTemplate.opsForValue().set(key(state.matchId()), objectMapper.writeValueAsString(state),
-                Duration.ofMinutes(cacheTtlMinutes));
-        } catch (RuntimeException | JsonProcessingException ex) {
-            log.warn("Redis live-state cache failed for match {}: {}", state.matchId(), ex.getMessage());
-        }
+        write(scorecardKey(state.matchId()), state);
+        // Keep legacy key populated for backward compatibility during rollout.
+        write(legacyKey(state.matchId()), state);
     }
 
     public void cacheAndPublish(LiveMatchStateResponse state) {
@@ -67,7 +59,34 @@ public class LiveMatchStateService {
         return new LiveMatchStateResponse(matchId, status, scores, sets, revision, updatedAt);
     }
 
-    private String key(UUID matchId) {
-        return KEY_PREFIX + matchId;
+    private Optional<LiveMatchStateResponse> read(String key) {
+        try {
+            String value = redisTemplate.opsForValue().get(key);
+            return value == null ? Optional.empty()
+                : Optional.of(objectMapper.readValue(value, LiveMatchStateResponse.class));
+        } catch (RuntimeException ex) {
+            log.warn("Redis live-state read failed for key {}: {}", key, ex.getMessage());
+            return Optional.empty();
+        } catch (JsonProcessingException ex) {
+            log.warn("Redis live-state JSON was invalid for key {}: {}", key, ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private void write(String key, LiveMatchStateResponse state) {
+        try {
+            redisTemplate.opsForValue().set(key, objectMapper.writeValueAsString(state),
+                Duration.ofMinutes(cacheTtlMinutes));
+        } catch (RuntimeException | JsonProcessingException ex) {
+            log.warn("Redis live-state cache failed for match {}: {}", state.matchId(), ex.getMessage());
+        }
+    }
+
+    private String scorecardKey(UUID matchId) {
+        return SCORECARD_KEY_PREFIX + matchId;
+    }
+
+    private String legacyKey(UUID matchId) {
+        return LEGACY_KEY_PREFIX + matchId;
     }
 }
