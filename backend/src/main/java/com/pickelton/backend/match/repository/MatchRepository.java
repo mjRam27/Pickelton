@@ -1,23 +1,18 @@
 package com.pickelton.backend.match.repository;
 
-import java.util.List;
 import java.util.UUID;
 
+import com.pickelton.backend.enums.MatchParticipantRole;
 import com.pickelton.backend.enums.MatchStatus;
+import com.pickelton.backend.match.entity.Match;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.pickelton.backend.match.entity.Match;
-
 public interface MatchRepository extends JpaRepository<Match, UUID> {
 
-    List<Match> findByTournamentId(UUID tournamentId);
-
-    List<Match> findByTournamentIdOrderByCreatedAtAsc(UUID tournamentId);
-
     @Query("""
-        SELECT COUNT(m) FROM Match m
+        SELECT COUNT(DISTINCT m) FROM Match m
         WHERE m.status = :status
           AND m.winner IS NOT NULL
           AND m.winner.id = :userId
@@ -25,24 +20,32 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
     long countWinsByUserId(@Param("userId") UUID userId, @Param("status") MatchStatus status);
 
     @Query("""
-        SELECT COUNT(m) FROM Match m
+        SELECT COUNT(DISTINCT m) FROM Match m
+        JOIN MatchParticipant p ON p.match = m
         WHERE m.status = :status
           AND m.winner IS NOT NULL
           AND m.winner.id <> :userId
-          AND (m.player1.id = :userId OR m.player2.id = :userId)
+          AND p.user.id = :userId
+          AND p.role = :role
         """)
-    long countLossesByUserId(@Param("userId") UUID userId, @Param("status") MatchStatus status);
+    long countLossesByUserId(@Param("userId") UUID userId, @Param("status") MatchStatus status,
+                             @Param("role") MatchParticipantRole role);
 
     @Query("""
-        SELECT COUNT(m) FROM Match m
-        WHERE m.player1.id = :userId OR m.player2.id = :userId
+        SELECT COUNT(DISTINCT m) FROM Match m
+        JOIN MatchParticipant p ON p.match = m
+        WHERE p.user.id = :userId
+          AND p.role = :role
         """)
-    long countTotalMatchesByUserId(@Param("userId") UUID userId);
+    long countTotalMatchesByUserId(@Param("userId") UUID userId, @Param("role") MatchParticipantRole role);
 
     @Query("""
-        SELECT COUNT(m) FROM Match m
+        SELECT COUNT(DISTINCT m) FROM Match m
+        JOIN MatchParticipant p ON p.match = m
         WHERE m.status = :status
-          AND (m.player1.id = :userId OR m.player2.id = :userId)
+          AND p.user.id = :userId
+          AND p.role = :role
         """)
-    long countTotalMatchesByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") MatchStatus status);
+    long countTotalMatchesByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") MatchStatus status,
+                                            @Param("role") MatchParticipantRole role);
 }

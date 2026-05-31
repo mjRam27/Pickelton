@@ -1,19 +1,17 @@
 package com.pickelton.backend.match.entity;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.pickelton.backend.common.entity.BaseEntity;
-import com.pickelton.backend.enums.MatchStatus;
-import com.pickelton.backend.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,28 +29,26 @@ import org.hibernate.type.SqlTypes;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "matches")
-public class Match extends BaseEntity {
+@Table(name = "match_state")
+public class MatchState extends BaseEntity {
 
-    @Column(nullable = false)
-    private String round;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private MatchStatus status;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id", nullable = false, unique = true)
+    private Match match;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "scores", nullable = false, columnDefinition = "jsonb")
     @Builder.Default
-    private Map<String, Object> rules = new LinkedHashMap<>();
+    private Map<String, Integer> scores = new LinkedHashMap<>();
 
-    @Column(length = 255)
-    private String venue;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "sets", nullable = false, columnDefinition = "jsonb")
+    @Builder.Default
+    private List<Map<String, Integer>> sets = new ArrayList<>();
 
-    @Column(name = "scheduled_at")
-    private OffsetDateTime scheduledAt;
+    @Column(nullable = false)
+    private Long revision;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "winner_id")
-    private User winner;
+    @Column(name = "last_event_at", nullable = false)
+    private OffsetDateTime lastEventAt;
 }

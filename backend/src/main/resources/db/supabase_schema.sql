@@ -1,3 +1,7 @@
+-- Historical Supabase bootstrap retained for existing installations.
+-- Existing databases: apply supabase_production_refactor.sql after this schema.
+-- Fresh databases: use ../schema.sql instead.
+
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS users (

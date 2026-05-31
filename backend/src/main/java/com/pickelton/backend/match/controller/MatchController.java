@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.pickelton.backend.common.response.ApiResponse;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
+import com.pickelton.backend.match.dto.LiveMatchStateResponse;
 import com.pickelton.backend.match.dto.MatchResponse;
 import com.pickelton.backend.match.dto.UpdateMatchScoreRequest;
 import com.pickelton.backend.match.service.MatchService;
@@ -34,6 +35,11 @@ public class MatchController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<MatchResponse>> getMatch(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success("Match fetched", matchService.getMatch(id)));
+    }
+
+    @GetMapping("/{id}/live-score")
+    public ResponseEntity<ApiResponse<LiveMatchStateResponse>> getLiveScore(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success("Live match state fetched", matchService.getLiveScore(id)));
     }
 
     @GetMapping("/tournament/{tournamentId}")

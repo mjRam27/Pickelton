@@ -31,7 +31,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "host_verifications")
+@Table(name = "host_applications")
 public class HostVerification extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)

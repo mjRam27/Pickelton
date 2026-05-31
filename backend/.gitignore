@@ -6,4 +6,5 @@ target/
 *.pem
 .env
 .env.*
+!.env.example
 .DS_Store

@@ -8,6 +8,7 @@ Pickelton is a modular monolith backend for tournament and community management 
 - Spring Boot 3.x
 - Maven
 - PostgreSQL
+- Upstash Redis
 - Spring Data JPA
 - Spring Security + JWT
 - Lombok
@@ -35,25 +36,52 @@ The backend follows a feature-based modular monolith layout:
 
 Copy `.env.example` to `.env` and provide values for:
 
-- `DB_URL`
-- `DB_USERNAME`
-- `DB_PASSWORD`
+- `DATABASE_URL`
+- `DATABASE_USERNAME`
+- `DATABASE_PASSWORD`
 - `JWT_PRIVATE_KEY`
 - `JWT_PUBLIC_KEY`
 - `JWT_EXPIRATION_MS` (`900000` recommended for 15-minute access tokens)
 - `JWT_REFRESH_EXPIRATION_MS` (`2592000000` recommended for 30-day refresh sessions)
 - `REDIS_URL`
+- `MATCH_CACHE_TTL_MINUTES` (`120` by default)
 
 `application.yml` reads these values from environment variables.
 JWTs are signed with RS256. For local development only, the backend generates an ephemeral RSA key pair if the JWT keys are missing.
 Redis stores rotating refresh sessions, revoked access tokens, phone OTPs, user cache entries, and shared request-rate counters.
 
+For Upstash, use the TLS URL form:
+
+```properties
+REDIS_URL=rediss://default:<password>@<host>:6379
+```
+
+Never commit `.env`. Rotate credentials immediately if they have been exposed in a terminal recording, screenshot, or chat.
+
+## Database Setup
+
+For a fresh database, run:
+
+```text
+src/main/resources/schema.sql
+```
+
+For an existing Supabase database created from the previous schema, run this once in the Supabase SQL editor before starting the refactored backend:
+
+```text
+src/main/resources/db/supabase_production_refactor.sql
+```
+
+The migration replaces fixed `player1_id` and `player2_id` columns with `match_participants`, stores current score state in `match_state`, appends changes to `score_events`, adds `tournament_matches` and `posts`, and renames the database table `host_verifications` to `host_applications`.
+
 ## Run Locally
 
-1. Start PostgreSQL with Docker:
+1. Use Java 21. On PowerShell:
 
-```bash
-docker compose up -d postgres
+```powershell
+$env:JAVA_HOME='C:\Program Files\Java\jdk-21'
+$env:PATH="$env:JAVA_HOME\bin;$env:PATH"
+java -version
 ```
 
 2. Run the backend:
@@ -151,11 +179,16 @@ Players must have verified phones and can register only while a tournament is up
 
 - `POST /api/matches`
 - `GET /api/matches/{id}`
+- `GET /api/matches/{id}/live-score`
 - `GET /api/matches/tournament/{tournamentId}`
 - `PATCH /api/matches/{id}/score`
 - `PATCH /api/matches/{id}/cancel`
 
-Only the tournament host can create/cancel matches or record scores. Match players must be actively registered; completed score updates are written to score history and broadcast over WebSocket.
+Only the tournament host can create or cancel matches. The host and accepted scorer/referee participants can record scores. Match players must be actively registered.
+
+PostgreSQL remains the source of truth. Live score reads use the Redis key `match:{matchId}` first and fall back to PostgreSQL. Score updates persist to `match_state` and append a `score_events` row before refreshing Redis, publishing on `match.score-updates`, and broadcasting over WebSocket.
+
+`POST /api/matches` accepts the new participant list. The legacy `player1Id` and `player2Id` request fields remain supported temporarily so the existing mobile client does not break during rollout.
 
 ### Leaderboard
 
