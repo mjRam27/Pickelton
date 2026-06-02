@@ -1,10 +1,12 @@
 // pickelton-mobile/app/+not-found.tsx
 import { Link } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../theme/colors";
+import type { ThemeColors } from "../theme/colors";
+import { useThemeStyles } from "../theme/ThemeProvider";
 
 export default function NotFoundScreen() {
+  const styles = useThemeStyles(createStyles);
   return (
     <View style={styles.wrapper}>
       <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
@@ -15,7 +17,7 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => ({
   wrapper: { backgroundColor: colors.background, flex: 1 },
   container: { alignItems: "center", flex: 1, justifyContent: "center", padding: 20 },
   title: { color: colors.text, fontSize: 22, fontWeight: "900" },

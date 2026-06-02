@@ -1,15 +1,19 @@
 // pickelton-mobile/app/match/create.tsx
 import { useState } from "react";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CardContainer } from "../../components/CardContainer";
+import { BackLink } from "../../components/BackLink";
+import { BrandMark } from "../../components/BrandMark";
 import { InputField } from "../../components/InputField";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { apiErrorMessage, createMatch } from "../../services/api";
-import { colors } from "../../theme/colors";
+import type { ThemeColors } from "../../theme/colors";
+import { useThemeStyles } from "../../theme/ThemeProvider";
 
 export default function MatchCreationScreen() {
+  const styles = useThemeStyles(createStyles);
   const [form, setForm] = useState({ tournamentId: "", player1Id: "", player2Id: "", round: "Round 1" });
   const [role, setRole] = useState<"scorer" | "referee" | "viewer">("scorer");
   const [error, setError] = useState("");
@@ -33,8 +37,8 @@ export default function MatchCreationScreen() {
     <View style={styles.wrapper}>
       <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
         <ScrollView contentContainerStyle={styles.content}>
-        <Text onPress={() => router.back()} style={styles.back}>BACK</Text>
-        <Text style={styles.brand}>PICKELTON PRECISION</Text>
+        <BackLink />
+        <BrandMark compact />
         <Text style={styles.title}>CREATE MATCH</Text>
         <Text style={styles.copy}>Set up a tournament match and assign your live official.</Text>
         <CardContainer style={styles.form}>
@@ -50,22 +54,20 @@ export default function MatchCreationScreen() {
           ))}
         </View>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <PrimaryButton label={loading ? "CREATING..." : "CREATE & SEND INVITES"} onPress={submit} disabled={loading} />
+        <PrimaryButton icon="send-outline" label={loading ? "CREATING..." : "CREATE & SEND INVITES"} onPress={submit} disabled={loading} />
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => ({
   wrapper: { backgroundColor: colors.background, flex: 1 },
   safe: { flex: 1 },
   content: { padding: 18, paddingBottom: 28 },
-  back: { color: colors.muted, fontSize: 10, fontWeight: "900", marginBottom: 17 },
-  brand: { color: colors.blue, fontSize: 10, fontStyle: "italic", fontWeight: "900" },
   title: { color: colors.text, fontSize: 32, fontStyle: "italic", fontWeight: "900", marginTop: 20 },
   copy: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 7 },
-  form: { marginTop: 20, paddingBottom: 3 },
+  form: { borderTopColor: colors.primary, borderTopWidth: 3, marginTop: 20, paddingBottom: 3 },
   label: { color: colors.primary, fontSize: 9, fontWeight: "900", marginBottom: 10, marginTop: 18 },
   roles: { flexDirection: "row", gap: 7, marginBottom: 18 },
   role: { flex: 1, minHeight: 42, paddingHorizontal: 4 },
