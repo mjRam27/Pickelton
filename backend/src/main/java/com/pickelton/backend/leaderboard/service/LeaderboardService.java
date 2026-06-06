@@ -8,7 +8,11 @@ import java.util.UUID;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.leaderboard.dto.LeaderboardEntryResponse;
 import com.pickelton.backend.leaderboard.dto.LeaderboardResponse;
-import com.pickelton.backend.match.repository.MatchRepository;
+import com.pickelton.backend.enums.ParticipantRole;
+import com.pickelton.backend.match.entity.Match;
+import com.pickelton.backend.match.entity.MatchParticipant;
+import com.pickelton.backend.match.repository.MatchParticipantRepository;
+import com.pickelton.backend.match.repository.TournamentMatchRepository;
 import com.pickelton.backend.registration.repository.RegistrationRepository;
 import com.pickelton.backend.tournament.repository.TournamentRepository;
 import com.pickelton.backend.user.entity.User;
@@ -25,7 +29,8 @@ public class LeaderboardService {
 
     private final TournamentRepository tournamentRepository;
     private final RegistrationRepository registrationRepository;
-    private final MatchRepository matchRepository;
+    private final TournamentMatchRepository tournamentMatchRepository;
+    private final MatchParticipantRepository participantRepository;
 
     public LeaderboardResponse getLeaderboard(UUID tournamentId) {
         if (!tournamentRepository.existsById(tournamentId)) {
@@ -37,27 +42,10 @@ public class LeaderboardService {
         registrationRepository.findByTournamentIdAndStatus(tournamentId, RegistrationStatus.REGISTERED)
             .forEach(registration -> statsMap.putIfAbsent(registration.getUser().getId(), new Stats(registration.getUser())));
 
-        matchRepository.findByTournamentId(tournamentId).stream()
+        tournamentMatchRepository.findByTournamentIdOrderByCreatedAtAsc(tournamentId).stream()
+            .map(link -> link.getMatch())
             .filter(match -> match.getStatus() == MatchStatus.COMPLETED)
-            .forEach(match -> {
-            if (match.getPlayer1() != null) {
-                statsMap.putIfAbsent(match.getPlayer1().getId(), new Stats(match.getPlayer1()));
-                statsMap.get(match.getPlayer1().getId()).played++;
-            }
-            if (match.getPlayer2() != null) {
-                statsMap.putIfAbsent(match.getPlayer2().getId(), new Stats(match.getPlayer2()));
-                statsMap.get(match.getPlayer2().getId()).played++;
-            }
-
-            User winner = match.getWinner();
-            if (winner != null) {
-                statsMap.get(winner.getId()).won++;
-                User loser = winner.getId().equals(match.getPlayer1().getId()) ? match.getPlayer2() : match.getPlayer1();
-                if (loser != null) {
-                    statsMap.get(loser.getId()).lost++;
-                }
-            }
-        });
+            .forEach(match -> applyMatch(statsMap, match));
 
         List<LeaderboardEntryResponse> entries = statsMap.values().stream()
             .map(Stats::toResponse)
@@ -75,6 +63,25 @@ public class LeaderboardService {
             .toList();
 
         return new LeaderboardResponse(tournamentId, entries);
+    }
+
+    private void applyMatch(Map<UUID, Stats> statsMap, Match match) {
+        List<MatchParticipant> players = participantRepository.findByMatchIdAndRole(match.getId(), ParticipantRole.PLAYER);
+        players.forEach(participant -> {
+            User player = participant.getUser();
+            statsMap.putIfAbsent(player.getId(), new Stats(player));
+            statsMap.get(player.getId()).played++;
+        });
+
+        User winner = match.getWinner();
+        if (winner != null) {
+            statsMap.putIfAbsent(winner.getId(), new Stats(winner));
+            statsMap.get(winner.getId()).won++;
+            players.stream()
+                .map(MatchParticipant::getUser)
+                .filter(player -> !player.getId().equals(winner.getId()))
+                .forEach(player -> statsMap.get(player.getId()).lost++);
+        }
     }
 
     private static final class Stats {

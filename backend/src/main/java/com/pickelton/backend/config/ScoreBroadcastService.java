@@ -1,9 +1,8 @@
 package com.pickelton.backend.config;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import com.pickelton.backend.enums.MatchStatus;
+import com.pickelton.backend.match.dto.LiveScoreResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -14,16 +13,7 @@ public class ScoreBroadcastService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void broadcastScoreUpdate(UUID matchId, ScoreUpdatePayload payload) {
+    public void broadcastScoreUpdate(UUID matchId, LiveScoreResponse payload) {
         messagingTemplate.convertAndSend("/topic/match/" + matchId, payload);
-    }
-
-    public record ScoreUpdatePayload(
-        UUID matchId,
-        int score1,
-        int score2,
-        MatchStatus status,
-        OffsetDateTime updatedAt
-    ) {
     }
 }

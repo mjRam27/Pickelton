@@ -12,10 +12,6 @@ import com.pickelton.backend.match.entity.Match;
 
 public interface MatchRepository extends JpaRepository<Match, UUID> {
 
-    List<Match> findByTournamentId(UUID tournamentId);
-
-    List<Match> findByTournamentIdOrderByCreatedAtAsc(UUID tournamentId);
-
     @Query("""
         SELECT COUNT(m) FROM Match m
         WHERE m.status = :status
@@ -29,20 +25,35 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
         WHERE m.status = :status
           AND m.winner IS NOT NULL
           AND m.winner.id <> :userId
-          AND (m.player1.id = :userId OR m.player2.id = :userId)
+          AND EXISTS (
+              SELECT p FROM MatchParticipant p
+              WHERE p.match = m
+                AND p.user.id = :userId
+                AND p.role = com.pickelton.backend.enums.ParticipantRole.PLAYER
+          )
         """)
     long countLossesByUserId(@Param("userId") UUID userId, @Param("status") MatchStatus status);
 
     @Query("""
         SELECT COUNT(m) FROM Match m
-        WHERE m.player1.id = :userId OR m.player2.id = :userId
+        WHERE EXISTS (
+            SELECT p FROM MatchParticipant p
+            WHERE p.match = m
+              AND p.user.id = :userId
+              AND p.role = com.pickelton.backend.enums.ParticipantRole.PLAYER
+        )
         """)
     long countTotalMatchesByUserId(@Param("userId") UUID userId);
 
     @Query("""
         SELECT COUNT(m) FROM Match m
         WHERE m.status = :status
-          AND (m.player1.id = :userId OR m.player2.id = :userId)
+          AND EXISTS (
+              SELECT p FROM MatchParticipant p
+              WHERE p.match = m
+                AND p.user.id = :userId
+                AND p.role = com.pickelton.backend.enums.ParticipantRole.PLAYER
+          )
         """)
     long countTotalMatchesByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") MatchStatus status);
 }

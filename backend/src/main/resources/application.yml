@@ -48,6 +48,9 @@ otp:
   resend-cooldown-seconds: ${OTP_RESEND_COOLDOWN_SECONDS:60}
   max-attempts: ${OTP_MAX_ATTEMPTS:5}
 
+match:
+  cache-ttl-minutes: ${MATCH_CACHE_TTL_MINUTES:120}
+
 allowed:
   origins: ${ALLOWED_ORIGINS:http://localhost:3000}
 

@@ -1,12 +1,13 @@
 package com.pickelton.backend.match.entity;
 
 import com.pickelton.backend.common.entity.BaseEntity;
-import com.pickelton.backend.user.entity.User;
+import com.pickelton.backend.tournament.entity.Tournament;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,24 +23,17 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "score_history")
-public class ScoreHistory extends BaseEntity {
+@Table(name = "tournament_matches")
+public class TournamentMatch extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id", nullable = false)
+    @JoinColumn(name = "tournament_id", nullable = false)
+    private Tournament tournament;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id", nullable = false, unique = true)
     private Match match;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id", nullable = false)
-    private User player;
-
-    @Column(name = "old_score", nullable = false)
-    private Integer oldScore;
-
-    @Column(name = "new_score", nullable = false)
-    private Integer newScore;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updated_by", nullable = false)
-    private User updatedBy;
+    @Column(length = 50)
+    private String round;
 }
