@@ -2,10 +2,11 @@ package com.pickelton.backend.match.service;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.pickelton.backend.common.exception.BadRequestException;
@@ -13,23 +14,22 @@ import com.pickelton.backend.common.exception.ForbiddenException;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.common.service.CurrentUserService;
 import com.pickelton.backend.config.ScoreBroadcastService;
-import com.pickelton.backend.enums.MatchMode;
-import com.pickelton.backend.enums.MatchParticipantRole;
-import com.pickelton.backend.enums.MatchParticipantStatus;
+import com.pickelton.backend.enums.InvitationStatus;
 import com.pickelton.backend.enums.MatchStatus;
+import com.pickelton.backend.enums.MatchType;
+import com.pickelton.backend.enums.ParticipantRole;
 import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.enums.ScoreEventType;
+import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.enums.TournamentStatus;
 import com.pickelton.backend.mapper.MatchMapper;
-import com.pickelton.backend.match.dto.AddPointRequest;
-import com.pickelton.backend.match.dto.AssignScorekeeperRequest;
+import com.pickelton.backend.match.dto.AcceptInviteRequest;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
-import com.pickelton.backend.match.dto.LiveMatchStateResponse;
-import com.pickelton.backend.match.dto.ManualScoreCorrectionRequest;
-import com.pickelton.backend.match.dto.MatchParticipantResponse;
+import com.pickelton.backend.match.dto.InviteParticipantRequest;
+import com.pickelton.backend.match.dto.LiveScoreResponse;
 import com.pickelton.backend.match.dto.MatchResponse;
-import com.pickelton.backend.match.dto.MatchScorecardResponse;
-import com.pickelton.backend.match.dto.ScorekeeperSearchResponse;
+import com.pickelton.backend.match.dto.ScorePointRequest;
+import com.pickelton.backend.match.dto.UndoScoreRequest;
 import com.pickelton.backend.match.dto.UpdateMatchScoreRequest;
 import com.pickelton.backend.match.entity.Match;
 import com.pickelton.backend.match.entity.MatchParticipant;
@@ -58,103 +58,137 @@ public class MatchService {
 
     private final MatchRepository matchRepository;
     private final MatchParticipantRepository participantRepository;
-    private final MatchStateRepository stateRepository;
+    private final MatchStateRepository matchStateRepository;
     private final ScoreEventRepository scoreEventRepository;
     private final TournamentMatchRepository tournamentMatchRepository;
     private final TournamentRepository tournamentRepository;
     private final RegistrationRepository registrationRepository;
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
-    private final LiveMatchStateService liveStateService;
+    private final LiveMatchStateService liveMatchStateService;
     private final ScoreBroadcastService scoreBroadcastService;
     private final MatchMapper matchMapper;
 
     public MatchResponse createMatch(CreateMatchRequest request) {
-        MatchMode mode = resolvedMode(request);
-        Tournament tournament = null;
-        UUID tournamentId = null;
-        if (mode == MatchMode.TOURNAMENT) {
-            if (request.tournamentId() == null) {
-                throw new BadRequestException("Tournament is required for tournament matches");
-            }
-            if (request.round() == null || request.round().isBlank()) {
-                throw new BadRequestException("Round is required for tournament matches");
-            }
-            tournament = requireTournament(request.tournamentId());
-            requireOrganizer(tournament);
-            if (tournament.getStatus() == TournamentStatus.FINISHED || tournament.getStatus() == TournamentStatus.CANCELLED) {
-                throw new BadRequestException("Matches cannot be created for a closed tournament");
-            }
-            tournamentId = tournament.getId();
+        Tournament tournament = requireTournament(request.tournamentId());
+        requireOrganizer(tournament);
+        if (tournament.getStatus() == TournamentStatus.FINISHED || tournament.getStatus() == TournamentStatus.CANCELLED) {
+            throw new BadRequestException("Matches cannot be created for a closed tournament");
         }
 
-        String round = mode == MatchMode.CASUAL ? "Friendly Match" : request.round().trim();
-        Match match = matchRepository.save(Match.builder()
-            .round(round)
-            .status(MatchStatus.SCHEDULED)
-            .rules(defaultRules(request.rules()))
-            .venue(request.venue())
+        Match match = Match.builder()
+            .createdBy(currentUserService.getCurrentUser())
+            .sport(request.sport() != null ? request.sport() : sportForMatch(tournament.getSportType()))
+            .matchType(request.matchType() != null ? request.matchType() : MatchType.SINGLES)
+            .round(request.round().trim())
+            .status(MatchStatus.CREATED)
             .scheduledAt(request.scheduledAt())
+            .location(clean(request.location()))
+            .rules(request.rules() != null ? new LinkedHashMap<>(request.rules()) : defaultRules())
+            .build();
+        match = matchRepository.save(match);
+
+        tournamentMatchRepository.save(TournamentMatch.builder()
+            .tournament(tournament)
+            .match(match)
+            .round(match.getRound())
             .build());
-        if (tournament != null) {
-            tournamentMatchRepository.save(TournamentMatch.builder()
+
+        List<ParticipantDraft> drafts = participantDrafts(request);
+        for (ParticipantDraft draft : drafts) {
+            User user = draft.role() == ParticipantRole.PLAYER
+                ? requireRegisteredPlayer(tournament.getId(), draft.userId(), "Player")
+                : requireUser(draft.userId(), "Participant");
+            participantRepository.save(MatchParticipant.builder()
                 .match(match)
-                .tournament(tournament)
-                .displayOrder((int) tournamentMatchRepository.countByTournamentId(tournament.getId()) + 1)
+                .user(user)
+                .team(draft.team())
+                .role(draft.role())
+                .invitationStatus(draft.role() == ParticipantRole.PLAYER ? InvitationStatus.ACCEPTED : InvitationStatus.INVITED)
                 .build());
         }
-        List<MatchParticipant> participants = saveParticipants(match, request, tournamentId);
-        OffsetDateTime now = OffsetDateTime.now();
-        MatchState state = stateRepository.save(MatchState.builder()
+
+        MatchState state = matchStateRepository.save(initialState(match));
+        LiveScoreResponse live = toLiveResponse(match, state);
+        liveMatchStateService.cache(live);
+        return toResponse(match, state);
+    }
+
+    public MatchResponse inviteParticipant(UUID matchId, InviteParticipantRequest request) {
+        Match match = requireMatch(matchId);
+        requireMatchOwner(match);
+        User user = requireUser(request.userId(), "Invitee");
+        MatchParticipant participant = participantRepository.save(MatchParticipant.builder()
             .match(match)
-            .scores(initialScores())
-            .sets(new ArrayList<>())
-            .revision(0L)
-            .lastEventAt(now)
+            .user(user)
+            .team(clean(request.team()))
+            .role(request.role())
+            .invitationStatus(InvitationStatus.INVITED)
             .build());
-        appendEvent(match, currentUserService.getCurrentUser(), ScoreEventType.MATCH_CREATED,
-            Map.of("scores", state.getScores()), nextSequence(match.getId()));
-        LiveMatchStateResponse liveState = liveState(match, state);
-        liveStateService.cache(liveState);
-        return matchMapper.toResponse(match, tournamentId, participants, state);
+        match.setStatus(MatchStatus.INVITED);
+        matchRepository.save(match);
+        return toResponse(match, requireState(match.getId()));
+    }
+
+    public MatchResponse acceptInvite(UUID matchId, AcceptInviteRequest request) {
+        UUID userId = request.userId() != null ? request.userId() : currentUserService.getUserId();
+        MatchParticipant participant = participantRepository.findByMatchIdOrderByCreatedAtAsc(matchId).stream()
+            .filter(candidate -> candidate.getUser().getId().equals(userId))
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException("Invite not found"));
+        participant.setInvitationStatus(InvitationStatus.ACCEPTED);
+        participantRepository.save(participant);
+        Match match = participant.getMatch();
+        match.setStatus(MatchStatus.ACCEPTED);
+        matchRepository.save(match);
+        return toResponse(match, requireState(matchId));
     }
 
     @Transactional(readOnly = true)
     public MatchResponse getMatch(UUID id) {
-        Match match = requireMatch(id);
-        return response(match);
+        return toResponse(requireMatch(id), requireState(id));
     }
 
     @Transactional(readOnly = true)
-    public LiveMatchStateResponse getLiveScore(UUID id) {
-        return liveStateService.get(id).orElseGet(() -> {
-            Match match = requireMatch(id);
-            LiveMatchStateResponse state = liveState(match, requireState(id));
-            liveStateService.cache(state);
-            return state;
-        });
+    public LiveScoreResponse getLiveScore(UUID id) {
+        return liveMatchStateService.get(id)
+            .orElseGet(() -> {
+                Match match = requireMatch(id);
+                LiveScoreResponse response = toLiveResponse(match, requireState(id));
+                liveMatchStateService.cache(response);
+                return response;
+            });
     }
 
     @Transactional(readOnly = true)
     public List<MatchResponse> getTournamentMatches(UUID tournamentId) {
         requireTournament(tournamentId);
-        return tournamentMatchRepository.findByTournamentIdOrderByDisplayOrderAscCreatedAtAsc(tournamentId).stream()
-            .map(TournamentMatch::getMatch)
-            .map(this::response)
+        return tournamentMatchRepository.findByTournamentIdOrderByCreatedAtAsc(tournamentId).stream()
+            .map(tournamentMatch -> toResponse(tournamentMatch.getMatch(), requireState(tournamentMatch.getMatch().getId())))
             .toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<ScorekeeperSearchResponse> searchScorekeepers(UUID tournamentId, String query) {
-        Tournament tournament = requireTournament(tournamentId);
-        requireOrganizer(tournament);
-        String normalized = query == null ? "" : query.trim();
-        if (normalized.isBlank()) {
-            throw new BadRequestException("Search query is required");
+    public MatchResponse scorePoint(UUID id, ScorePointRequest request) {
+        Match match = requireMatch(id);
+        requireScoringPermission(match);
+        MatchState state = requireState(id);
+        String team = normalizeTeam(request.team());
+        int points = request.points() != null ? request.points() : 1;
+        int oldScore = scoreForTeam(state, team);
+        int newScore = oldScore + points;
+        state.getCurrentScore().put(team, newScore);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("team", team);
+        payload.put("oldScore", oldScore);
+        payload.put("newScore", newScore);
+        payload.put("delta", points);
+        if (match.getStatus() == MatchStatus.CREATED || match.getStatus() == MatchStatus.ACCEPTED || match.getStatus() == MatchStatus.SCHEDULED) {
+            match.setStatus(MatchStatus.LIVE);
         }
-        return userRepository.searchByNameEmailOrPhone(normalized, PageRequest.of(0, 20)).stream()
-            .map(user -> new ScorekeeperSearchResponse(user.getId(), user.getName(), user.getEmail(), user.getPhoneNumber()))
-            .toList();
+        appendEvent(match, state, ScoreEventType.POINT, payload);
+        matchRepository.save(match);
+        publish(match, state);
+        return toResponse(match, state);
     }
 
     public MatchResponse assignScorekeeper(UUID matchId, AssignScorekeeperRequest request) {
@@ -190,454 +224,214 @@ public class MatchService {
     @Transactional(readOnly = true)
     public MatchScorecardResponse getScorecard(UUID id) {
         Match match = requireMatch(id);
+        requireScoringPermission(match);
         MatchState state = requireState(id);
-        return scorecard(match, state);
-    }
-
-    public MatchScorecardResponse addPoint(UUID matchId, AddPointRequest request) {
-        Match match = requireMatch(matchId);
-        requireAssignedScorekeeper(match);
-        ensureMatchEditable(match);
-
-        MatchState state = requireState(matchId);
-        String teamCode = normalizeTeamCode(request.teamCode());
-        Map<String, Integer> beforeScores = new LinkedHashMap<>(state.getScores());
-        if (!beforeScores.containsKey(teamCode)) {
-            throw new BadRequestException("Invalid team code");
+        if (request.team() != null && !request.team().isBlank()) {
+            return scorePoint(id, new ScorePointRequest(request.team(), request.delta() != null ? request.delta() : 1));
         }
-        Map<String, Integer> afterScores = new LinkedHashMap<>(beforeScores);
-        afterScores.put(teamCode, beforeScores.getOrDefault(teamCode, 0) + 1);
-
-        state.setScores(afterScores);
-        state.setRevision(state.getRevision() + 1);
-        OffsetDateTime now = OffsetDateTime.now();
-        state.setLastEventAt(now);
-        if (match.getStatus() == MatchStatus.SCHEDULED) {
-            match.setStatus(MatchStatus.IN_PROGRESS);
-        }
-        stateRepository.save(state);
-        matchRepository.save(match);
-
-        appendEvent(match, currentUserService.getCurrentUser(), ScoreEventType.POINT_ADDED, Map.of(
-            "teamCode", teamCode,
-            "beforeScores", beforeScores,
-            "afterScores", afterScores,
-            "undone", false
-        ), nextSequence(matchId));
-
-        LiveMatchStateResponse liveState = liveState(match, state);
-        liveStateService.cacheAndPublish(liveState);
-        scoreBroadcastService.broadcastScoreUpdate(match.getId(), liveState);
-        return scorecard(match, state);
-    }
-
-    public MatchScorecardResponse undoLastScore(UUID matchId) {
-        Match match = requireMatch(matchId);
-        requireAssignedScorekeeper(match);
-        ensureMatchEditable(match);
-
-        MatchState state = requireState(matchId);
-        ScoreEvent latestPoint = latestActivePointEvent(matchId).orElseThrow(() ->
-            new BadRequestException("No active score event to undo"));
-
-        Map<String, Integer> beforeScores = mapFromPayload(latestPoint.getPayload().get("beforeScores"));
-        Map<String, Integer> afterScores = new LinkedHashMap<>(state.getScores());
-        if (beforeScores.isEmpty()) {
-            throw new BadRequestException("Latest score event is not undoable");
-        }
-
-        OffsetDateTime now = OffsetDateTime.now();
-        state.setScores(new LinkedHashMap<>(beforeScores));
-        state.setRevision(state.getRevision() + 1);
-        state.setLastEventAt(now);
-        stateRepository.save(state);
-
-        Map<String, Object> latestPayload = new LinkedHashMap<>(latestPoint.getPayload());
-        latestPayload.put("undone", true);
-        latestPayload.put("undoneAt", now.toString());
-        latestPayload.put("undoneBy", currentUserService.getUserId().toString());
-        latestPoint.setPayload(latestPayload);
-        scoreEventRepository.save(latestPoint);
-
-        appendEvent(match, currentUserService.getCurrentUser(), ScoreEventType.UNDO, Map.of(
-            "undoneEventId", latestPoint.getId().toString(),
-            "beforeScores", afterScores,
-            "afterScores", beforeScores
-        ), nextSequence(matchId));
-
-        LiveMatchStateResponse liveState = liveState(match, state);
-        liveStateService.cacheAndPublish(liveState);
-        scoreBroadcastService.broadcastScoreUpdate(match.getId(), liveState);
-        return scorecard(match, state);
-    }
-
-    public MatchScorecardResponse manualCorrection(UUID matchId, ManualScoreCorrectionRequest request) {
-        Match match = requireMatch(matchId);
-        requireAssignedScorekeeper(match);
-        ensureMatchEditable(match);
-
-        MatchState state = requireState(matchId);
-        Map<String, Integer> beforeScores = new LinkedHashMap<>(state.getScores());
-        Map<String, Integer> afterScores = new LinkedHashMap<>(Map.of("A", request.scoreA(), "B", request.scoreB()));
-
-        state.setScores(afterScores);
-        state.setRevision(state.getRevision() + 1);
-        OffsetDateTime correctedAt = OffsetDateTime.now();
-        state.setLastEventAt(correctedAt);
-        if (match.getStatus() == MatchStatus.SCHEDULED && (request.scoreA() > 0 || request.scoreB() > 0)) {
-            match.setStatus(MatchStatus.IN_PROGRESS);
-            matchRepository.save(match);
-        }
-        stateRepository.save(state);
-
-        appendEvent(match, currentUserService.getCurrentUser(), ScoreEventType.MANUAL_CORRECTION, Map.of(
-            "beforeScores", beforeScores,
-            "afterScores", afterScores,
-            "reason", request.reason().trim(),
-            "correctedBy", currentUserService.getUserId().toString(),
-            "correctedAt", correctedAt.toString()
-        ), nextSequence(matchId));
-
-        LiveMatchStateResponse liveState = liveState(match, state);
-        liveStateService.cacheAndPublish(liveState);
-        scoreBroadcastService.broadcastScoreUpdate(match.getId(), liveState);
-        return scorecard(match, state);
-    }
-
-    public MatchScorecardResponse completeMatch(UUID matchId) {
-        Match match = requireMatch(matchId);
-        requireAssignedScorekeeper(match);
-        ensureMatchEditable(match);
-
-        MatchState state = requireState(matchId);
-        String winningTeam = determineWinningTeam(state.getScores(), match.getRules())
-            .orElseThrow(() -> new BadRequestException("Winning rules are not satisfied yet"));
-        User winner = winnerForTeam(matchId, winningTeam)
-            .orElseThrow(() -> new BadRequestException("Unable to resolve winner from match participants"));
-
-        OffsetDateTime now = OffsetDateTime.now();
-        match.setWinner(winner);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("oldScore", new LinkedHashMap<>(state.getCurrentScore()));
+        state.getCurrentScore().put("A", request.score1());
+        state.getCurrentScore().put("B", request.score2());
+        payload.put("newScore", new LinkedHashMap<>(state.getCurrentScore()));
         match.setStatus(MatchStatus.COMPLETED);
+        match.setWinner(resolveWinner(match.getId(), request.score1(), request.score2()));
+        appendEvent(match, state, ScoreEventType.POINT, payload);
         matchRepository.save(match);
-
-        state.setRevision(state.getRevision() + 1);
-        state.setLastEventAt(now);
-        stateRepository.save(state);
-
-        appendEvent(match, currentUserService.getCurrentUser(), ScoreEventType.MATCH_COMPLETED, Map.of(
-            "scores", state.getScores(),
-            "winnerTeamCode", winningTeam,
-            "winnerId", winner.getId().toString(),
-            "completedAt", now.toString()
-        ), nextSequence(matchId));
-
-        LiveMatchStateResponse liveState = liveState(match, state);
-        liveStateService.cacheAndPublish(liveState);
-        scoreBroadcastService.broadcastScoreUpdate(match.getId(), liveState);
-        return scorecard(match, state);
+        publish(match, state);
+        return toResponse(match, state);
     }
 
-    public MatchResponse updateScore(UUID id, UpdateMatchScoreRequest request) {
+    public MatchResponse undoLastPoint(UUID id, UndoScoreRequest request) {
         Match match = requireMatch(id);
-        requireAssignedScorekeeper(match);
-        ensureMatchEditable(match);
+        requireScoringPermission(match);
         MatchState state = requireState(id);
-        Map<String, Integer> oldScores = new LinkedHashMap<>(state.getScores());
-        state.setScores(new LinkedHashMap<>(Map.of("A", request.score1(), "B", request.score2())));
-        state.setRevision(state.getRevision() + 1);
-        state.setLastEventAt(OffsetDateTime.now());
-        if (match.getStatus() == MatchStatus.SCHEDULED) {
-            match.setStatus(MatchStatus.IN_PROGRESS);
+        List<ScoreEvent> events = scoreEventRepository.findByMatchIdOrderBySequenceNumberAsc(id);
+        Set<String> undoneEventIds = new HashSet<>();
+        events.stream()
+            .filter(event -> event.getEventType() == ScoreEventType.UNDO)
+            .map(event -> event.getPayload().get("undoneEventId"))
+            .filter(value -> value != null)
+            .map(String::valueOf)
+            .forEach(undoneEventIds::add);
+        ScoreEvent lastPoint = events.stream()
+            .filter(event -> event.getEventType() == ScoreEventType.POINT)
+            .filter(event -> !undoneEventIds.contains(event.getId().toString()))
+            .reduce((first, second) -> second)
+            .orElseThrow(() -> new BadRequestException("No point event to undo"));
+        String team = String.valueOf(lastPoint.getPayload().getOrDefault("team", ""));
+        int delta = intValue(lastPoint.getPayload().get("delta"), 1);
+        if (team.isBlank()) {
+            throw new BadRequestException("Last point event cannot be automatically undone");
         }
-        stateRepository.save(state);
+        int oldScore = scoreForTeam(state, team);
+        int newScore = Math.max(0, oldScore - delta);
+        state.getCurrentScore().put(team, newScore);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("undoneEventId", lastPoint.getId());
+        payload.put("team", team);
+        payload.put("oldScore", oldScore);
+        payload.put("newScore", newScore);
+        payload.put("reason", request != null ? request.reason() : null);
+        appendEvent(match, state, ScoreEventType.UNDO, payload);
+        publish(match, state);
+        return toResponse(match, state);
+    }
+
+    public MatchResponse endSet(UUID id) {
+        Match match = requireMatch(id);
+        requireScoringPermission(match);
+        MatchState state = requireState(id);
+        Map<String, Object> set = new LinkedHashMap<>();
+        set.put("set", state.getCurrentSet());
+        set.put("score", new LinkedHashMap<>(state.getCurrentScore()));
+        state.getSetSummary().add(set);
+        state.setCurrentSet(state.getCurrentSet() + 1);
+        state.setCurrentScore(new LinkedHashMap<>(Map.of("A", 0, "B", 0)));
+        appendEvent(match, state, ScoreEventType.END_SET, set);
+        publish(match, state);
+        return toResponse(match, state);
+    }
+
+    public MatchResponse endMatch(UUID id) {
+        Match match = requireMatch(id);
+        requireScoringPermission(match);
+        MatchState state = requireState(id);
+        match.setStatus(MatchStatus.COMPLETED);
+        match.setWinner(resolveWinner(match.getId(), scoreForTeam(state, "A"), scoreForTeam(state, "B")));
+        appendEvent(match, state, ScoreEventType.END_MATCH, Map.of("finalScore", new LinkedHashMap<>(state.getCurrentScore())));
         matchRepository.save(match);
-        appendEvent(match, currentUserService.getCurrentUser(), ScoreEventType.SCORE_UPDATED,
-            Map.of("oldScores", oldScores, "scores", state.getScores()), nextSequence(id));
-        LiveMatchStateResponse liveState = liveState(match, state);
-        liveStateService.cacheAndPublish(liveState);
-        scoreBroadcastService.broadcastScoreUpdate(match.getId(), liveState);
-        return response(match);
+        publish(match, state);
+        return toResponse(match, state);
     }
 
     public MatchResponse cancelMatch(UUID id) {
         Match match = requireMatch(id);
-        requireOrganizer(tournamentForMatch(id));
+        requireMatchOwner(match);
         if (match.getStatus() == MatchStatus.COMPLETED) {
             throw new BadRequestException("Completed match cannot be cancelled");
         }
         match.setStatus(MatchStatus.CANCELLED);
-        Match saved = matchRepository.save(match);
-        LiveMatchStateResponse liveState = liveState(saved, requireState(id));
-        liveStateService.cacheAndPublish(liveState);
-        scoreBroadcastService.broadcastScoreUpdate(saved.getId(), liveState);
-        return response(saved);
+        MatchState state = requireState(id);
+        state.getLiveState().put("status", match.getStatus().name());
+        matchStateRepository.save(state);
+        matchRepository.save(match);
+        publish(match, state);
+        return toResponse(match, state);
     }
 
-    private List<MatchParticipant> saveParticipants(Match match, CreateMatchRequest request, UUID tournamentId) {
-        List<CreateMatchRequest.ParticipantRequest> requested = normalizedPlayers(request);
-        if (requested.stream().filter(participant -> participant.role() == MatchParticipantRole.PLAYER).count() < 2) {
-            throw new BadRequestException("At least two players are required");
-        }
-        List<MatchParticipant> participants = new ArrayList<>();
-        for (CreateMatchRequest.ParticipantRequest participant : requested) {
-            User user = participant.role() == MatchParticipantRole.PLAYER
-                ? (tournamentId == null
-                    ? requireUser(participant.userId(), "Player")
-                    : requireRegisteredPlayer(tournamentId, participant.userId(), "Player"))
-                : requireUser(participant.userId(), "Official");
-            participants.add(participantRepository.save(MatchParticipant.builder()
-                .match(match)
-                .user(user)
-                .teamCode(participant.teamCode())
-                .role(participant.role())
-                .status(participant.role() == MatchParticipantRole.PLAYER
-                    ? MatchParticipantStatus.ACCEPTED : MatchParticipantStatus.INVITED)
-                .build()));
-        }
-        addOfficial(participants, match, request.scorerId(), MatchParticipantRole.SCORER);
-        addOfficial(participants, match, request.refereeId(), MatchParticipantRole.REFEREE);
-        return participants;
-    }
-
-    private List<CreateMatchRequest.ParticipantRequest> normalizedPlayers(CreateMatchRequest request) {
+    private List<ParticipantDraft> participantDrafts(CreateMatchRequest request) {
+        List<ParticipantDraft> drafts = new ArrayList<>();
         if (request.participants() != null && !request.participants().isEmpty()) {
-            return request.participants().stream()
-                .map(participant -> new CreateMatchRequest.ParticipantRequest(
-                    participant.userId(), participant.teamCode(),
-                    participant.role() == null ? MatchParticipantRole.PLAYER : participant.role()))
-                .toList();
-        }
-        if (request.player1Id() == null || request.player2Id() == null) {
-            throw new BadRequestException("Provide participants or both legacy player IDs");
-        }
-        if (request.player1Id().equals(request.player2Id())) {
-            throw new BadRequestException("Players must be different");
-        }
-        return List.of(
-            new CreateMatchRequest.ParticipantRequest(request.player1Id(), "A", MatchParticipantRole.PLAYER),
-            new CreateMatchRequest.ParticipantRequest(request.player2Id(), "B", MatchParticipantRole.PLAYER)
-        );
-    }
-
-    private void addOfficial(List<MatchParticipant> participants, Match match, UUID userId, MatchParticipantRole role) {
-        if (userId == null) return;
-        boolean exists = participants.stream().anyMatch(participant ->
-            participant.getUser().getId().equals(userId) && participant.getRole() == role);
-        if (!exists) {
-            participants.add(participantRepository.save(MatchParticipant.builder()
-                .match(match).user(requireUser(userId, "Official")).role(role)
-                .status(role == MatchParticipantRole.SCORER
-                    ? MatchParticipantStatus.ACCEPTED
-                    : MatchParticipantStatus.INVITED)
-                .build()));
-        }
-    }
-
-    private MatchResponse response(Match match) {
-        return matchMapper.toResponse(match, tournamentIdForMatch(match.getId()).orElse(null),
-            participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId()), requireState(match.getId()));
-    }
-
-    private LiveMatchStateResponse liveState(Match match, MatchState state) {
-        return liveStateService.snapshot(match.getId(), match.getStatus(), state.getScores(), state.getSets(),
-            state.getRevision(), state.getLastEventAt());
-    }
-
-    private void appendEvent(Match match, User actor, ScoreEventType type, Map<String, Object> payload, long sequence) {
-        scoreEventRepository.save(ScoreEvent.builder().match(match).actor(actor).eventType(type)
-            .payload(payload).sequenceNumber(sequence).build());
-    }
-
-    private long nextSequence(UUID matchId) {
-        return scoreEventRepository.findTopByMatchIdOrderBySequenceNumberDesc(matchId)
-            .map(event -> event.getSequenceNumber() + 1L)
-            .orElse(1L);
-    }
-
-    private Map<String, Object> defaultRules(Map<String, Object> requested) {
-        if (requested != null && !requested.isEmpty()) return new LinkedHashMap<>(requested);
-        return new LinkedHashMap<>(Map.of(
-            "pointsPerSet", 21,
-            "bestOfSets", 3,
-            "winByTwo", true
-        ));
-    }
-
-    private Map<String, Integer> initialScores() {
-        return new LinkedHashMap<>(Map.of("A", 0, "B", 0));
-    }
-
-    private MatchMode resolvedMode(CreateMatchRequest request) {
-        if (request.mode() != null) {
-            return request.mode();
-        }
-        return request.tournamentId() == null ? MatchMode.CASUAL : MatchMode.TOURNAMENT;
-    }
-
-    private String normalizeTeamCode(String teamCode) {
-        if (teamCode == null || teamCode.isBlank()) {
-            throw new BadRequestException("Team code is required");
-        }
-        return teamCode.trim().toUpperCase();
-    }
-
-    private void ensureMatchEditable(Match match) {
-        if (match.getStatus() == MatchStatus.COMPLETED) {
-            throw new BadRequestException("Completed match cannot be edited");
-        }
-        if (match.getStatus() == MatchStatus.CANCELLED) {
-            throw new BadRequestException("Cancelled match cannot be edited");
-        }
-    }
-
-    private void requireAssignedScorekeeper(Match match) {
-        UUID currentUserId = currentUserService.getUserId();
-        UUID assignedScorekeeper = findAssignedScorekeeperId(match.getId())
-            .orElseThrow(() -> new BadRequestException("No scorekeeper is assigned for this match"));
-        if (!assignedScorekeeper.equals(currentUserId)) {
-            throw new ForbiddenException("Only assigned scorekeeper can update score");
-        }
-    }
-
-    private Optional<UUID> findAssignedScorekeeperId(UUID matchId) {
-        return participantRepository.findFirstByMatchIdAndRoleAndStatusOrderByCreatedAtDesc(
-                matchId, MatchParticipantRole.SCORER, MatchParticipantStatus.ACCEPTED)
-            .map(participant -> participant.getUser().getId());
-    }
-
-    private Optional<UUID> findLatestScorekeeperId(UUID matchId) {
-        List<MatchParticipant> scorers =
-            participantRepository.findByMatchIdAndRoleOrderByCreatedAtDesc(matchId, MatchParticipantRole.SCORER);
-        if (scorers.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(scorers.getFirst().getUser()).map(User::getId);
-    }
-
-    private Optional<ScoreEvent> latestActivePointEvent(UUID matchId) {
-        return scoreEventRepository.findByMatchIdOrderBySequenceNumberDesc(matchId).stream()
-            .filter(event -> event.getEventType() == ScoreEventType.POINT_ADDED)
-            .filter(event -> !Boolean.TRUE.equals(event.getPayload().get("undone")))
-            .findFirst();
-    }
-
-    private Map<String, Integer> mapFromPayload(Object raw) {
-        Map<String, Integer> result = new LinkedHashMap<>();
-        if (!(raw instanceof Map<?, ?> rawMap)) {
-            return result;
-        }
-        for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
-            if (entry.getKey() == null || entry.getValue() == null) {
-                continue;
+            request.participants().forEach(participant -> drafts.add(new ParticipantDraft(
+                participant.userId(), normalizeTeam(participant.team()), participant.role())));
+        } else {
+            if (request.player1Id() == null || request.player2Id() == null) {
+                throw new BadRequestException("Either participants or legacy player1Id/player2Id are required");
             }
-            if (entry.getValue() instanceof Number number) {
-                result.put(String.valueOf(entry.getKey()), number.intValue());
-                continue;
-            }
-            try {
-                result.put(String.valueOf(entry.getKey()), Integer.parseInt(String.valueOf(entry.getValue())));
-            } catch (NumberFormatException ignore) {
-            }
+            drafts.add(new ParticipantDraft(request.player1Id(), "A", ParticipantRole.PLAYER));
+            drafts.add(new ParticipantDraft(request.player2Id(), "B", ParticipantRole.PLAYER));
         }
-        return result;
+        if (request.scorerId() != null) {
+            drafts.add(new ParticipantDraft(request.scorerId(), null, ParticipantRole.SCORER));
+        }
+        if (request.refereeId() != null) {
+            drafts.add(new ParticipantDraft(request.refereeId(), null, ParticipantRole.REFEREE));
+        }
+        return drafts;
     }
 
-    private Optional<String> determineWinningTeam(Map<String, Integer> scores, Map<String, Object> rules) {
-        int scoreA = scores.getOrDefault("A", 0);
-        int scoreB = scores.getOrDefault("B", 0);
-        if (scoreA == scoreB) {
-            return Optional.empty();
-        }
-        int pointsToWin = intRule(rules, List.of("pointsToWin", "pointsPerSet"), 21);
-        boolean winByTwo = booleanRule(rules, List.of("winByTwo"), true);
-        int maxScore = Math.max(scoreA, scoreB);
-        int diff = Math.abs(scoreA - scoreB);
-        if (maxScore < pointsToWin) {
-            return Optional.empty();
-        }
-        if (winByTwo && diff < 2) {
-            return Optional.empty();
-        }
-        return Optional.of(scoreA > scoreB ? "A" : "B");
+    private MatchState initialState(Match match) {
+        return MatchState.builder()
+            .match(match)
+            .currentScore(new LinkedHashMap<>(Map.of("A", 0, "B", 0)))
+            .currentSet(1)
+            .setSummary(new ArrayList<>())
+            .liveState(new LinkedHashMap<>(Map.of("status", match.getStatus().name())))
+            .revision(0L)
+            .lastEventAt(OffsetDateTime.now())
+            .build();
     }
 
-    private Optional<User> winnerForTeam(UUID matchId, String teamCode) {
-        return participantRepository.findByMatchIdOrderByCreatedAtAsc(matchId).stream()
-            .filter(participant -> participant.getRole() == MatchParticipantRole.PLAYER)
-            .filter(participant -> teamCode.equalsIgnoreCase(participant.getTeamCode()))
-            .map(MatchParticipant::getUser)
-            .findFirst();
+    private void appendEvent(Match match, MatchState state, ScoreEventType eventType, Map<String, Object> payload) {
+        long sequence = state.getRevision() + 1;
+        User actor = currentUserService.getCurrentUser();
+        scoreEventRepository.save(ScoreEvent.builder()
+            .match(match)
+            .actor(actor)
+            .eventType(eventType)
+            .payload(payload)
+            .sequenceNumber(sequence)
+            .build());
+        state.setRevision(sequence);
+        state.setLastEventAt(OffsetDateTime.now());
+        state.getLiveState().put("status", match.getStatus().name());
+        matchStateRepository.save(state);
     }
 
-    private int intRule(Map<String, Object> rules, List<String> keys, int fallback) {
-        if (rules == null) {
-            return fallback;
-        }
-        for (String key : keys) {
-            Object value = rules.get(key);
-            if (value instanceof Number number) {
-                return number.intValue();
-            }
-            if (value instanceof String str && !str.isBlank()) {
-                try {
-                    return Integer.parseInt(str.trim());
-                } catch (NumberFormatException ignore) {
-                }
-            }
-        }
-        return fallback;
+    private void publish(Match match, MatchState state) {
+        LiveScoreResponse live = toLiveResponse(match, state);
+        liveMatchStateService.cacheAndPublish(live);
+        scoreBroadcastService.broadcastScoreUpdate(match.getId(), live);
     }
 
-    private boolean booleanRule(Map<String, Object> rules, List<String> keys, boolean fallback) {
-        if (rules == null) {
-            return fallback;
-        }
-        for (String key : keys) {
-            Object value = rules.get(key);
-            if (value instanceof Boolean bool) {
-                return bool;
-            }
-            if (value instanceof String str && !str.isBlank()) {
-                return Boolean.parseBoolean(str.trim());
-            }
-        }
-        return fallback;
-    }
-
-    private MatchScorecardResponse scorecard(Match match, MatchState state) {
-        List<MatchParticipant> participants = participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId());
-        List<MatchParticipantResponse> participantResponses = participants.stream()
-            .map(participant -> new MatchParticipantResponse(
-                participant.getUser().getId(), participant.getTeamCode(), participant.getRole(), participant.getStatus()))
-            .toList();
-
-        int pointsToWin = intRule(match.getRules(), List.of("pointsToWin", "pointsPerSet"), 21);
-        int bestOf = intRule(match.getRules(), List.of("bestOf", "bestOfSets"), 3);
-        boolean winByTwo = booleanRule(match.getRules(), List.of("winByTwo"), true);
-        UUID scorekeeperId = findAssignedScorekeeperId(match.getId())
-            .or(() -> findLatestScorekeeperId(match.getId()))
+    private MatchResponse toResponse(Match match, MatchState state) {
+        UUID tournamentId = tournamentMatchRepository.findByMatchId(match.getId())
+            .map(link -> link.getTournament().getId())
             .orElse(null);
-        UUID tournamentId = tournamentIdForMatch(match.getId()).orElse(null);
+        List<MatchParticipant> participants = participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId());
+        return matchMapper.toResponse(match, tournamentId, participants, state);
+    }
 
-        return new MatchScorecardResponse(
+    private LiveScoreResponse toLiveResponse(Match match, MatchState state) {
+        return new LiveScoreResponse(
             match.getId(),
-            tournamentId,
-            match.getRound(),
             match.getStatus(),
-            match.getVenue(),
-            match.getScheduledAt(),
-            participantResponses,
-            new LinkedHashMap<>(state.getScores()),
-            Math.max(1, state.getSets().size() + 1),
-            pointsToWin,
-            bestOf,
-            winByTwo,
-            scorekeeperId,
-            match.getWinner() != null ? match.getWinner().getId() : null,
+            state.getCurrentScore(),
+            state.getCurrentSet(),
+            state.getSetSummary(),
+            state.getLiveState(),
             state.getRevision(),
-            state.getLastEventAt(),
-            match.getCreatedAt()
+            state.getLastEventAt()
         );
+    }
+
+    private User resolveWinner(UUID matchId, int scoreA, int scoreB) {
+        if (scoreA == scoreB) {
+            return null;
+        }
+        String winningTeam = scoreA > scoreB ? "A" : "B";
+        return participantRepository.findByMatchIdAndRole(matchId, ParticipantRole.PLAYER).stream()
+            .filter(participant -> winningTeam.equalsIgnoreCase(participant.getTeam()))
+            .map(MatchParticipant::getUser)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private int scoreForTeam(MatchState state, String team) {
+        return intValue(state.getCurrentScore().get(team), 0);
+    }
+
+    private int intValue(Object value, int fallback) {
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String text) {
+            return Integer.parseInt(text);
+        }
+        return fallback;
+    }
+
+    private void requireScoringPermission(Match match) {
+        UUID userId = currentUserService.getUserId();
+        if (match.getCreatedBy().getId().equals(userId)) {
+            return;
+        }
+        boolean authorized = participantRepository.existsByMatchIdAndUserIdAndRoleInAndInvitationStatus(match.getId(), userId,
+            List.of(ParticipantRole.SCORER, ParticipantRole.REFEREE), InvitationStatus.ACCEPTED);
+        if (!authorized) {
+            throw new ForbiddenException("Only accepted scorer or referee can update the score");
+        }
     }
 
     private User requireRegisteredPlayer(UUID tournamentId, UUID userId, String label) {
@@ -648,7 +442,8 @@ public class MatchService {
     }
 
     private User requireUser(UUID id, String label) {
-        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(label + " not found"));
+        return userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException(label + " not found"));
     }
 
     private Tournament requireTournament(UUID id) {
@@ -656,28 +451,46 @@ public class MatchService {
     }
 
     private Match requireMatch(UUID id) {
-        return matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+        return matchRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
     }
 
     private MatchState requireState(UUID matchId) {
-        return stateRepository.findByMatchId(matchId).orElseThrow(() -> new ResourceNotFoundException("Match state not found"));
-    }
-
-    private Tournament tournamentForMatch(UUID matchId) {
-        return tournamentMatchRepository.findByMatchId(matchId)
-            .map(TournamentMatch::getTournament)
-            .orElseThrow(() -> new ResourceNotFoundException("Tournament match link not found"));
-    }
-
-    private Optional<UUID> tournamentIdForMatch(UUID matchId) {
-        return tournamentMatchRepository.findByMatchId(matchId)
-            .map(TournamentMatch::getTournament)
-            .map(Tournament::getId);
+        return matchStateRepository.findByMatchId(matchId)
+            .orElseThrow(() -> new ResourceNotFoundException("Match state not found"));
     }
 
     private void requireOrganizer(Tournament tournament) {
         if (!tournament.getCreatedBy().getId().equals(currentUserService.getUserId())) {
             throw new ForbiddenException("Only the tournament host can manage matches");
         }
+    }
+
+    private void requireMatchOwner(Match match) {
+        if (!match.getCreatedBy().getId().equals(currentUserService.getUserId())) {
+            throw new ForbiddenException("Only the match creator can manage invites");
+        }
+    }
+
+    private SportType sportForMatch(SportType sportType) {
+        return sportType == SportType.BOTH ? SportType.PICKLEBALL : sportType;
+    }
+
+    private Map<String, Object> defaultRules() {
+        return new LinkedHashMap<>(Map.of("pointsPerSet", 21, "bestOfSets", 3));
+    }
+
+    private String normalizeTeam(String team) {
+        if (team == null || team.isBlank()) {
+            return null;
+        }
+        return team.trim().toUpperCase();
+    }
+
+    private String clean(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private record ParticipantDraft(UUID userId, String team, ParticipantRole role) {
     }
 }

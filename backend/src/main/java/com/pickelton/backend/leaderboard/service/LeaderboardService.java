@@ -11,6 +11,9 @@ import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.leaderboard.dto.LeaderboardEntryResponse;
 import com.pickelton.backend.leaderboard.dto.LeaderboardResponse;
+import com.pickelton.backend.enums.ParticipantRole;
+import com.pickelton.backend.match.entity.Match;
+import com.pickelton.backend.match.entity.MatchParticipant;
 import com.pickelton.backend.match.repository.MatchParticipantRepository;
 import com.pickelton.backend.match.repository.TournamentMatchRepository;
 import com.pickelton.backend.registration.repository.RegistrationRepository;
@@ -38,26 +41,10 @@ public class LeaderboardService {
         registrationRepository.findByTournamentIdAndStatus(tournamentId, RegistrationStatus.REGISTERED)
             .forEach(registration -> stats.putIfAbsent(registration.getUser().getId(), new Stats(registration.getUser())));
 
-        tournamentMatchRepository.findByTournamentIdOrderByDisplayOrderAscCreatedAtAsc(tournamentId).stream()
+        tournamentMatchRepository.findByTournamentIdOrderByCreatedAtAsc(tournamentId).stream()
             .map(link -> link.getMatch())
             .filter(match -> match.getStatus() == MatchStatus.COMPLETED)
-            .forEach(match -> {
-                List<User> players = participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId()).stream()
-                    .filter(participant -> participant.getRole() == MatchParticipantRole.PLAYER)
-                    .map(participant -> participant.getUser())
-                    .toList();
-                players.forEach(player -> {
-                    stats.putIfAbsent(player.getId(), new Stats(player));
-                    stats.get(player.getId()).played++;
-                });
-                if (match.getWinner() != null) {
-                    stats.putIfAbsent(match.getWinner().getId(), new Stats(match.getWinner()));
-                    stats.get(match.getWinner().getId()).won++;
-                    players.stream()
-                        .filter(player -> !player.getId().equals(match.getWinner().getId()))
-                        .forEach(player -> stats.get(player.getId()).lost++);
-                }
-            });
+            .forEach(match -> applyMatch(statsMap, match));
 
         List<LeaderboardEntryResponse> entries = stats.values().stream()
             .map(Stats::toResponse)
@@ -67,6 +54,25 @@ public class LeaderboardService {
             })
             .toList();
         return new LeaderboardResponse(tournamentId, entries);
+    }
+
+    private void applyMatch(Map<UUID, Stats> statsMap, Match match) {
+        List<MatchParticipant> players = participantRepository.findByMatchIdAndRole(match.getId(), ParticipantRole.PLAYER);
+        players.forEach(participant -> {
+            User player = participant.getUser();
+            statsMap.putIfAbsent(player.getId(), new Stats(player));
+            statsMap.get(player.getId()).played++;
+        });
+
+        User winner = match.getWinner();
+        if (winner != null) {
+            statsMap.putIfAbsent(winner.getId(), new Stats(winner));
+            statsMap.get(winner.getId()).won++;
+            players.stream()
+                .map(MatchParticipant::getUser)
+                .filter(player -> !player.getId().equals(winner.getId()))
+                .forEach(player -> statsMap.get(player.getId()).lost++);
+        }
     }
 
     private static final class Stats {

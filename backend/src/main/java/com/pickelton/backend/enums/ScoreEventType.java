@@ -1,12 +1,8 @@
 package com.pickelton.backend.enums;
 
 public enum ScoreEventType {
-    MATCH_CREATED,
-    POINT_ADDED,
-    SCORE_UPDATED,
+    POINT,
     UNDO,
-    MANUAL_CORRECTION,
-    SET_ENDED,
-    POINT_UNDONE,
-    MATCH_COMPLETED
+    END_SET,
+    END_MATCH
 }

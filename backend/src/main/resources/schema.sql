@@ -1,5 +1,41 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+DO $$
+BEGIN
+    CREATE TYPE match_status AS ENUM ('CREATED', 'INVITED', 'ACCEPTED', 'SCHEDULED', 'IN_PROGRESS', 'LIVE', 'COMPLETED', 'CANCELLED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE TYPE participant_role AS ENUM ('PLAYER', 'SCORER', 'REFEREE');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE TYPE invitation_status AS ENUM ('INVITED', 'ACCEPTED', 'DECLINED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE TYPE score_event_type AS ENUM ('POINT', 'UNDO', 'END_SET', 'END_MATCH');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE TYPE match_type AS ENUM ('SINGLES', 'DOUBLES', 'TEAM');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE TYPE sport_type AS ENUM ('PICKLEBALL', 'BADMINTON', 'BOTH');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
@@ -96,21 +132,21 @@ CREATE TABLE IF NOT EXISTS registrations (
 
 CREATE TABLE IF NOT EXISTS matches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    winner_id UUID REFERENCES users(id),
-    status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
-    round VARCHAR(50) NOT NULL,
-    rules JSONB NOT NULL DEFAULT '{"pointsPerSet":21,"bestOfSets":3}'::jsonb,
-    venue VARCHAR(255),
+    created_by UUID NOT NULL REFERENCES users(id),
+    sport sport_type NOT NULL DEFAULT 'PICKLEBALL',
+    match_type match_type NOT NULL DEFAULT 'SINGLES',
+    status match_status NOT NULL DEFAULT 'CREATED',
     scheduled_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS tournament_matches (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
-    match_id UUID NOT NULL UNIQUE REFERENCES matches(id) ON DELETE CASCADE,
-    display_order INT NOT NULL DEFAULT 1,
+    location VARCHAR(255),
+    rules JSONB NOT NULL DEFAULT '{"pointsPerSet":21,"bestOfSets":3}'::jsonb,
+    winner_id UUID REFERENCES users(id),
+    round VARCHAR(50),
+    -- Legacy columns stay nullable until all clients and reports move to the normalized tables.
+    tournament_id UUID REFERENCES tournaments(id),
+    player1_id UUID REFERENCES users(id),
+    player2_id UUID REFERENCES users(id),
+    score1 INT NOT NULL DEFAULT 0,
+    score2 INT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -119,9 +155,9 @@ CREATE TABLE IF NOT EXISTS match_participants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id),
-    team_code VARCHAR(10),
-    role VARCHAR(20) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'INVITED',
+    team_code VARCHAR(20),
+    role participant_role NOT NULL,
+    invitation_status invitation_status NOT NULL DEFAULT 'INVITED',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT uk_match_participant_role UNIQUE (match_id, user_id, role)
@@ -130,8 +166,10 @@ CREATE TABLE IF NOT EXISTS match_participants (
 CREATE TABLE IF NOT EXISTS match_state (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id UUID NOT NULL UNIQUE REFERENCES matches(id) ON DELETE CASCADE,
-    scores JSONB NOT NULL DEFAULT '{"A":0,"B":0}'::jsonb,
-    sets JSONB NOT NULL DEFAULT '[]'::jsonb,
+    current_score JSONB NOT NULL DEFAULT '{"A":0,"B":0}'::jsonb,
+    current_set INT NOT NULL DEFAULT 1,
+    set_summary JSONB NOT NULL DEFAULT '[]'::jsonb,
+    live_state JSONB NOT NULL DEFAULT '{}'::jsonb,
     revision BIGINT NOT NULL DEFAULT 0,
     last_event_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -142,7 +180,7 @@ CREATE TABLE IF NOT EXISTS score_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
     actor_user_id UUID REFERENCES users(id),
-    event_type VARCHAR(30) NOT NULL,
+    event_type score_event_type NOT NULL,
     payload JSONB NOT NULL DEFAULT '{}'::jsonb,
     sequence_number BIGINT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -150,7 +188,27 @@ CREATE TABLE IF NOT EXISTS score_events (
     CONSTRAINT uk_score_event_sequence UNIQUE (match_id, sequence_number)
 );
 
+CREATE TABLE IF NOT EXISTS tournament_matches (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    match_id UUID NOT NULL UNIQUE REFERENCES matches(id) ON DELETE CASCADE,
+    round VARCHAR(50),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    club_id UUID REFERENCES clubs(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    metadata_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Legacy score snapshots stay until the final cleanup migration.
+CREATE TABLE IF NOT EXISTS score_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     author_user_id UUID NOT NULL REFERENCES users(id),
     club_id UUID REFERENCES clubs(id) ON DELETE CASCADE,
@@ -164,8 +222,16 @@ CREATE TABLE IF NOT EXISTS posts (
 CREATE INDEX IF NOT EXISTS idx_club_members_user_id ON club_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_club_members_club_id ON club_members(club_id);
 CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments(status);
-CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id ON tournament_matches(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_host_verifications_user_id ON host_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_host_verifications_status ON host_verifications(status);
+CREATE INDEX IF NOT EXISTS idx_registrations_tournament_id ON registrations(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
 CREATE INDEX IF NOT EXISTS idx_match_participants_match_id ON match_participants(match_id);
 CREATE INDEX IF NOT EXISTS idx_match_participants_user_id ON match_participants(user_id);
-CREATE INDEX IF NOT EXISTS idx_score_events_match_id ON score_events(match_id);
+CREATE INDEX IF NOT EXISTS idx_match_state_match_id ON match_state(match_id);
+CREATE INDEX IF NOT EXISTS idx_score_events_match_id_seq ON score_events(match_id, sequence_number);
+CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id ON tournament_matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);

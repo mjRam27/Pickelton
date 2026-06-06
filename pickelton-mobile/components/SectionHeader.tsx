@@ -1,13 +1,16 @@
 // pickelton-mobile/components/SectionHeader.tsx
-import { StyleSheet, Text, View } from "react-native";
-import { colors } from "../theme/colors";
+import { Text, View } from "react-native";
+import type { ThemeColors } from "../theme/colors";
+import { useThemeStyles } from "../theme/ThemeProvider";
 
-export function SectionHeader({ title }: { title: string }) {
-  return <View style={styles.row}><View style={styles.marker} /><Text style={styles.title}>{title}</Text></View>;
+export function SectionHeader({ title, action }: { title: string; action?: string }) {
+  const styles = useThemeStyles(createStyles);
+  return <View style={styles.row}><View style={styles.marker} /><Text style={styles.title}>{title}</Text>{action ? <Text style={styles.action}>{action}</Text> : null}</View>;
 }
 
-const styles = StyleSheet.create({
-  row: { alignItems: "center", flexDirection: "row", gap: 8, marginBottom: 12, marginTop: 22 },
-  marker: { backgroundColor: colors.primary, height: 15, width: 2 },
-  title: { color: colors.text, fontSize: 10, fontWeight: "900" },
+const createStyles = (colors: ThemeColors) => ({
+  row: { alignItems: "center", flexDirection: "row", gap: 9, marginBottom: 13, marginTop: 25 },
+  marker: { backgroundColor: colors.primary, borderRadius: 2, height: 18, width: 3 },
+  title: { color: colors.text, flex: 1, fontSize: 12, fontWeight: "900", letterSpacing: 0.6 },
+  action: { color: colors.primary, fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
 });

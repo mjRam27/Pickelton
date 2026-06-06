@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -25,14 +26,14 @@ import lombok.Setter;
 @Table(name = "tournament_matches")
 public class TournamentMatch extends BaseEntity {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id", nullable = false)
+    private Tournament tournament;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id", nullable = false, unique = true)
     private Match match;
 
-    @jakarta.persistence.ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tournament_id", nullable = false)
-    private Tournament tournament;
-
-    @Column(name = "display_order", nullable = false)
-    private Integer displayOrder;
+    @Column(length = 50)
+    private String round;
 }

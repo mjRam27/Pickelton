@@ -1,8 +1,8 @@
 package com.pickelton.backend.match.entity;
 
 import com.pickelton.backend.common.entity.BaseEntity;
-import com.pickelton.backend.enums.MatchParticipantRole;
-import com.pickelton.backend.enums.MatchParticipantStatus;
+import com.pickelton.backend.enums.InvitationStatus;
+import com.pickelton.backend.enums.ParticipantRole;
 import com.pickelton.backend.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +19,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Getter
 @Setter
@@ -39,14 +41,16 @@ public class MatchParticipant extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "team_code", length = 10)
-    private String teamCode;
+    @Column(name = "team_code", length = 20)
+    private String team;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private MatchParticipantRole role;
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(nullable = false, columnDefinition = "participant_role")
+    private ParticipantRole role;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private MatchParticipantStatus status;
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "invitation_status", nullable = false, columnDefinition = "invitation_status")
+    private InvitationStatus invitationStatus;
 }

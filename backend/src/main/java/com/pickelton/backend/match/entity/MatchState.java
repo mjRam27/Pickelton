@@ -36,18 +36,28 @@ public class MatchState extends BaseEntity {
     @JoinColumn(name = "match_id", nullable = false, unique = true)
     private Match match;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "scores", nullable = false, columnDefinition = "jsonb")
     @Builder.Default
-    private Map<String, Integer> scores = new LinkedHashMap<>();
-
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "sets", nullable = false, columnDefinition = "jsonb")
-    @Builder.Default
-    private List<Map<String, Integer>> sets = new ArrayList<>();
+    @Column(name = "current_score", nullable = false, columnDefinition = "jsonb")
+    private Map<String, Object> currentScore = new LinkedHashMap<>();
 
+    @Builder.Default
+    @Column(name = "current_set", nullable = false)
+    private Integer currentSet = 1;
+
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "set_summary", nullable = false, columnDefinition = "jsonb")
+    private List<Map<String, Object>> setSummary = new ArrayList<>();
+
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "live_state", nullable = false, columnDefinition = "jsonb")
+    private Map<String, Object> liveState = new LinkedHashMap<>();
+
+    @Builder.Default
     @Column(nullable = false)
-    private Long revision;
+    private Long revision = 0L;
 
     @Column(name = "last_event_at", nullable = false)
     private OffsetDateTime lastEventAt;

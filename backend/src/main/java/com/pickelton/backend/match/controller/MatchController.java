@@ -4,14 +4,13 @@ import java.util.UUID;
 import java.util.List;
 
 import com.pickelton.backend.common.response.ApiResponse;
-import com.pickelton.backend.match.dto.AddPointRequest;
-import com.pickelton.backend.match.dto.AssignScorekeeperRequest;
+import com.pickelton.backend.match.dto.AcceptInviteRequest;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
-import com.pickelton.backend.match.dto.LiveMatchStateResponse;
-import com.pickelton.backend.match.dto.ManualScoreCorrectionRequest;
+import com.pickelton.backend.match.dto.InviteParticipantRequest;
+import com.pickelton.backend.match.dto.LiveScoreResponse;
 import com.pickelton.backend.match.dto.MatchResponse;
-import com.pickelton.backend.match.dto.MatchScorecardResponse;
-import com.pickelton.backend.match.dto.ScorekeeperSearchResponse;
+import com.pickelton.backend.match.dto.ScorePointRequest;
+import com.pickelton.backend.match.dto.UndoScoreRequest;
 import com.pickelton.backend.match.dto.UpdateMatchScoreRequest;
 import com.pickelton.backend.match.service.MatchService;
 import jakarta.validation.Valid;
@@ -44,13 +43,21 @@ public class MatchController {
     }
 
     @GetMapping("/{id}/live-score")
-    public ResponseEntity<ApiResponse<LiveMatchStateResponse>> getLiveScore(@PathVariable UUID id) {
-        return ResponseEntity.ok(ApiResponse.success("Live match state fetched", matchService.getLiveScore(id)));
+    public ResponseEntity<ApiResponse<LiveScoreResponse>> getLiveScore(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success("Live score fetched", matchService.getLiveScore(id)));
     }
 
-    @GetMapping("/{id}/scorecard")
-    public ResponseEntity<ApiResponse<MatchScorecardResponse>> getScorecard(@PathVariable UUID id) {
-        return ResponseEntity.ok(ApiResponse.success("Match scorecard fetched", matchService.getScorecard(id)));
+    @PostMapping("/{id}/invite")
+    public ResponseEntity<ApiResponse<MatchResponse>> inviteParticipant(@PathVariable UUID id,
+                                                                        @Valid @RequestBody InviteParticipantRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Participant invited", matchService.inviteParticipant(id, request)));
+    }
+
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<ApiResponse<MatchResponse>> acceptInvite(@PathVariable UUID id,
+                                                                   @RequestBody(required = false) AcceptInviteRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Invite accepted",
+            matchService.acceptInvite(id, request != null ? request : new AcceptInviteRequest(null))));
     }
 
     @GetMapping("/tournament/{tournamentId}")
@@ -103,6 +110,28 @@ public class MatchController {
     @PatchMapping("/{id}/score")
     public ResponseEntity<ApiResponse<MatchResponse>> updateScore(@PathVariable UUID id, @Valid @RequestBody UpdateMatchScoreRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Match score updated", matchService.updateScore(id, request)));
+    }
+
+    @PostMapping("/{id}/score")
+    public ResponseEntity<ApiResponse<MatchResponse>> scorePoint(@PathVariable UUID id, @Valid @RequestBody ScorePointRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Point recorded", matchService.scorePoint(id, request)));
+    }
+
+    @PostMapping("/{id}/undo")
+    public ResponseEntity<ApiResponse<MatchResponse>> undoPoint(@PathVariable UUID id,
+                                                                @RequestBody(required = false) UndoScoreRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Point undone",
+            matchService.undoLastPoint(id, request != null ? request : new UndoScoreRequest(null))));
+    }
+
+    @PostMapping("/{id}/end-set")
+    public ResponseEntity<ApiResponse<MatchResponse>> endSet(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success("Set ended", matchService.endSet(id)));
+    }
+
+    @PostMapping("/{id}/end-match")
+    public ResponseEntity<ApiResponse<MatchResponse>> endMatch(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success("Match ended", matchService.endMatch(id)));
     }
 
     @PatchMapping("/{id}/cancel")

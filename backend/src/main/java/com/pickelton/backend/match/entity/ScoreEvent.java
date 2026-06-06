@@ -21,7 +21,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.type.SqlTypes;
 
 @Getter
@@ -44,12 +46,13 @@ public class ScoreEvent extends BaseEntity {
     private User actor;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_type", nullable = false, length = 30)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "event_type", nullable = false, columnDefinition = "score_event_type")
     private ScoreEventType eventType;
 
+    @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
-    @Builder.Default
     private Map<String, Object> payload = new LinkedHashMap<>();
 
     @Column(name = "sequence_number", nullable = false)

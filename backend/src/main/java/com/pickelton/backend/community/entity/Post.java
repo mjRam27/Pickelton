@@ -1,8 +1,6 @@
 package com.pickelton.backend.community.entity;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.pickelton.backend.club.entity.Club;
@@ -34,8 +32,8 @@ import org.hibernate.type.SqlTypes;
 public class Post extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_user_id", nullable = false)
-    private User author;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id")
@@ -44,13 +42,8 @@ public class Post extends BaseEntity {
     @Column(nullable = false, columnDefinition = "text")
     private String content;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "event_types", nullable = false, columnDefinition = "jsonb")
     @Builder.Default
-    private List<String> eventTypes = new ArrayList<>();
-
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false, columnDefinition = "jsonb")
-    @Builder.Default
+    @Column(name = "metadata_json", nullable = false, columnDefinition = "jsonb")
     private Map<String, Object> metadata = new LinkedHashMap<>();
 }

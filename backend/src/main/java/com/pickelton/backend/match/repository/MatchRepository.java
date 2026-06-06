@@ -25,17 +25,24 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
         WHERE m.status = :status
           AND m.winner IS NOT NULL
           AND m.winner.id <> :userId
-          AND p.user.id = :userId
-          AND p.role = :role
+          AND EXISTS (
+              SELECT p FROM MatchParticipant p
+              WHERE p.match = m
+                AND p.user.id = :userId
+                AND p.role = com.pickelton.backend.enums.ParticipantRole.PLAYER
+          )
         """)
     long countLossesByUserId(@Param("userId") UUID userId, @Param("status") MatchStatus status,
                              @Param("role") MatchParticipantRole role);
 
     @Query("""
-        SELECT COUNT(DISTINCT m) FROM Match m
-        JOIN MatchParticipant p ON p.match = m
-        WHERE p.user.id = :userId
-          AND p.role = :role
+        SELECT COUNT(m) FROM Match m
+        WHERE EXISTS (
+            SELECT p FROM MatchParticipant p
+            WHERE p.match = m
+              AND p.user.id = :userId
+              AND p.role = com.pickelton.backend.enums.ParticipantRole.PLAYER
+        )
         """)
     long countTotalMatchesByUserId(@Param("userId") UUID userId, @Param("role") MatchParticipantRole role);
 
@@ -43,8 +50,12 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
         SELECT COUNT(DISTINCT m) FROM Match m
         JOIN MatchParticipant p ON p.match = m
         WHERE m.status = :status
-          AND p.user.id = :userId
-          AND p.role = :role
+          AND EXISTS (
+              SELECT p FROM MatchParticipant p
+              WHERE p.match = m
+                AND p.user.id = :userId
+                AND p.role = com.pickelton.backend.enums.ParticipantRole.PLAYER
+          )
         """)
     long countTotalMatchesByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") MatchStatus status,
                                             @Param("role") MatchParticipantRole role);

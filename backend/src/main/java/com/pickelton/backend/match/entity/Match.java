@@ -5,7 +5,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.pickelton.backend.common.entity.BaseEntity;
+import com.pickelton.backend.enums.MatchType;
 import com.pickelton.backend.enums.MatchStatus;
+import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,7 +23,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.type.SqlTypes;
 
 @Getter
@@ -34,25 +38,40 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "matches")
 public class Match extends BaseEntity {
 
-    @Column(nullable = false)
-    private String round;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private MatchStatus status;
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(nullable = false, columnDefinition = "sport_type")
+    private SportType sport;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
-    @Builder.Default
-    private Map<String, Object> rules = new LinkedHashMap<>();
-
-    @Column(length = 255)
-    private String venue;
-
-    @Column(name = "scheduled_at")
-    private OffsetDateTime scheduledAt;
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "match_type", nullable = false, columnDefinition = "match_type")
+    private MatchType matchType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "winner_id")
     private User winner;
+
+    @Column(length = 50)
+    private String round;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(nullable = false, columnDefinition = "match_status")
+    private MatchStatus status;
+
+    @Column(name = "scheduled_at")
+    private OffsetDateTime scheduledAt;
+
+    @Column(length = 255)
+    private String location;
+
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false, columnDefinition = "jsonb")
+    private Map<String, Object> rules = new LinkedHashMap<>();
 }
