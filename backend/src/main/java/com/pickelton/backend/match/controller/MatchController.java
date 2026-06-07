@@ -5,11 +5,16 @@ import java.util.List;
 
 import com.pickelton.backend.common.response.ApiResponse;
 import com.pickelton.backend.match.dto.AcceptInviteRequest;
+import com.pickelton.backend.match.dto.AddPointRequest;
+import com.pickelton.backend.match.dto.AssignScorekeeperRequest;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
 import com.pickelton.backend.match.dto.InviteParticipantRequest;
 import com.pickelton.backend.match.dto.LiveScoreResponse;
+import com.pickelton.backend.match.dto.ManualScoreCorrectionRequest;
 import com.pickelton.backend.match.dto.MatchResponse;
+import com.pickelton.backend.match.dto.MatchScorecardResponse;
 import com.pickelton.backend.match.dto.ScorePointRequest;
+import com.pickelton.backend.match.dto.ScorekeeperSearchResponse;
 import com.pickelton.backend.match.dto.UndoScoreRequest;
 import com.pickelton.backend.match.dto.UpdateMatchScoreRequest;
 import com.pickelton.backend.match.service.MatchService;

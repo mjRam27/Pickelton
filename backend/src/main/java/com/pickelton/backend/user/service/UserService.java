@@ -5,7 +5,6 @@ import java.util.UUID;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.config.CacheConfig;
 import com.pickelton.backend.enums.MatchStatus;
-import com.pickelton.backend.enums.MatchParticipantRole;
 import com.pickelton.backend.match.repository.MatchRepository;
 import com.pickelton.backend.user.dto.UpdateUserRequest;
 import com.pickelton.backend.user.dto.PublicUserResponse;
@@ -101,8 +100,8 @@ public class UserService {
             throw new ResourceNotFoundException("User not found");
         }
         long wins = matchRepository.countWinsByUserId(userId, MatchStatus.COMPLETED);
-        long losses = matchRepository.countLossesByUserId(userId, MatchStatus.COMPLETED, MatchParticipantRole.PLAYER);
-        long total = matchRepository.countTotalMatchesByUserIdAndStatus(userId, MatchStatus.COMPLETED, MatchParticipantRole.PLAYER);
+        long losses = matchRepository.countLossesByUserId(userId, MatchStatus.COMPLETED);
+        long total = matchRepository.countTotalMatchesByUserIdAndStatus(userId, MatchStatus.COMPLETED);
         return new UserStatsDTO(userId, wins, losses, total);
     }
 

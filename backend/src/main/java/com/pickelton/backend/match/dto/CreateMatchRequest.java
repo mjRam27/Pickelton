@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.pickelton.backend.enums.MatchMode;
 import com.pickelton.backend.enums.MatchType;
 import com.pickelton.backend.enums.ParticipantRole;
 import com.pickelton.backend.enums.SportType;
@@ -13,7 +14,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateMatchRequest(
-    @NotNull(message = "Tournament is required") UUID tournamentId,
+    MatchMode mode,
+    UUID tournamentId,
     UUID player1Id,
     UUID player2Id,
     List<ParticipantRequest> participants,

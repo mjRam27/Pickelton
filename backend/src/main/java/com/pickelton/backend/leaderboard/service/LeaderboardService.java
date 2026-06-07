@@ -44,7 +44,7 @@ public class LeaderboardService {
         tournamentMatchRepository.findByTournamentIdOrderByCreatedAtAsc(tournamentId).stream()
             .map(link -> link.getMatch())
             .filter(match -> match.getStatus() == MatchStatus.COMPLETED)
-            .forEach(match -> applyMatch(statsMap, match));
+            .forEach(match -> applyMatch(stats, match));
 
         List<LeaderboardEntryResponse> entries = stats.values().stream()
             .map(Stats::toResponse)

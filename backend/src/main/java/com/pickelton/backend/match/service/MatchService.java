@@ -15,6 +15,7 @@ import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.common.service.CurrentUserService;
 import com.pickelton.backend.config.ScoreBroadcastService;
 import com.pickelton.backend.enums.InvitationStatus;
+import com.pickelton.backend.enums.MatchMode;
 import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.enums.MatchType;
 import com.pickelton.backend.enums.ParticipantRole;
@@ -24,11 +25,16 @@ import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.enums.TournamentStatus;
 import com.pickelton.backend.mapper.MatchMapper;
 import com.pickelton.backend.match.dto.AcceptInviteRequest;
+import com.pickelton.backend.match.dto.AddPointRequest;
+import com.pickelton.backend.match.dto.AssignScorekeeperRequest;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
 import com.pickelton.backend.match.dto.InviteParticipantRequest;
 import com.pickelton.backend.match.dto.LiveScoreResponse;
+import com.pickelton.backend.match.dto.ManualScoreCorrectionRequest;
 import com.pickelton.backend.match.dto.MatchResponse;
+import com.pickelton.backend.match.dto.MatchScorecardResponse;
 import com.pickelton.backend.match.dto.ScorePointRequest;
+import com.pickelton.backend.match.dto.ScorekeeperSearchResponse;
 import com.pickelton.backend.match.dto.UndoScoreRequest;
 import com.pickelton.backend.match.dto.UpdateMatchScoreRequest;
 import com.pickelton.backend.match.entity.Match;
@@ -70,15 +76,22 @@ public class MatchService {
     private final MatchMapper matchMapper;
 
     public MatchResponse createMatch(CreateMatchRequest request) {
-        Tournament tournament = requireTournament(request.tournamentId());
-        requireOrganizer(tournament);
-        if (tournament.getStatus() == TournamentStatus.FINISHED || tournament.getStatus() == TournamentStatus.CANCELLED) {
-            throw new BadRequestException("Matches cannot be created for a closed tournament");
+        MatchMode mode = request.mode() != null ? request.mode() : MatchMode.TOURNAMENT;
+        Tournament tournament = null;
+        if (mode == MatchMode.TOURNAMENT) {
+            if (request.tournamentId() == null) {
+                throw new BadRequestException("Tournament is required for tournament matches");
+            }
+            tournament = requireTournament(request.tournamentId());
+            requireOrganizer(tournament);
+            if (tournament.getStatus() == TournamentStatus.FINISHED || tournament.getStatus() == TournamentStatus.CANCELLED) {
+                throw new BadRequestException("Matches cannot be created for a closed tournament");
+            }
         }
 
         Match match = Match.builder()
             .createdBy(currentUserService.getCurrentUser())
-            .sport(request.sport() != null ? request.sport() : sportForMatch(tournament.getSportType()))
+            .sport(request.sport() != null ? request.sport() : sportForMatch(tournament != null ? tournament.getSportType() : SportType.PICKLEBALL))
             .matchType(request.matchType() != null ? request.matchType() : MatchType.SINGLES)
             .round(request.round().trim())
             .status(MatchStatus.CREATED)
@@ -88,15 +101,17 @@ public class MatchService {
             .build();
         match = matchRepository.save(match);
 
-        tournamentMatchRepository.save(TournamentMatch.builder()
-            .tournament(tournament)
-            .match(match)
-            .round(match.getRound())
-            .build());
+        if (mode == MatchMode.TOURNAMENT) {
+            tournamentMatchRepository.save(TournamentMatch.builder()
+                .tournament(tournament)
+                .match(match)
+                .round(match.getRound())
+                .build());
+        }
 
         List<ParticipantDraft> drafts = participantDrafts(request);
         for (ParticipantDraft draft : drafts) {
-            User user = draft.role() == ParticipantRole.PLAYER
+            User user = mode == MatchMode.TOURNAMENT && draft.role() == ParticipantRole.PLAYER
                 ? requireRegisteredPlayer(tournament.getId(), draft.userId(), "Player")
                 : requireUser(draft.userId(), "Participant");
             participantRepository.save(MatchParticipant.builder()
@@ -191,20 +206,27 @@ public class MatchService {
         return toResponse(match, state);
     }
 
+    @Transactional(readOnly = true)
+    public List<ScorekeeperSearchResponse> searchScorekeepers(UUID tournamentId, String query) {
+        requireTournament(tournamentId);
+        // TODO: Implement tournament-aware scorekeeper search.
+        return List.of();
+    }
+
     public MatchResponse assignScorekeeper(UUID matchId, AssignScorekeeperRequest request) {
         Match match = requireMatch(matchId);
         requireOrganizer(tournamentForMatch(matchId));
         User scorekeeper = requireUser(request.userId(), "Scorekeeper");
 
         List<MatchParticipant> scorers =
-            participantRepository.findByMatchIdAndRoleOrderByCreatedAtDesc(matchId, MatchParticipantRole.SCORER);
+            participantRepository.findByMatchIdAndRole(matchId, ParticipantRole.SCORER);
         MatchParticipant selected = null;
         for (MatchParticipant scorer : scorers) {
             if (scorer.getUser().getId().equals(scorekeeper.getId())) {
-                scorer.setStatus(MatchParticipantStatus.ACCEPTED);
+                scorer.setInvitationStatus(InvitationStatus.ACCEPTED);
                 selected = participantRepository.save(scorer);
-            } else if (scorer.getStatus() != MatchParticipantStatus.DECLINED) {
-                scorer.setStatus(MatchParticipantStatus.DECLINED);
+            } else if (scorer.getInvitationStatus() != InvitationStatus.DECLINED) {
+                scorer.setInvitationStatus(InvitationStatus.DECLINED);
                 participantRepository.save(scorer);
             }
         }
@@ -213,16 +235,45 @@ public class MatchService {
             selected = participantRepository.save(MatchParticipant.builder()
                 .match(match)
                 .user(scorekeeper)
-                .role(MatchParticipantRole.SCORER)
-                .status(MatchParticipantStatus.ACCEPTED)
+                .role(ParticipantRole.SCORER)
+                .invitationStatus(InvitationStatus.ACCEPTED)
                 .build());
         }
 
-        return response(match);
+        return toResponse(match, requireState(matchId));
     }
 
     @Transactional(readOnly = true)
     public MatchScorecardResponse getScorecard(UUID id) {
+        Match match = requireMatch(id);
+        return toScorecardResponse(match, requireState(id));
+    }
+
+    public MatchScorecardResponse addPoint(UUID id, AddPointRequest request) {
+        // TODO: Replace this adapter with full scorecard point logic.
+        MatchResponse response = scorePoint(id, new ScorePointRequest(request.teamCode(), 1));
+        return toScorecardResponse(requireMatch(response.id()), requireState(response.id()));
+    }
+
+    public MatchScorecardResponse undoLastScore(UUID id) {
+        // TODO: Replace this adapter with full scorecard undo logic.
+        MatchResponse response = undoLastPoint(id, new UndoScoreRequest(null));
+        return toScorecardResponse(requireMatch(response.id()), requireState(response.id()));
+    }
+
+    public MatchScorecardResponse manualCorrection(UUID id, ManualScoreCorrectionRequest request) {
+        // TODO: Replace this adapter with full scorecard correction logic.
+        MatchResponse response = updateScore(id, new UpdateMatchScoreRequest(request.scoreA(), request.scoreB(), null, null));
+        return toScorecardResponse(requireMatch(response.id()), requireState(response.id()));
+    }
+
+    public MatchScorecardResponse completeMatch(UUID id) {
+        // TODO: Replace this adapter with full scorecard completion logic.
+        MatchResponse response = endMatch(id);
+        return toScorecardResponse(requireMatch(response.id()), requireState(response.id()));
+    }
+
+    public MatchResponse updateScore(UUID id, UpdateMatchScoreRequest request) {
         Match match = requireMatch(id);
         requireScoringPermission(match);
         MatchState state = requireState(id);
@@ -383,6 +434,52 @@ public class MatchService {
         return matchMapper.toResponse(match, tournamentId, participants, state);
     }
 
+    private MatchScorecardResponse toScorecardResponse(Match match, MatchState state) {
+        UUID tournamentId = tournamentMatchRepository.findByMatchId(match.getId())
+            .map(link -> link.getTournament().getId())
+            .orElse(null);
+        List<MatchParticipant> participants = participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId());
+        UUID scorekeeperId = participants.stream()
+            .filter(participant -> participant.getRole() == ParticipantRole.SCORER)
+            .filter(participant -> participant.getInvitationStatus() == InvitationStatus.ACCEPTED)
+            .map(participant -> participant.getUser().getId())
+            .findFirst()
+            .orElse(null);
+        Map<String, Integer> scores = new LinkedHashMap<>();
+        scores.put("A", scoreForTeam(state, "A"));
+        scores.put("B", scoreForTeam(state, "B"));
+        return new MatchScorecardResponse(
+            match.getId(),
+            tournamentId,
+            match.getRound(),
+            match.getStatus(),
+            match.getLocation(),
+            match.getScheduledAt(),
+            participants.stream().map(this::toParticipantResponse).toList(),
+            scores,
+            state.getCurrentSet(),
+            intValue(match.getRules().get("pointsPerSet"), 21),
+            intValue(match.getRules().get("bestOfSets"), 3),
+            booleanValue(match.getRules().get("winByTwo"), true),
+            scorekeeperId,
+            match.getWinner() != null ? match.getWinner().getId() : null,
+            state.getRevision(),
+            state.getLastEventAt(),
+            match.getCreatedAt()
+        );
+    }
+
+    private com.pickelton.backend.match.dto.MatchParticipantResponse toParticipantResponse(MatchParticipant participant) {
+        return new com.pickelton.backend.match.dto.MatchParticipantResponse(
+            participant.getId(),
+            participant.getUser().getId(),
+            participant.getUser().getName(),
+            participant.getTeam(),
+            participant.getRole(),
+            participant.getInvitationStatus()
+        );
+    }
+
     private LiveScoreResponse toLiveResponse(Match match, MatchState state) {
         return new LiveScoreResponse(
             match.getId(),
@@ -422,6 +519,16 @@ public class MatchService {
         return fallback;
     }
 
+    private boolean booleanValue(Object value, boolean fallback) {
+        if (value instanceof Boolean flag) {
+            return flag;
+        }
+        if (value instanceof String text) {
+            return Boolean.parseBoolean(text);
+        }
+        return fallback;
+    }
+
     private void requireScoringPermission(Match match) {
         UUID userId = currentUserService.getUserId();
         if (match.getCreatedBy().getId().equals(userId)) {
@@ -448,6 +555,12 @@ public class MatchService {
 
     private Tournament requireTournament(UUID id) {
         return tournamentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Tournament not found"));
+    }
+
+    private Tournament tournamentForMatch(UUID matchId) {
+        return tournamentMatchRepository.findByMatchId(matchId)
+            .map(TournamentMatch::getTournament)
+            .orElseThrow(() -> new ResourceNotFoundException("Tournament match not found"));
     }
 
     private Match requireMatch(UUID id) {
