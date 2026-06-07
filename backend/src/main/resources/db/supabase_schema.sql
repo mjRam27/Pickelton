@@ -100,9 +100,15 @@ CREATE TABLE IF NOT EXISTS registrations (
 
 CREATE TABLE IF NOT EXISTS matches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tournament_id UUID NOT NULL REFERENCES tournaments(id),
+    tournament_id UUID REFERENCES tournaments(id),
     player1_id UUID NOT NULL REFERENCES users(id),
     player2_id UUID NOT NULL REFERENCES users(id),
+    mode VARCHAR(20) NOT NULL DEFAULT 'TOURNAMENT',
+    game_type VARCHAR(20) NOT NULL DEFAULT 'SINGLES',
+    scorekeeper_id UUID REFERENCES users(id),
+    points_to_win INT NOT NULL DEFAULT 11,
+    best_of INT NOT NULL DEFAULT 1,
+    win_by_two BOOLEAN NOT NULL DEFAULT TRUE,
     score1 INT NOT NULL DEFAULT 0,
     score2 INT NOT NULL DEFAULT 0,
     winner_id UUID REFERENCES users(id),
@@ -110,7 +116,32 @@ CREATE TABLE IF NOT EXISTS matches (
     round VARCHAR(50) NOT NULL DEFAULT 'Round 1',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT chk_match_players_different CHECK (player1_id <> player2_id)
+    CONSTRAINT chk_match_players_different CHECK (player1_id <> player2_id),
+    CONSTRAINT chk_match_points_to_win_min CHECK (points_to_win >= 11),
+    CONSTRAINT chk_match_best_of_allowed CHECK (best_of IN (1, 3, 5)),
+    CONSTRAINT chk_match_mode_allowed CHECK (mode IN ('CASUAL', 'TOURNAMENT')),
+    CONSTRAINT chk_match_game_type_allowed CHECK (game_type IN ('SINGLES', 'DOUBLES'))
+);
+
+CREATE TABLE IF NOT EXISTS match_teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    match_id UUID NOT NULL REFERENCES matches(id),
+    team_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_match_team UNIQUE (match_id, team_no),
+    CONSTRAINT chk_match_team_no_allowed CHECK (team_no IN (1, 2))
+);
+
+CREATE TABLE IF NOT EXISTS match_team_players (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES match_teams(id),
+    user_id UUID NOT NULL REFERENCES users(id),
+    slot_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_match_team_player UNIQUE (team_id, user_id),
+    CONSTRAINT uk_match_team_slot UNIQUE (team_id, slot_no)
 );
 
 CREATE TABLE IF NOT EXISTS score_history (
@@ -185,10 +216,47 @@ ALTER TABLE tournaments ALTER COLUMN tournament_type SET NOT NULL;
 ALTER TABLE tournaments ALTER COLUMN sport_type SET NOT NULL;
 ALTER TABLE tournaments ALTER COLUMN start_date SET NOT NULL;
 
+ALTER TABLE matches ALTER COLUMN tournament_id DROP NOT NULL;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS mode VARCHAR(20);
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS game_type VARCHAR(20);
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS scorekeeper_id UUID REFERENCES users(id);
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS points_to_win INT;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS best_of INT;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS win_by_two BOOLEAN;
+
+UPDATE matches SET mode = 'TOURNAMENT' WHERE mode IS NULL;
+UPDATE matches SET game_type = 'SINGLES' WHERE game_type IS NULL;
+UPDATE matches SET points_to_win = 11 WHERE points_to_win IS NULL;
+UPDATE matches SET best_of = 1 WHERE best_of IS NULL;
+UPDATE matches SET win_by_two = TRUE WHERE win_by_two IS NULL;
+
+ALTER TABLE matches ALTER COLUMN mode SET NOT NULL;
+ALTER TABLE matches ALTER COLUMN game_type SET NOT NULL;
+ALTER TABLE matches ALTER COLUMN points_to_win SET NOT NULL;
+ALTER TABLE matches ALTER COLUMN best_of SET NOT NULL;
+ALTER TABLE matches ALTER COLUMN win_by_two SET NOT NULL;
+
 ALTER TABLE matches ALTER COLUMN round DROP DEFAULT;
 ALTER TABLE matches ALTER COLUMN round TYPE VARCHAR(50) USING round::VARCHAR;
 ALTER TABLE matches ALTER COLUMN round SET DEFAULT 'Round 1';
 ALTER TABLE score_history ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+CREATE TABLE IF NOT EXISTS match_teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    match_id UUID NOT NULL REFERENCES matches(id),
+    team_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS match_team_players (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES match_teams(id),
+    user_id UUID NOT NULL REFERENCES users(id),
+    slot_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 DO $$
 BEGIN
@@ -208,6 +276,54 @@ BEGIN
         SELECT 1 FROM pg_constraint WHERE conname = 'chk_match_players_different'
     ) THEN
         ALTER TABLE matches ADD CONSTRAINT chk_match_players_different CHECK (player1_id <> player2_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_match_points_to_win_min'
+    ) THEN
+        ALTER TABLE matches ADD CONSTRAINT chk_match_points_to_win_min CHECK (points_to_win >= 11);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_match_best_of_allowed'
+    ) THEN
+        ALTER TABLE matches ADD CONSTRAINT chk_match_best_of_allowed CHECK (best_of IN (1, 3, 5));
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_match_mode_allowed'
+    ) THEN
+        ALTER TABLE matches ADD CONSTRAINT chk_match_mode_allowed CHECK (mode IN ('CASUAL', 'TOURNAMENT'));
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_match_game_type_allowed'
+    ) THEN
+        ALTER TABLE matches ADD CONSTRAINT chk_match_game_type_allowed CHECK (game_type IN ('SINGLES', 'DOUBLES'));
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uk_match_team'
+    ) THEN
+        ALTER TABLE match_teams ADD CONSTRAINT uk_match_team UNIQUE (match_id, team_no);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_match_team_no_allowed'
+    ) THEN
+        ALTER TABLE match_teams ADD CONSTRAINT chk_match_team_no_allowed CHECK (team_no IN (1, 2));
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uk_match_team_player'
+    ) THEN
+        ALTER TABLE match_team_players ADD CONSTRAINT uk_match_team_player UNIQUE (team_id, user_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uk_match_team_slot'
+    ) THEN
+        ALTER TABLE match_team_players ADD CONSTRAINT uk_match_team_slot UNIQUE (team_id, slot_no);
     END IF;
 
     IF NOT EXISTS (
@@ -233,4 +349,10 @@ CREATE INDEX IF NOT EXISTS idx_registrations_tournament_id ON registrations(tour
 CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_matches_tournament_id ON matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
+CREATE INDEX IF NOT EXISTS idx_matches_mode ON matches(mode);
+CREATE INDEX IF NOT EXISTS idx_matches_game_type ON matches(game_type);
+CREATE INDEX IF NOT EXISTS idx_matches_scorekeeper_id ON matches(scorekeeper_id);
+CREATE INDEX IF NOT EXISTS idx_match_teams_match_id ON match_teams(match_id);
+CREATE INDEX IF NOT EXISTS idx_match_team_players_team_id ON match_team_players(team_id);
+CREATE INDEX IF NOT EXISTS idx_match_team_players_user_id ON match_team_players(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
