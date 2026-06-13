@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Animated, Easing, Pressable, ScrollView, Text, View } from "react-native";
+import { Animated, Easing, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CardContainer } from "../../components/CardContainer";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { SectionHeader } from "../../components/SectionHeader";
 import { StatusPill } from "../../components/StatusPill";
+import { addScorecardPoint, apiErrorMessage, fetchLiveScore, undoScorecardPoint, type LiveScore, type MatchScorecard, type TeamCode } from "../../services/api";
 import type { ThemeColors } from "../../theme/colors";
 import { useThemeStyles } from "../../theme/ThemeProvider";
 
@@ -20,45 +21,123 @@ type LiveMatch = {
   server: Point;
   toss: string;
   commentary: string[];
+  status: string;
+  currentSet: number;
+  bestOf: number;
+  revision: number;
 };
 
-const initialMatches: LiveMatch[] = [
-  { id: "a1", court: "A1", venue: "Indiranagar Arena", teams: ["Falcons", "Smashers"], players: ["Aarav / Rohan", "Kabir / Neil"], score: [7, 5], server: "a", toss: "Falcons won and chose to serve", commentary: ["Falcons close the rally with a composed kitchen-line finish.", "Smashers answer with a patient return. Nobody is leaving early."] },
-  { id: "b2", court: "B2", venue: "Whitefield Pickle Hub", teams: ["Spin Kings", "Dink Dynasty"], players: ["Meera / Anika", "Dev / Nikhil"], score: [10, 9], server: "b", toss: "Dink Dynasty won and chose to receive", commentary: ["Spin Kings reach set point with a neat cross-court angle.", "Dink Dynasty stay one rally away from making this dramatic."] },
-  { id: "c3", court: "C3", venue: "Koramangala Court House", teams: ["Net Ninjas", "Rally Royals"], players: ["Ishaan / Varun", "Sara / Tara"], score: [2, 3], server: "a", toss: "Net Ninjas won and chose the south side", commentary: ["Rally Royals find the early lead. Small margin, large confidence."] },
-];
+const emptyMatch: LiveMatch = {
+  id: "",
+  court: "LIVE",
+  venue: "Match court",
+  teams: ["Team A", "Team B"],
+  players: ["Awaiting roster", "Awaiting roster"],
+  score: [0, 0],
+  server: "a",
+  toss: "Live scorecard connected by match ID",
+  commentary: ["Scorecard is ready for backend updates."],
+  status: "CREATED",
+  currentSet: 1,
+  bestOf: 3,
+  revision: 0,
+};
 
 export default function ScoringScreen() {
   const styles = useThemeStyles(createStyles);
-  const { authorized } = useLocalSearchParams<{ authorized?: string }>();
+  const { authorized, matchId: matchIdParam } = useLocalSearchParams<{ authorized?: string; matchId?: string }>();
+  const matchId = Array.isArray(matchIdParam) ? matchIdParam[0] : matchIdParam;
   const isAuthorized = authorized === "true";
-  const [matches, setMatches] = useState(initialMatches);
-  const [selectedId, setSelectedId] = useState("a1");
-  const [history, setHistory] = useState<Point[]>([]);
+  const [match, setMatch] = useState<LiveMatch>(() => ({ ...emptyMatch, id: matchId ?? "" }));
+  const [loading, setLoading] = useState(Boolean(matchId));
+  const [busyAction, setBusyAction] = useState<TeamCode | "UNDO" | "" >("");
+  const [error, setError] = useState(matchId ? "" : "No match ID was provided. Go back to the invite and open scoring again.");
   const [pointNotice, setPointNotice] = useState("");
-  const match = matches.find((item) => item.id === selectedId) ?? matches[0];
 
-  function addPoint(player: Point) {
-    if (!isAuthorized) return;
-    const winner = player === "a" ? match.teams[0] : match.teams[1];
-    const commentary = `${winner} take the point. Clean contact, louder scoreboard.`;
-    setPointNotice(commentary);
+  const showNotice = useCallback((message: string) => {
+    setPointNotice(message);
     setTimeout(() => setPointNotice(""), 2800);
-    setHistory((current) => [...current, player]);
-    setMatches((current) => current.map((item) => {
-      if (item.id !== match.id) return item;
-      const score: [number, number] = player === "a" ? [item.score[0] + 1, item.score[1]] : [item.score[0], item.score[1] + 1];
-      return { ...item, score, server: player, commentary: [commentary, ...item.commentary].slice(0, 4) };
+  }, []);
+
+  const applyLiveScore = useCallback((score: LiveScore) => {
+    setMatch((current) => ({
+      ...current,
+      id: score.matchId,
+      score: [numericScore(score.currentScore.A), numericScore(score.currentScore.B)],
+      status: score.status,
+      currentSet: score.currentSet ?? current.currentSet,
+      revision: score.revision ?? current.revision,
+      commentary: [`Live score synced at revision ${score.revision ?? 0}.`, ...current.commentary].slice(0, 4),
     }));
+  }, []);
+
+  const applyScorecard = useCallback((scorecard: MatchScorecard, action: string) => {
+    const teamAPlayers = participantNames(scorecard, "A");
+    const teamBPlayers = participantNames(scorecard, "B");
+    const scoreA = numericScore(scorecard.scores.A);
+    const scoreB = numericScore(scorecard.scores.B);
+    setMatch((current) => ({
+      ...current,
+      id: scorecard.matchId,
+      venue: scorecard.venue || current.venue,
+      teams: [teamAPlayers.teamName, teamBPlayers.teamName],
+      players: [teamAPlayers.players, teamBPlayers.players],
+      score: [scoreA, scoreB],
+      server: scoreA >= scoreB ? "a" : "b",
+      toss: `Set ${scorecard.currentGameNumber} / best of ${scorecard.bestOf}`,
+      status: scorecard.status,
+      currentSet: scorecard.currentGameNumber,
+      bestOf: scorecard.bestOf,
+      revision: scorecard.revision,
+      commentary: [action, ...current.commentary].slice(0, 4),
+    }));
+    showNotice(action);
+  }, [showNotice]);
+
+  useEffect(() => {
+    if (!matchId) return;
+    let mounted = true;
+    setLoading(true);
+    setError("");
+    fetchLiveScore(matchId)
+      .then((score) => {
+        if (mounted) applyLiveScore(score);
+      })
+      .catch((cause) => {
+        if (mounted) setError(apiErrorMessage(cause));
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [applyLiveScore, matchId]);
+
+  async function addPoint(teamCode: TeamCode) {
+    if (!isAuthorized || !matchId || busyAction) return;
+    setBusyAction(teamCode);
+    setError("");
+    try {
+      const scorecard = await addScorecardPoint(matchId, teamCode);
+      applyScorecard(scorecard, `${teamCode === "A" ? "Team A" : "Team B"} point recorded.`);
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    } finally {
+      setBusyAction("");
+    }
   }
 
-  function undo() {
-    const player = history[history.length - 1];
-    if (!isAuthorized || !player) return;
-    setHistory((current) => current.slice(0, -1));
-    setMatches((current) => current.map((item) => item.id === match.id
-      ? { ...item, score: player === "a" ? [Math.max(0, item.score[0] - 1), item.score[1]] : [item.score[0], Math.max(0, item.score[1] - 1)] }
-      : item));
+  async function undo() {
+    if (!isAuthorized || !matchId || busyAction) return;
+    setBusyAction("UNDO");
+    setError("");
+    try {
+      const scorecard = await undoScorecardPoint(matchId);
+      applyScorecard(scorecard, "Last score action undone.");
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    } finally {
+      setBusyAction("");
+    }
   }
 
   return (
@@ -71,31 +150,28 @@ export default function ScoringScreen() {
           </View>
           <Text style={styles.brand}>PICKELTON / LIVE</Text>
           <Text style={styles.title}>MATCH{"\n"}<Text style={styles.primary}>PULSE</Text></Text>
-          <Text style={styles.copy}>Follow simultaneous matches across venues. Tap a court to bring its live details into focus.</Text>
+          <Text style={styles.copy}>Follow the live scorecard for this match. Authorized officials can record points from this screen.</Text>
           {pointNotice ? <PointCommentaryToast message={pointNotice} /> : null}
+          {loading ? <Text style={styles.statusText}>LOADING SCORECARD...</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <SectionHeader title="ACTIVE COURTS" action={`${matches.length} LIVE`} />
+          <SectionHeader title="ACTIVE COURTS" action={matchId ? "1 LIVE" : "NO MATCH"} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.courtStrip}>
-            {matches.map((item) => {
-              const selected = item.id === match.id;
-              return (
-                <Pressable key={item.id} onPress={() => { setSelectedId(item.id); setHistory([]); }} style={[styles.courtCard, selected && styles.courtCardSelected]}>
-                  <Text style={[styles.courtVenue, selected && styles.darkText]}>{item.venue}</Text>
-                  <Text style={[styles.courtMeta, selected && styles.darkMuted]}>COURT {item.court}</Text>
-                  <Text style={[styles.courtScore, selected && styles.darkText]}>{item.score[0]} - {item.score[1]}</Text>
-                  <Text style={[styles.courtTeams, selected && styles.darkMuted]}>{item.teams.join(" / ")}</Text>
-                </Pressable>
-              );
-            })}
+            <View style={[styles.courtCard, styles.courtCardSelected]}>
+              <Text style={[styles.courtVenue, styles.darkText]}>{match.venue}</Text>
+              <Text style={[styles.courtMeta, styles.darkMuted]}>MATCH {shortId(match.id)}</Text>
+              <Text style={[styles.courtScore, styles.darkText]}>{match.score[0]} - {match.score[1]}</Text>
+              <Text style={[styles.courtTeams, styles.darkMuted]}>{match.teams.join(" / ")}</Text>
+            </View>
           </ScrollView>
 
           <CardContainer style={styles.scoreCard}>
             <View style={styles.scoreHeader}>
               <View>
                 <Text style={styles.venue}>{match.venue}</Text>
-                <Text style={styles.meta}>COURT {match.court} / BEST OF 3</Text>
+                <Text style={styles.meta}>SET {match.currentSet} / BEST OF {match.bestOf} / REV {match.revision}</Text>
               </View>
-              <StatusPill label="ON AIR" tone="danger" />
+              <StatusPill label={match.status === "COMPLETED" ? "FINAL" : "ON AIR"} tone={match.status === "COMPLETED" ? "primary" : "danger"} />
             </View>
             <View style={styles.scoreRow}>
               <Team name={match.teams[0]} players={match.players[0]} score={match.score[0]} serving={match.server === "a"} primary />
@@ -103,8 +179,8 @@ export default function ScoringScreen() {
               <Team name={match.teams[1]} players={match.players[1]} score={match.score[1]} serving={match.server === "b"} />
             </View>
             <View style={styles.toss}>
-              <Text style={styles.tossLabel}>TOSS</Text>
-              <Text style={styles.tossText}>{match.toss}</Text>
+              <Text style={styles.tossLabel}>MATCH ID</Text>
+              <Text style={styles.tossText}>{matchId || "Missing match ID"}</Text>
             </View>
           </CardContainer>
 
@@ -132,17 +208,33 @@ export default function ScoringScreen() {
 
           <SectionHeader title="SCORING CONTROLS" />
           <View style={styles.row}>
-            <PrimaryButton label={`${match.teams[0]} +1`} onPress={() => addPoint("a")} disabled={!isAuthorized} style={styles.flex} />
-            <PrimaryButton label={`${match.teams[1]} +1`} onPress={() => addPoint("b")} disabled={!isAuthorized} variant="subtle" style={styles.flex} />
+            <PrimaryButton label={`${match.teams[0]} +1`} onPress={() => addPoint("A")} disabled={!isAuthorized || !matchId || Boolean(busyAction) || loading} style={styles.flex} />
+            <PrimaryButton label={`${match.teams[1]} +1`} onPress={() => addPoint("B")} disabled={!isAuthorized || !matchId || Boolean(busyAction) || loading} variant="subtle" style={styles.flex} />
           </View>
           <View style={styles.row}>
-            <PrimaryButton label="UNDO" onPress={undo} disabled={!isAuthorized || !history.length} variant="outline" style={styles.flex} />
-            <PrimaryButton label="END SET" disabled={!isAuthorized} variant="outline" style={styles.flex} />
+            <PrimaryButton label={busyAction === "UNDO" ? "UNDOING..." : "UNDO"} onPress={undo} disabled={!isAuthorized || !matchId || Boolean(busyAction) || loading || (match.score[0] === 0 && match.score[1] === 0)} variant="outline" style={styles.flex} />
+            <PrimaryButton label="COMPLETE" disabled variant="outline" style={styles.flex} />
           </View>
         </ScrollView>
       </SafeAreaView>
     </View>
   );
+}
+
+function numericScore(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function shortId(id: string) {
+  return id ? id.slice(0, 8).toUpperCase() : "MISSING";
+}
+
+function participantNames(scorecard: MatchScorecard, team: TeamCode) {
+  const players = scorecard.participants.filter((participant) => participant.role === "PLAYER" && participant.team === team).map((participant) => participant.name);
+  return {
+    teamName: `Team ${team}`,
+    players: players.length ? players.join(" / ") : `Team ${team} players`,
+  };
 }
 
 function Performance({ label, left, right, width }: { label: string; left: string; right: string; width: `${number}%` }) {
@@ -247,6 +339,8 @@ const createStyles = (colors: ThemeColors) => ({
   title: { color: colors.text, fontSize: 38, fontStyle: "italic", fontWeight: "900", lineHeight: 37, marginTop: 14 },
   primary: { color: colors.primary },
   copy: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 10 },
+  statusText: { color: colors.primary, fontSize: 9, fontWeight: "900", letterSpacing: 0.7, marginTop: 12 },
+  error: { borderColor: colors.danger, borderRadius: 8, borderWidth: 1, color: colors.danger, fontSize: 10, fontWeight: "800", lineHeight: 16, marginTop: 12, padding: 12 },
   pointToast: { backgroundColor: colors.primarySoft, borderColor: colors.primaryDim, borderRadius: 8, borderWidth: 1, marginTop: 14, padding: 12 }, pointToastLabel: { color: colors.primary, fontSize: 8, fontWeight: "900", letterSpacing: 0.8 }, pointToastText: { color: colors.text, fontSize: 11, lineHeight: 16, marginTop: 5 },
   courtStrip: { gap: 9, paddingBottom: 2 },
   courtCard: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 12, borderWidth: 1, padding: 13, width: 178 },

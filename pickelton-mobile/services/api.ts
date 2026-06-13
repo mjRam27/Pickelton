@@ -1,8 +1,10 @@
 // pickelton-mobile/services/api.ts
 import axios from "axios";
 
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://YOUR_LOCAL_IP:8080";
+
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL ?? "http://YOUR_LOCAL_IP:8080",
+  baseURL: API_BASE_URL,
   timeout: 10000,
 });
 
@@ -34,6 +36,44 @@ export type AuthUser = {
   createdAt?: string;
 };
 export type MatchPayload = { tournamentId: string; player1Id: string; player2Id: string; round: string };
+export type TeamCode = "A" | "B";
+export type MatchParticipant = {
+  id: string;
+  userId: string;
+  name: string;
+  team: string | null;
+  role: "PLAYER" | "SCORER" | "REFEREE";
+  invitationStatus: string;
+};
+export type LiveScore = {
+  matchId: string;
+  status: string;
+  currentScore: Record<string, number>;
+  currentSet: number;
+  setSummary: Array<Record<string, unknown>>;
+  liveState: Record<string, unknown>;
+  revision: number;
+  updatedAt?: string;
+};
+export type MatchScorecard = {
+  matchId: string;
+  tournamentId?: string | null;
+  round: string;
+  status: string;
+  venue?: string | null;
+  scheduledAt?: string | null;
+  participants: MatchParticipant[];
+  scores: Record<string, number>;
+  currentGameNumber: number;
+  pointsToWin: number;
+  bestOf: number;
+  winByTwo: boolean;
+  scorekeeperId?: string | null;
+  winnerId?: string | null;
+  revision: number;
+  updatedAt?: string;
+  createdAt?: string;
+};
 export type HostPayload = {
   fullName: string; dateOfBirth: string; phoneNumber: string; addressLine1: string; city: string; stateRegion: string;
   postalCode: string; idDocumentType: "AADHAAR"; idDocumentNumberLast4: string; documentImageUrl: string;
@@ -78,6 +118,12 @@ export function getCurrentUser() {
   return currentUser;
 }
 
+export type UserSearchResult = { userId: string; name: string; email: string; phoneNumber: string };
+
+export async function searchUsers(query: string) {
+  return unwrap<UserSearchResult[]>(await api.get("/api/v1/users/search", { params: { query, limit: 10 } }));
+}
+
 export async function fetchMyProfile() {
   const profile = unwrap<AuthUser>(await api.get("/api/v1/auth/me"));
   currentUser = { ...currentUser, ...profile };
@@ -102,6 +148,26 @@ function setSession(session: AuthUser & { token: string }) {
 
 export async function createMatch(payload: MatchPayload) {
   return unwrap<{ id: string }>(await api.post("/api/matches", payload));
+}
+
+export async function fetchLiveScore(matchId: string) {
+  return unwrap<LiveScore>(await api.get(`/api/matches/${matchId}/live-score`));
+}
+
+export async function addScorecardPoint(matchId: string, teamCode: TeamCode) {
+  return unwrap<MatchScorecard>(await api.post(`/api/matches/${matchId}/scorecard/point`, { teamCode }));
+}
+
+export async function undoScorecardPoint(matchId: string) {
+  return unwrap<MatchScorecard>(await api.post(`/api/matches/${matchId}/scorecard/undo`));
+}
+
+export async function correctScorecard(matchId: string, scoreA: number, scoreB: number, reason: string) {
+  return unwrap<MatchScorecard>(await api.post(`/api/matches/${matchId}/scorecard/correction`, { scoreA, scoreB, reason }));
+}
+
+export async function completeScorecard(matchId: string) {
+  return unwrap<MatchScorecard>(await api.post(`/api/matches/${matchId}/scorecard/complete`));
 }
 
 export async function applyHost(payload: HostPayload) {

@@ -1,5 +1,6 @@
 package com.pickelton.backend.user.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
@@ -9,12 +10,14 @@ import com.pickelton.backend.match.repository.MatchRepository;
 import com.pickelton.backend.user.dto.UpdateUserRequest;
 import com.pickelton.backend.user.dto.PublicUserResponse;
 import com.pickelton.backend.user.dto.UserDTO;
+import com.pickelton.backend.user.dto.UserSearchResponse;
 import com.pickelton.backend.user.dto.UserStatsDTO;
 import com.pickelton.backend.user.entity.User;
 import com.pickelton.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,6 +96,17 @@ public class UserService {
             user.setCity(request.city().trim());
         }
         return toDto(userRepository.save(user));
+    }
+
+    public List<UserSearchResponse> searchUsers(String query, int limit) {
+        if (query == null || query.trim().length() < 2) {
+            return List.of();
+        }
+        int capped = Math.min(Math.max(limit, 1), 20);
+        return userRepository.searchByNameEmailOrPhone(query.trim(), PageRequest.of(0, capped))
+            .stream()
+            .map(u -> new UserSearchResponse(u.getId(), u.getName(), u.getEmail(), u.getPhoneNumber()))
+            .toList();
     }
 
     public UserStatsDTO getUserStats(UUID userId) {

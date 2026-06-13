@@ -1,5 +1,6 @@
 package com.pickelton.backend.user.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.pickelton.backend.common.response.ApiResponse;
@@ -7,6 +8,7 @@ import com.pickelton.backend.common.service.CurrentUserService;
 import com.pickelton.backend.user.dto.UpdateUserRequest;
 import com.pickelton.backend.user.dto.PublicUserResponse;
 import com.pickelton.backend.user.dto.UserDTO;
+import com.pickelton.backend.user.dto.UserSearchResponse;
 import com.pickelton.backend.user.dto.UserStatsDTO;
 import com.pickelton.backend.user.service.UserService;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -40,6 +43,15 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserDTO>> updateMe(@Valid @RequestBody UpdateUserRequest request) {
         UserDTO dto = userService.updateMyProfile(currentUserService.getUserId(), request);
         return ResponseEntity.ok(ApiResponse.ok(dto, "Profile updated"));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> search(
+        @RequestParam String query,
+        @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.searchUsers(query, limit)));
     }
 
     @GetMapping("/{id}/stats")

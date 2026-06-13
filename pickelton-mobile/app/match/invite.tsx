@@ -32,7 +32,7 @@ export default function MatchInviteScreen() {
             <Text style={styles.role}>{role.toUpperCase()}</Text>
           </View>
         </CardContainer>
-        <PrimaryButton icon="checkmark-circle-outline" label="ACCEPT INVITE" onPress={() => router.replace({ pathname: "/match/scoring", params: { authorized: String(authorized) } })} style={styles.accept} />
+        <PrimaryButton icon="checkmark-circle-outline" label="ACCEPT INVITE" onPress={() => router.replace({ pathname: "/match/scoring", params: { authorized: String(authorized), matchId } })} style={styles.accept} />
         <PrimaryButton label="DECLINE" variant="outline" onPress={() => router.replace("/(tabs)")} />
         </View>
       </SafeAreaView>

@@ -119,7 +119,7 @@ public class MatchService {
                 .user(user)
                 .team(draft.team())
                 .role(draft.role())
-                .invitationStatus(draft.role() == ParticipantRole.PLAYER ? InvitationStatus.ACCEPTED : InvitationStatus.INVITED)
+                .invitationStatus(draft.invitationStatus())
                 .build());
         }
 
@@ -375,19 +375,26 @@ public class MatchService {
         List<ParticipantDraft> drafts = new ArrayList<>();
         if (request.participants() != null && !request.participants().isEmpty()) {
             request.participants().forEach(participant -> drafts.add(new ParticipantDraft(
-                participant.userId(), normalizeTeam(participant.team()), participant.role())));
+                participant.userId(), normalizeTeam(participant.team()), participant.role(),
+                participant.role() == ParticipantRole.PLAYER ? InvitationStatus.ACCEPTED : InvitationStatus.INVITED)));
         } else {
             if (request.player1Id() == null || request.player2Id() == null) {
                 throw new BadRequestException("Either participants or legacy player1Id/player2Id are required");
             }
-            drafts.add(new ParticipantDraft(request.player1Id(), "A", ParticipantRole.PLAYER));
-            drafts.add(new ParticipantDraft(request.player2Id(), "B", ParticipantRole.PLAYER));
+            drafts.add(new ParticipantDraft(request.player1Id(), "A", ParticipantRole.PLAYER, InvitationStatus.ACCEPTED));
+            drafts.add(new ParticipantDraft(request.player2Id(), "B", ParticipantRole.PLAYER, InvitationStatus.ACCEPTED));
         }
         if (request.scorerId() != null) {
-            drafts.add(new ParticipantDraft(request.scorerId(), null, ParticipantRole.SCORER));
+            boolean scorerIsPlayer = drafts.stream()
+                .anyMatch(draft -> draft.role() == ParticipantRole.PLAYER && request.scorerId().equals(draft.userId()));
+            if (scorerIsPlayer) {
+                throw new BadRequestException("Scorekeeper cannot be one of the match players.");
+            }
+            // Scorer selected at creation time is trusted immediately, so it can keep score without a separate accept step.
+            drafts.add(new ParticipantDraft(request.scorerId(), null, ParticipantRole.SCORER, InvitationStatus.ACCEPTED));
         }
         if (request.refereeId() != null) {
-            drafts.add(new ParticipantDraft(request.refereeId(), null, ParticipantRole.REFEREE));
+            drafts.add(new ParticipantDraft(request.refereeId(), null, ParticipantRole.REFEREE, InvitationStatus.INVITED));
         }
         return drafts;
     }
@@ -604,6 +611,6 @@ public class MatchService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
-    private record ParticipantDraft(UUID userId, String team, ParticipantRole role) {
+    private record ParticipantDraft(UUID userId, String team, ParticipantRole role, InvitationStatus invitationStatus) {
     }
 }

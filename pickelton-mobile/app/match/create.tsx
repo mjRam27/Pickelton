@@ -7,14 +7,20 @@ import { CardContainer } from "../../components/CardContainer";
 import { BackLink } from "../../components/BackLink";
 import { BrandMark } from "../../components/BrandMark";
 import { InputField } from "../../components/InputField";
+import { PlayerPicker } from "../../components/PlayerPicker";
 import { PrimaryButton } from "../../components/PrimaryButton";
-import { apiErrorMessage, createMatch } from "../../services/api";
+import { apiErrorMessage, createMatch, type UserSearchResult } from "../../services/api";
 import type { ThemeColors } from "../../theme/colors";
 import { useThemeStyles } from "../../theme/ThemeProvider";
 
 export default function MatchCreationScreen() {
   const styles = useThemeStyles(createStyles);
-  const [form, setForm] = useState({ tournamentId: "", round: "Round 1", teamAPlayer1Id: "", teamAPlayer2Id: "", teamBPlayer1Id: "", teamBPlayer2Id: "", location: "", scorerId: "", refereeId: "" });
+  const [form, setForm] = useState({ tournamentId: "", round: "Round 1", location: "", refereeId: "" });
+  const [teamAPlayer1, setTeamAPlayer1] = useState<UserSearchResult | null>(null);
+  const [teamAPlayer2, setTeamAPlayer2] = useState<UserSearchResult | null>(null);
+  const [teamBPlayer1, setTeamBPlayer1] = useState<UserSearchResult | null>(null);
+  const [teamBPlayer2, setTeamBPlayer2] = useState<UserSearchResult | null>(null);
+  const [scorer, setScorer] = useState<UserSearchResult | null>(null);
   const [mode, setMode] = useState<"CASUAL" | "TOURNAMENT">("CASUAL");
   const [matchType, setMatchType] = useState<"SINGLES" | "DOUBLES">("SINGLES");
   const [pointsPerSet, setPointsPerSet] = useState("21");
@@ -23,17 +29,21 @@ export default function MatchCreationScreen() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const field = (name: keyof typeof form) => ({ value: form[name], onChangeText: (value: string) => setForm((current) => ({ ...current, [name]: value })) });
+  // Ids already chosen in the other player slots, so the same user can't be picked twice.
+  const pickedIds = (self: UserSearchResult | null) =>
+    [teamAPlayer1, teamAPlayer2, teamBPlayer1, teamBPlayer2]
+      .filter((player): player is UserSearchResult => Boolean(player) && player !== self)
+      .map((player) => player.userId);
+  // Selected players can never be picked as the scorekeeper.
+  const selectedPlayerIds = [teamAPlayer1, teamAPlayer2, teamBPlayer1, teamBPlayer2]
+    .filter((player): player is UserSearchResult => Boolean(player))
+    .map((player) => player.userId);
 
   async function submit() {
     setError("");
     const tournamentId = form.tournamentId.trim();
     const round = form.round.trim();
-    const teamAPlayer1Id = form.teamAPlayer1Id.trim();
-    const teamAPlayer2Id = form.teamAPlayer2Id.trim();
-    const teamBPlayer1Id = form.teamBPlayer1Id.trim();
-    const teamBPlayer2Id = form.teamBPlayer2Id.trim();
     const location = form.location.trim();
-    const scorerId = form.scorerId.trim();
     const refereeId = form.refereeId.trim();
     const numericPointsPerSet = Number(pointsPerSet);
     const numericBestOfSets = Number(bestOfSets);
@@ -53,12 +63,23 @@ export default function MatchCreationScreen() {
       setError("Tournament ID is required for tournament matches.");
       return;
     }
-    if (matchType === "SINGLES" && (!teamAPlayer1Id || !teamBPlayer1Id)) {
-      setError("Team A Player 1 and Team B Player 1 are required for singles.");
+    const selectedPlayers = matchType === "SINGLES"
+      ? [teamAPlayer1, teamBPlayer1]
+      : [teamAPlayer1, teamAPlayer2, teamBPlayer1, teamBPlayer2];
+    if (selectedPlayers.some((player) => !player)) {
+      setError(matchType === "SINGLES"
+        ? "Select Team A Player 1 and Team B Player 1 for singles."
+        : "Select all four players for doubles.");
       return;
     }
-    if (matchType === "DOUBLES" && (!teamAPlayer1Id || !teamAPlayer2Id || !teamBPlayer1Id || !teamBPlayer2Id)) {
-      setError("All four player IDs are required for doubles.");
+    const chosen = selectedPlayers as UserSearchResult[];
+    const uniqueIds = new Set(chosen.map((player) => player.userId));
+    if (uniqueIds.size !== chosen.length) {
+      setError("Each player must be a different user.");
+      return;
+    }
+    if (scorer && uniqueIds.has(scorer.userId)) {
+      setError("Scorekeeper cannot be one of the match players.");
       return;
     }
     if (!Number.isFinite(numericPointsPerSet) || numericPointsPerSet <= 0 || !Number.isFinite(numericBestOfSets) || numericBestOfSets <= 0) {
@@ -67,18 +88,18 @@ export default function MatchCreationScreen() {
     }
     setLoading(true);
     try {
-      const player1Id = teamAPlayer1Id;
-      const player2Id = teamBPlayer1Id;
+      const player1Id = teamAPlayer1!.userId;
+      const player2Id = teamBPlayer1!.userId;
       const participants = matchType === "SINGLES"
         ? [
-          { userId: teamAPlayer1Id, team: "A", role: "PLAYER" },
-          { userId: teamBPlayer1Id, team: "B", role: "PLAYER" },
+          { userId: teamAPlayer1!.userId, team: "A", role: "PLAYER" },
+          { userId: teamBPlayer1!.userId, team: "B", role: "PLAYER" },
         ]
         : [
-          { userId: teamAPlayer1Id, team: "A", role: "PLAYER" },
-          { userId: teamAPlayer2Id, team: "A", role: "PLAYER" },
-          { userId: teamBPlayer1Id, team: "B", role: "PLAYER" },
-          { userId: teamBPlayer2Id, team: "B", role: "PLAYER" },
+          { userId: teamAPlayer1!.userId, team: "A", role: "PLAYER" },
+          { userId: teamAPlayer2!.userId, team: "A", role: "PLAYER" },
+          { userId: teamBPlayer1!.userId, team: "B", role: "PLAYER" },
+          { userId: teamBPlayer2!.userId, team: "B", role: "PLAYER" },
         ];
       const payload = {
         mode,
@@ -86,7 +107,7 @@ export default function MatchCreationScreen() {
         player1Id,
         player2Id,
         participants,
-        scorerId: scorerId || null,
+        scorerId: scorer?.userId ?? null,
         refereeId: refereeId || null,
         sport: "PICKLEBALL",
         matchType,
@@ -97,7 +118,7 @@ export default function MatchCreationScreen() {
       };
       console.log("Create match payload", payload);
       const match = await createMatch(payload as any);
-      const role = scorerId ? "scorer" : refereeId ? "referee" : "viewer";
+      const role = scorer ? "scorer" : refereeId ? "referee" : "viewer";
       router.push({ pathname: "/match/invite", params: { role, matchId: match.id } });
     } catch (cause) {
       const error = cause as any;
@@ -138,10 +159,10 @@ export default function MatchCreationScreen() {
         </CardContainer>
         <Text style={styles.section}>PLAYERS</Text>
         <CardContainer style={styles.form}>
-          <InputField label="TEAM A PLAYER 1 ID" placeholder="Registered player UUID" autoCapitalize="none" {...field("teamAPlayer1Id")} />
-          {matchType === "DOUBLES" ? <InputField label="TEAM A PLAYER 2 ID" placeholder="Registered partner UUID" autoCapitalize="none" {...field("teamAPlayer2Id")} /> : null}
-          <InputField label="TEAM B PLAYER 1 ID" placeholder="Registered opponent UUID" autoCapitalize="none" {...field("teamBPlayer1Id")} />
-          {matchType === "DOUBLES" ? <InputField label="TEAM B PLAYER 2 ID" placeholder="Registered partner UUID" autoCapitalize="none" {...field("teamBPlayer2Id")} /> : null}
+          <PlayerPicker label="TEAM A PLAYER 1" value={teamAPlayer1} onSelect={setTeamAPlayer1} excludeUserIds={pickedIds(teamAPlayer1)} />
+          {matchType === "DOUBLES" ? <PlayerPicker label="TEAM A PLAYER 2" value={teamAPlayer2} onSelect={setTeamAPlayer2} excludeUserIds={pickedIds(teamAPlayer2)} /> : null}
+          <PlayerPicker label="TEAM B PLAYER 1" value={teamBPlayer1} onSelect={setTeamBPlayer1} excludeUserIds={pickedIds(teamBPlayer1)} />
+          {matchType === "DOUBLES" ? <PlayerPicker label="TEAM B PLAYER 2" value={teamBPlayer2} onSelect={setTeamBPlayer2} excludeUserIds={pickedIds(teamBPlayer2)} /> : null}
         </CardContainer>
         <Text style={styles.section}>RULES</Text>
         <CardContainer style={styles.form}>
@@ -155,7 +176,7 @@ export default function MatchCreationScreen() {
         </CardContainer>
         <Text style={styles.section}>OFFICIALS</Text>
         <CardContainer style={styles.form}>
-          <InputField label="SCORER ID" placeholder="Optional scorer UUID" autoCapitalize="none" {...field("scorerId")} />
+          <PlayerPicker label="SCOREKEEPER (OPTIONAL)" value={scorer} onSelect={setScorer} excludeUserIds={selectedPlayerIds} />
           <InputField label="REFEREE ID" placeholder="Optional referee UUID" autoCapitalize="none" {...field("refereeId")} />
         </CardContainer>
         {error ? <Text style={styles.error}>{error}</Text> : null}
