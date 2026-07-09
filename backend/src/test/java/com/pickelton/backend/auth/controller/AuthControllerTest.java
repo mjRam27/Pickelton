@@ -15,6 +15,7 @@ import com.pickelton.backend.auth.dto.LoginRequest;
 import com.pickelton.backend.auth.dto.RefreshTokenRequest;
 import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.service.AuthService;
+import com.pickelton.backend.enums.PlatformRole;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,7 +122,8 @@ class AuthControllerTest {
             "+919876543210",
             LocalDate.of(1998, 1, 1),
             false,
-            false
+            false,
+            PlatformRole.USER
         );
     }
 }

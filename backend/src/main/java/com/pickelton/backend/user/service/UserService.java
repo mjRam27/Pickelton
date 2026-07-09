@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.config.CacheConfig;
 import com.pickelton.backend.enums.MatchStatus;
+import com.pickelton.backend.club.repository.ClubMemberRepository;
 import com.pickelton.backend.match.repository.MatchRepository;
 import com.pickelton.backend.user.dto.UpdateUserRequest;
 import com.pickelton.backend.user.dto.PublicUserResponse;
@@ -28,6 +29,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MatchRepository matchRepository;
+    private final ClubMemberRepository clubMemberRepository;
 
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
@@ -98,6 +100,14 @@ public class UserService {
         return toDto(userRepository.save(user));
     }
 
+    @Transactional
+    @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
+    public UserDTO updateAvatar(UUID userId, String avatarUrl) {
+        User user = findById(userId);
+        user.setAvatarUrl(avatarUrl);
+        return toDto(userRepository.save(user));
+    }
+
     public List<UserSearchResponse> searchUsers(String query, int limit) {
         if (query == null || query.trim().length() < 2) {
             return List.of();
@@ -105,7 +115,13 @@ public class UserService {
         int capped = Math.min(Math.max(limit, 1), 20);
         return userRepository.searchByNameEmailOrPhone(query.trim(), PageRequest.of(0, capped))
             .stream()
-            .map(u -> new UserSearchResponse(u.getId(), u.getName(), u.getEmail(), u.getPhoneNumber()))
+            .map(u -> new UserSearchResponse(
+                u.getId(),
+                u.getName(),
+                u.getAvatarUrl(),
+                u.getCity(),
+                clubMemberRepository.findClubNamesByUserId(u.getId())
+            ))
             .toList();
     }
 
@@ -131,6 +147,7 @@ public class UserService {
             user.getBio(),
             user.getAvatarUrl(),
             user.getCity(),
+            user.getRole(),
             user.getCreatedAt()
         );
     }

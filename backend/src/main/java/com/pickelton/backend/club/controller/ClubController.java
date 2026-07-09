@@ -3,14 +3,19 @@ package com.pickelton.backend.club.controller;
 import java.util.List;
 import java.util.UUID;
 
+import com.pickelton.backend.club.dto.ClubInvitationResponse;
 import com.pickelton.backend.club.dto.ClubMemberResponse;
 import com.pickelton.backend.club.dto.ClubResponse;
 import com.pickelton.backend.club.dto.CreateClubRequest;
+import com.pickelton.backend.club.dto.InviteClubMemberRequest;
 import com.pickelton.backend.club.dto.UpdateClubMemberRoleRequest;
 import com.pickelton.backend.club.dto.UpdateClubRequest;
 import com.pickelton.backend.club.service.ClubService;
 import com.pickelton.backend.common.response.ApiResponse;
 import com.pickelton.backend.common.response.PageResponse;
+import com.pickelton.backend.enums.InvitationStatus;
+import com.pickelton.backend.storage.dto.StorageUploadResponse;
+import com.pickelton.backend.storage.service.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/clubs")
@@ -30,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClubController {
 
     private final ClubService clubService;
+    private final StorageService storageService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ClubResponse>> createClub(@Valid @RequestBody CreateClubRequest request) {
@@ -50,6 +57,11 @@ public class ClubController {
         return ResponseEntity.ok(ApiResponse.ok(clubService.getMyClubs()));
     }
 
+    @GetMapping("/invitations/me")
+    public ResponseEntity<ApiResponse<List<ClubInvitationResponse>>> getMyInvitations() {
+        return ResponseEntity.ok(ApiResponse.ok(clubService.getMyInvitations()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ClubResponse>> getClub(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success("Club fetched", clubService.getClub(id)));
@@ -60,6 +72,26 @@ public class ClubController {
         @PathVariable UUID id, @Valid @RequestBody UpdateClubRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.ok(clubService.updateClub(id, request), "Club updated"));
+    }
+
+    @PostMapping("/{id}/logo")
+    public ResponseEntity<ApiResponse<ClubResponse>> uploadLogo(@PathVariable UUID id, @RequestParam("file") MultipartFile file) {
+        StorageUploadResponse upload = storageService.upload("club-logos", file);
+        return ResponseEntity.ok(ApiResponse.ok(clubService.updateLogo(id, upload.url()), "Club logo updated"));
+    }
+
+    @PostMapping("/{id}/invitations")
+    public ResponseEntity<ApiResponse<ClubInvitationResponse>> inviteMember(
+        @PathVariable UUID id, @Valid @RequestBody InviteClubMemberRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(clubService.inviteMember(id, request), "Club invitation sent"));
+    }
+
+    @PatchMapping("/invitations/{id}")
+    public ResponseEntity<ApiResponse<ClubInvitationResponse>> respondInvitation(
+        @PathVariable UUID id, @RequestParam InvitationStatus status
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(clubService.respondInvitation(id, status), "Club invitation updated"));
     }
 
     @PostMapping("/{id}/join")

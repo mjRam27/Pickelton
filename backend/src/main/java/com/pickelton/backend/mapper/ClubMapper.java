@@ -19,6 +19,8 @@ public class ClubMapper {
             club.getName(),
             club.getDescription(),
             club.getLocation(),
+            club.getCity(),
+            club.getLogoUrl(),
             userMapper.toPublicSummary(club.getCreatedBy()),
             memberCount,
             club.getCreatedAt(),

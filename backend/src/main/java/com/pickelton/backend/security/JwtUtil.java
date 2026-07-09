@@ -10,6 +10,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.UUID;
 
+import com.pickelton.backend.enums.PlatformRole;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ import io.jsonwebtoken.Jwts;
 public class JwtUtil {
 
     private static final String CLAIM_EMAIL = "email";
+    private static final String CLAIM_ROLE = "role";
     private static final String KEY_ALGORITHM = "RSA";
 
     @Value("${jwt.private-key:}")
@@ -51,11 +53,12 @@ public class JwtUtil {
         log.warn("JWT_PRIVATE_KEY/JWT_PUBLIC_KEY are not configured. Using an ephemeral development RSA key pair.");
     }
 
-    public String generateToken(UUID userId, String email) {
+    public String generateToken(UUID userId, String email, PlatformRole role) {
         Date now = new Date();
         return Jwts.builder()
             .subject(userId.toString())
             .claim(CLAIM_EMAIL, email)
+            .claim(CLAIM_ROLE, role.name())
             .issuedAt(now)
             .expiration(new Date(now.getTime() + expirationMs))
             .signWith(signingKey, Jwts.SIG.RS256)
@@ -77,6 +80,11 @@ public class JwtUtil {
 
     public String extractEmail(String token) {
         return parseClaims(token).get(CLAIM_EMAIL, String.class);
+    }
+
+    public PlatformRole extractRole(String token) {
+        String value = parseClaims(token).get(CLAIM_ROLE, String.class);
+        return value == null ? PlatformRole.USER : PlatformRole.valueOf(value);
     }
 
     public String extractSubject(String token) {

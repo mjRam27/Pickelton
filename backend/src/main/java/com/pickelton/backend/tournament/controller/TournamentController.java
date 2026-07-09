@@ -12,6 +12,8 @@ import com.pickelton.backend.tournament.dto.TournamentResponse;
 import com.pickelton.backend.tournament.dto.UpdateTournamentRequest;
 import com.pickelton.backend.tournament.dto.UpdateTournamentStatusRequest;
 import com.pickelton.backend.tournament.service.TournamentService;
+import com.pickelton.backend.storage.dto.StorageUploadResponse;
+import com.pickelton.backend.storage.service.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/tournaments")
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TournamentController {
 
     private final TournamentService tournamentService;
+    private final StorageService storageService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<TournamentResponse>> createTournament(@Valid @RequestBody CreateTournamentRequest request) {
@@ -68,6 +72,12 @@ public class TournamentController {
         @PathVariable UUID id, @Valid @RequestBody UpdateTournamentRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.ok(tournamentService.updateTournament(id, request), "Tournament updated"));
+    }
+
+    @PostMapping("/{id}/banner")
+    public ResponseEntity<ApiResponse<TournamentResponse>> uploadBanner(@PathVariable UUID id, @RequestParam("file") MultipartFile file) {
+        StorageUploadResponse upload = storageService.upload("tournament-banners", file);
+        return ResponseEntity.ok(ApiResponse.ok(tournamentService.updateBanner(id, upload.url()), "Tournament banner updated"));
     }
 
     @PatchMapping("/{id}/status")

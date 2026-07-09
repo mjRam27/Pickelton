@@ -6,11 +6,12 @@ import { useTheme, useThemeStyles } from "../theme/ThemeProvider";
 export function EmptyState({ title, copy }: { title: string; copy: string }) {
   const { colors } = useTheme();
   const styles = useThemeStyles(createStyles);
-  return <View style={styles.empty}><Ionicons color={colors.primary} name="tennisball-outline" size={25} /><Text style={styles.title}>{title}</Text><Text style={styles.copy}>{copy}</Text></View>;
+  return <View style={styles.empty}><View style={styles.icon}><Ionicons color={colors.primary} name="tennisball-outline" size={31} /></View><Text style={styles.title}>{title}</Text><Text style={styles.copy}>{copy}</Text></View>;
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  empty: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 10, borderStyle: "dashed", borderWidth: 1, gap: 3, padding: 22 },
-  title: { color: colors.text, fontSize: 12, fontWeight: "900" },
-  copy: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 7, textAlign: "center" },
+  empty: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 18, borderWidth: 1, gap: 7, padding: 28 },
+  icon: { alignItems: "center", backgroundColor: colors.primarySoft, borderRadius: 24, height: 72, justifyContent: "center", marginBottom: 4, width: 72 },
+  title: { color: colors.text, fontSize: 16, fontWeight: "800" },
+  copy: { color: colors.muted, fontSize: 13, lineHeight: 19, marginTop: 2, textAlign: "center" },
 });

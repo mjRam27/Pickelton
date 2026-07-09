@@ -22,19 +22,19 @@ export function PrimaryButton({ label, onPress, disabled = false, variant = "pri
   return (
     <Animated.View style={[style, { transform: [{ scale }] }]}>
       <Pressable disabled={disabled} onPress={onPress} onPressIn={() => animate(0.97)} onPressOut={() => animate(1)} style={({ pressed }) => [styles.button, styles[variant], pressed && styles.pressed, disabled && styles.disabled]}>
-        <View style={styles.content}>{icon ? <Ionicons color={variant === "primary" ? colors.background : colors.primary} name={icon} size={16} /> : null}<Text style={[styles.label, variant === "primary" ? styles.darkLabel : styles.lightLabel]}>{label}</Text></View>
+        <View style={styles.content}>{icon ? <Ionicons color={variant === "primary" ? colors.surface : colors.primary} name={icon} size={17} /> : null}<Text style={[styles.label, variant === "primary" ? styles.darkLabel : styles.lightLabel]}>{label}</Text></View>
       </Pressable>
     </Animated.View>
   );
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  button: { alignItems: "center", borderRadius: radius.md, borderWidth: 1, justifyContent: "center", minHeight: 50, paddingHorizontal: 16 },
+  button: { alignItems: "center", borderRadius: radius.pill, borderWidth: 1, justifyContent: "center", minHeight: 52, paddingHorizontal: 18 },
   primary: { backgroundColor: colors.primary, borderColor: colors.primary },
-  outline: { backgroundColor: "transparent", borderColor: colors.border },
-  subtle: { backgroundColor: colors.raised, borderColor: colors.border },
-  label: { fontSize: 11, fontWeight: "900", letterSpacing: 0.4 },
-  darkLabel: { color: colors.background },
+  outline: { backgroundColor: "transparent", borderColor: colors.primary },
+  subtle: { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft },
+  label: { fontSize: 13, fontWeight: "800", letterSpacing: 0 },
+  darkLabel: { color: colors.surface },
   lightLabel: { color: colors.text },
   pressed: { opacity: 0.82 },
   disabled: { opacity: 0.4 },

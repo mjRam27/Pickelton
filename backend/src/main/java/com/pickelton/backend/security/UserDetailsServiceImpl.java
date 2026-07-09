@@ -1,7 +1,5 @@
 package com.pickelton.backend.security;
 
-import java.util.Collections;
-
 import com.pickelton.backend.user.entity.User;
 import com.pickelton.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
             .username(user.getId().toString())
             .password(user.getPassword())
-            .authorities(Collections.emptyList())
+            .roles(user.getRole().name())
             .accountExpired(false)
             .accountLocked(false)
             .credentialsExpired(false)

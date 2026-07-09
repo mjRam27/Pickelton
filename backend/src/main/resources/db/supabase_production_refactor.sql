@@ -6,11 +6,13 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 DO $$
 BEGIN
-    IF to_regclass('public.host_applications') IS NOT NULL
-       AND to_regclass('public.host_verifications') IS NULL THEN
-        ALTER TABLE host_applications RENAME TO host_verifications;
+    IF to_regclass('public.host_verifications') IS NOT NULL
+       AND to_regclass('public.host_applications') IS NULL THEN
+        ALTER TABLE host_verifications RENAME TO host_applications;
     END IF;
 END $$;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(30) NOT NULL DEFAULT 'USER';
 
 DO $$
 BEGIN
@@ -241,6 +243,14 @@ CREATE INDEX IF NOT EXISTS idx_score_events_match_id_seq ON score_events(match_i
 CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id ON tournament_matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
+
+DO $$
+BEGIN
+    IF to_regclass('public.host_applications') IS NOT NULL THEN
+        CREATE INDEX IF NOT EXISTS idx_host_applications_user_id ON host_applications(user_id);
+        CREATE INDEX IF NOT EXISTS idx_host_applications_status ON host_applications(status);
+    END IF;
+END $$;
 
 -- Validation queries. They should return zero rows.
 -- SELECT id FROM matches m WHERE NOT EXISTS (SELECT 1 FROM match_state ms WHERE ms.match_id = m.id);

@@ -1,7 +1,10 @@
 package com.pickelton.backend.registration.entity;
 
+import java.time.OffsetDateTime;
+
 import com.pickelton.backend.common.entity.BaseEntity;
 import com.pickelton.backend.enums.RegistrationStatus;
+import com.pickelton.backend.registrationform.entity.TournamentRegistrationForm;
 import com.pickelton.backend.tournament.entity.Tournament;
 import com.pickelton.backend.user.entity.User;
 import jakarta.persistence.Column;
@@ -41,4 +44,18 @@ public class Registration extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RegistrationStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "form_id")
+    private TournamentRegistrationForm form;
+
+    @Column(name = "submitted_at")
+    private OffsetDateTime submittedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private OffsetDateTime reviewedAt;
 }

@@ -4,7 +4,9 @@ import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.pickelton.backend.club.entity.Club;
 import com.pickelton.backend.common.entity.BaseEntity;
+import com.pickelton.backend.enums.MatchCategory;
 import com.pickelton.backend.enums.MatchType;
 import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.enums.SportType;
@@ -51,6 +53,15 @@ public class Match extends BaseEntity {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "match_type", nullable = false, columnDefinition = "match_type")
     private MatchType matchType;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "match_category", nullable = false, length = 30)
+    private MatchCategory matchCategory = MatchCategory.FRIENDLY;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "club_id")
+    private Club club;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "winner_id")

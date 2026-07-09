@@ -11,6 +11,7 @@ import com.pickelton.backend.common.exception.ForbiddenException;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.common.response.PageResponse;
 import com.pickelton.backend.common.service.CurrentUserService;
+import com.pickelton.backend.enums.PlatformRole;
 import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.enums.TournamentStatus;
@@ -43,26 +44,27 @@ public class TournamentService {
 
     public TournamentResponse createTournament(CreateTournamentRequest request) {
         var currentUser = currentUserService.getCurrentUser();
-        if (!currentUser.isPhoneVerified()) {
+        boolean isAdmin = currentUser.getRole() == PlatformRole.ADMIN;
+        if (request.clubId() == null) {
+            throw new BadRequestException("Tournament must belong to a club");
+        }
+        if (!isAdmin && !currentUser.isPhoneVerified()) {
             throw new BadRequestException("Verify your phone number before creating tournaments");
         }
-        if (!hostVerificationService.isApprovedHost(currentUser)) {
+        if (!isAdmin && !hostVerificationService.isApprovedHost(currentUser)) {
             throw new BadRequestException("Approved host verification is required to create tournaments");
         }
-        Club club = null;
-        if (request.clubId() != null) {
-            club = clubRepository.findById(request.clubId())
-                .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
-            if (!clubService.isClubAdmin(club.getId(), currentUser.getId())) {
-                throw new ForbiddenException("Only a club admin can create a tournament for this club");
-            }
+        Club club = clubRepository.findById(request.clubId())
+            .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
+        if (!clubService.isClubAdmin(club.getId(), currentUser.getId())) {
+            throw new ForbiddenException("Only a club owner or admin can create a tournament for this club");
         }
         Tournament tournament = Tournament.builder()
             .name(request.name().trim())
             .description(request.description())
             .sportType(request.sportType())
             .tournamentType(request.tournamentType())
-            .status(TournamentStatus.UPCOMING)
+            .status(TournamentStatus.DRAFT)
             .createdBy(currentUser)
             .club(club)
             .entryFee(request.entryFee())
@@ -114,11 +116,14 @@ public class TournamentService {
 
     public TournamentResponse updateTournament(UUID id, UpdateTournamentRequest request) {
         Tournament tournament = requireOwnedTournament(id);
-        if (tournament.getStatus() != TournamentStatus.UPCOMING) {
-            throw new BadRequestException("Only upcoming tournaments can be updated");
+        if (tournament.getStatus() != TournamentStatus.DRAFT
+            && tournament.getStatus() != TournamentStatus.REGISTRATION_OPEN
+            && tournament.getStatus() != TournamentStatus.UPCOMING) {
+            throw new BadRequestException("Only draft or registration-open tournaments can be updated");
         }
         if (request.maxPlayers() != null) {
-            long registered = registrationRepository.countByTournamentIdAndStatus(id, RegistrationStatus.REGISTERED);
+            long registered = registrationRepository.countByTournamentIdAndStatus(id, RegistrationStatus.REGISTERED)
+                + registrationRepository.countByTournamentIdAndStatus(id, RegistrationStatus.APPROVED);
             if (request.maxPlayers() < registered) {
                 throw new BadRequestException("Max players cannot be less than current registrations");
             }
@@ -136,13 +141,32 @@ public class TournamentService {
         if (request.startDate() != null) {
             tournament.setStartDate(request.startDate());
         }
+        if (request.bannerUrl() != null) {
+            tournament.setBannerUrl(request.bannerUrl().trim());
+        }
+        return tournamentMapper.toResponse(tournamentRepository.save(tournament));
+    }
+
+    public TournamentResponse updateBanner(UUID id, String bannerUrl) {
+        Tournament tournament = requireOwnedTournament(id);
+        tournament.setBannerUrl(bannerUrl);
         return tournamentMapper.toResponse(tournamentRepository.save(tournament));
     }
 
     public TournamentResponse updateStatus(UUID id, TournamentStatus newStatus) {
         Tournament tournament = requireOwnedTournament(id);
         TournamentStatus current = tournament.getStatus();
-        boolean valid = (current == TournamentStatus.UPCOMING
+        boolean valid = (current == TournamentStatus.DRAFT
+            && (newStatus == TournamentStatus.REGISTRATION_OPEN || newStatus == TournamentStatus.CANCELLED))
+            || (current == TournamentStatus.REGISTRATION_OPEN
+            && (newStatus == TournamentStatus.REGISTRATION_CLOSED || newStatus == TournamentStatus.CANCELLED))
+            || (current == TournamentStatus.REGISTRATION_CLOSED
+            && (newStatus == TournamentStatus.LIVE || newStatus == TournamentStatus.CANCELLED))
+            || (current == TournamentStatus.LIVE
+            && (newStatus == TournamentStatus.COMPLETED || newStatus == TournamentStatus.CANCELLED))
+            || (current == TournamentStatus.COMPLETED
+            && newStatus == TournamentStatus.ARCHIVED)
+            || (current == TournamentStatus.UPCOMING
             && (newStatus == TournamentStatus.ONGOING || newStatus == TournamentStatus.CANCELLED))
             || (current == TournamentStatus.ONGOING
             && (newStatus == TournamentStatus.FINISHED || newStatus == TournamentStatus.CANCELLED));
@@ -152,6 +176,8 @@ public class TournamentService {
         tournament.setStatus(newStatus);
         if (newStatus == TournamentStatus.CANCELLED) {
             registrationRepository.findByTournamentIdAndStatus(id, RegistrationStatus.REGISTERED)
+                .forEach(registration -> registration.setStatus(RegistrationStatus.CANCELLED));
+            registrationRepository.findByTournamentIdAndStatus(id, RegistrationStatus.APPROVED)
                 .forEach(registration -> registration.setStatus(RegistrationStatus.CANCELLED));
         }
         return tournamentMapper.toResponse(tournamentRepository.save(tournament));

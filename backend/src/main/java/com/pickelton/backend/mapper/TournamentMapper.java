@@ -29,6 +29,7 @@ public class TournamentMapper {
             tournament.getEntryFee(),
             tournament.getMaxPlayers(),
             tournament.getStartDate(),
+            tournament.getBannerUrl(),
             tournament.getCreatedAt(),
             tournament.getUpdatedAt()
         );

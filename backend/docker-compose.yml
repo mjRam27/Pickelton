@@ -16,6 +16,17 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: pickelton-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: .
@@ -23,6 +34,8 @@ services:
     container_name: pickelton-backend
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/pickelton
@@ -32,7 +45,8 @@ services:
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
       JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-2592000000}
-      REDIS_URL: ${REDIS_URL:-}
+      REDIS_URL: redis://redis:6379
+      REDIS_SSL_ENABLED: false
       SERVER_PORT: 8080
     ports:
       - "8080:8080"

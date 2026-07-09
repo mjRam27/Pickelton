@@ -13,5 +13,6 @@ import com.pickelton.backend.user.dto.PublicUserSummary;
 public record TournamentResponse(UUID id, String name, String description, SportType sportType,
                                  TournamentType tournamentType, TournamentStatus status, PublicUserSummary createdBy,
                                  UUID clubId, String clubName, BigDecimal entryFee, Integer maxPlayers,
-                                 LocalDateTime startDate, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+                                 LocalDateTime startDate, String bannerUrl,
+                                 OffsetDateTime createdAt, OffsetDateTime updatedAt) {
 }

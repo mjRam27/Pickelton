@@ -10,5 +10,15 @@ export function CardContainer({ children, style }: PropsWithChildren<{ style?: S
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, padding: 16 },
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: 16,
+    shadowColor: "#101613",
+    shadowOffset: { height: 2, width: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+  },
 });

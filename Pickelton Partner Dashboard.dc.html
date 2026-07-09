@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EDECE6;font-family:'Inter',system-ui,sans-serif;--ms:'Material Symbols Rounded';--sg:'Space Grotesk',sans-serif}
+a{color:#0C4A38}a:hover{color:#0A3A2C}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#101613;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#101613}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#101613;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#0C4A38;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+/* app shell helpers (used only for structure that can't be inline) */
+.pk-nav{display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:9px;font:500 13.5px 'Inter';color:#5A6560;cursor:default}
+.pk-nav .mi{font-family:var(--ms);font-size:20px;color:#8A938C}
+.pk-nav.on{background:#EAF3DA;color:#0C4A38}
+.pk-nav.on .mi{color:#0C4A38}
+.pk-sec{font:600 10.5px 'Inter';letter-spacing:.08em;color:#A7AFA8;padding:16px 14px 6px}
+th{font:600 11px 'Inter';letter-spacing:.03em;color:#8A938C;text-align:left;padding:11px 16px;border-bottom:1px solid #EEEDE7;text-transform:uppercase}
+td{font:450 13px 'Inter';color:#28312C;padding:13px 16px;border-bottom:1px solid #F2F1EB}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t0" data-screen-label="System overview">
+<div class="dv-thd"><a class="dv-tid" href="#t0">0</a><span class="dv-tname">Pickelton Partner — a venue-operations dashboard</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="0a">
+<div class="dv-olabel"><a class="dv-oid" href="#0a">0a</a>Approach</div>
+<div class="dv-card" style="width:720px;padding:30px;box-sizing:border-box;box-shadow:none">
+  <div style="display:flex;align-items:center;gap:12px"><div style="width:38px;height:38px;border-radius:10px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:22px;color:#C8F550">stadium</span></div><div style="font:700 22px var(--sg);letter-spacing:-0.4px;color:#101613">Pickelton <span style="font-weight:500;color:#5A6560">Partner</span></div></div>
+  <div style="font:400 14px/1.6 'Inter';color:#5A6560;margin-top:14px;max-width:600px">A back-office console for venue owners, academies and tournament hosts — built like Stripe/Square, not a consumer app. Dense but calm: a persistent left rail, a quiet toolbar, and data tables + KPIs that reward scanning. Same Pickelton brand DNA as the player app, dialed down for work.</div>
+  <div style="display:flex;gap:10px;margin-top:22px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#0C4A38"></div><span style="font:11px ui-monospace;color:#8A938C">#0C4A38 primary</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#C8F550"></div><span style="font:11px ui-monospace;color:#8A938C">#C8F550 accent</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#FAFAF7;border:1px solid #EEEDE7"></div><span style="font:11px ui-monospace;color:#8A938C">#FAFAF7 canvas</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#28312C"></div><span style="font:11px ui-monospace;color:#8A938C">#28312C ink</span></div>
+  </div>
+  <div style="display:flex;gap:24px;margin-top:20px">
+    <div><div style="font:700 20px var(--sg);color:#101613">Space Grotesk</div><div style="font:11px ui-monospace;color:#8A938C">metrics · numbers</div></div>
+    <div><div style="font:600 16px 'Inter';color:#101613;padding-top:4px">Inter — UI, tables, labels</div><div style="font:11px ui-monospace;color:#8A938C">everything else</div></div>
+  </div>
+  <div style="margin-top:18px;font:400 12.5px/1.6 'Inter';color:#5A6560;max-width:600px">Nav: Dashboard · Venues · Courts · Bookings · Tournaments · Customers · Payments · Analytics · Notifications · Settings. Screens shown at 1280 desktop width. Photography &amp; maps are striped slots for now.</div>
+</div>
+</div>
+</div>
+</section>
+
+
+<section class="dv-turn" id="t1" data-screen-label="Dashboard">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Dashboard — the operator's morning view</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="1a" data-screen-label="Dashboard home">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Dashboard home</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <!-- SIDEBAR -->
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px;overflow:hidden">
+      <div class="pk-nav on"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings<span style="margin-left:auto;font:600 10px 'Inter';background:#0C4A38;color:#fff;border-radius:9px;padding:2px 7px">18</span></div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="pk-sec">SYSTEM</div>
+      <div class="pk-nav"><span class="mi">notifications</span>Notifications<span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#E4572E"></span></div>
+      <div class="pk-nav"><span class="mi">settings</span>Settings</div>
+    </div>
+    <div style="margin-top:auto;margin:auto 12px 14px;padding:11px;border:1px solid #EEEDE7;border-radius:11px;display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:9px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div><div style="line-height:1.25"><div style="font:600 12.5px 'Inter'">Greenpoint P&amp;P</div><div style="font:400 11px 'Inter';color:#8A938C">Owner · Meera S.</div></div><span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#B4BBB2">unfold_more</span></div>
+  </div>
+  <!-- MAIN -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;gap:14px;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Good morning, Meera</div><div style="font:400 12px 'Inter';color:#8A938C">Tuesday, 8 July · Greenpoint Padel &amp; Pickle</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <div style="height:36px;background:#F4F3EE;border-radius:9px;display:flex;align-items:center;gap:8px;padding:0 12px;width:220px"><span style="font-family:var(--ms);font-size:18px;color:#A7AFA8">search</span><span style="font:400 12.5px 'Inter';color:#A7AFA8">Search bookings, players…</span></div>
+        <div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#0C4A38">calendar_today</span>Today</div>
+        <div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 14px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">add</span>New booking</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+      <!-- KPI ROW -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:15px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 12px 'Inter';color:#8A938C">Today's bookings</span><span style="font-family:var(--ms);font-size:18px;color:#0C4A38">calendar_month</span></div>
+          <div style="font:700 27px var(--sg);margin-top:8px">42</div>
+          <div style="font:500 11.5px 'Inter';color:#3E8E5A;margin-top:3px">▲ 12% vs last Tue</div>
+        </div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:15px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 12px 'Inter';color:#8A938C">Revenue today</span><span style="font-family:var(--ms);font-size:18px;color:#0C4A38">payments</span></div>
+          <div style="font:700 27px var(--sg);margin-top:8px">$1,284</div>
+          <div style="font:500 11.5px 'Inter';color:#3E8E5A;margin-top:3px">▲ 8% vs last Tue</div>
+        </div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:15px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 12px 'Inter';color:#8A938C">Court occupancy</span><span style="font-family:var(--ms);font-size:18px;color:#0C4A38">donut_small</span></div>
+          <div style="font:700 27px var(--sg);margin-top:8px">78%</div>
+          <div style="height:5px;border-radius:3px;background:#EEEDE7;margin-top:8px;overflow:hidden"><div style="width:78%;height:100%;background:#0C4A38"></div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:15px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 12px 'Inter';color:#8A938C">Avg. rating</span><span style="font-family:var(--ms);font-size:18px;color:#C9A227;font-variation-settings:'FILL' 1">star</span></div>
+          <div style="font:700 27px var(--sg);margin-top:8px">4.8</div>
+          <div style="font:500 11.5px 'Inter';color:#8A938C;margin-top:3px">212 reviews</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;flex:1;min-height:0">
+        <!-- LEFT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+          <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px;flex:none">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px"><span style="font:600 14px 'Inter'">Revenue · last 14 days</span><span style="font:600 12px 'Inter';color:#0C4A38">$16,940</span></div>
+            <div style="display:flex;align-items:flex-end;gap:6px;height:96px">
+              <div style="flex:1;height:44%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:52%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:38%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:60%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:56%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:70%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:64%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:48%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:58%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:76%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:66%;background:#DDE7DF;border-radius:4px 4px 0 0"></div><div style="flex:1;height:82%;background:#0C4A38;border-radius:4px 4px 0 0"></div><div style="flex:1;height:72%;background:#0C4A38;border-radius:4px 4px 0 0"></div><div style="flex:1;height:90%;background:#0C4A38;border-radius:4px 4px 0 0"></div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px"><span style="font:600 14px 'Inter'">Today's bookings</span><span style="font:600 12px 'Inter';color:#0C4A38">View all</span></div>
+            <div style="overflow:hidden">
+              <table style="width:100%;border-collapse:collapse">
+                <tr><th>Time</th><th>Court</th><th>Customer</th><th>Status</th><th style="text-align:right">Amount</th></tr>
+                <tr><td style="font-variant-numeric:tabular-nums">6:00 PM</td><td>Court 3</td><td>Arjun Mehta</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Checked in</span></td><td style="text-align:right;font-weight:600">$28</td></tr>
+                <tr><td style="font-variant-numeric:tabular-nums">6:30 PM</td><td>Court 1</td><td>Sana Joshi</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Upcoming</span></td><td style="text-align:right;font-weight:600">$14</td></tr>
+                <tr><td style="font-variant-numeric:tabular-nums">7:00 PM</td><td>Court 3</td><td>Rohan Kapoor</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Upcoming</span></td><td style="text-align:right;font-weight:600">$28</td></tr>
+                <tr><td style="font-variant-numeric:tabular-nums">7:30 PM</td><td>Court 2</td><td>Tara Patel</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Upcoming</span></td><td style="text-align:right;font-weight:600">$14</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- RIGHT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+          <div style="background:#101613;color:#fff;border-radius:12px;padding:16px">
+            <div style="font:600 12px 'Inter';color:#9BA69E;margin-bottom:12px">Quick actions</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:#1B241E;border-radius:9px;padding:11px;display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">add_business</span><span style="font:500 11.5px 'Inter'">Add venue</span></div>
+              <div style="background:#1B241E;border-radius:9px;padding:11px;display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">event_available</span><span style="font:500 11.5px 'Inter'">Block a slot</span></div>
+              <div style="background:#1B241E;border-radius:9px;padding:11px;display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">trophy</span><span style="font:500 11.5px 'Inter'">New tournament</span></div>
+              <div style="background:#1B241E;border-radius:9px;padding:11px;display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">sell</span><span style="font:500 11.5px 'Inter'">Edit pricing</span></div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:14px 16px;flex:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font:600 14px 'Inter'">Upcoming tournaments</span><span style="font:600 12px 'Inter';color:#0C4A38">All</span></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid #F2F1EB"><div style="width:38px;height:38px;border-radius:9px;background:#EAF3DA;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 14px var(--sg);color:#0C4A38">19</span><span style="font:600 8px 'Inter';color:#0C4A38">JUL</span></div><div style="flex:1"><div style="font:600 12.5px 'Inter'">Summer Slam Doubles</div><div style="font:400 11px 'Inter';color:#8A938C">14/32 teams · 3.5 bracket</div></div><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Open</span></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:8px 0"><div style="width:38px;height:38px;border-radius:9px;background:#F4F3EE;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 14px var(--sg)">02</span><span style="font:600 8px 'Inter';color:#8A938C">AUG</span></div><div style="flex:1"><div style="font:600 12.5px 'Inter'">Academy Cup U-16</div><div style="font:400 11px 'Inter';color:#8A938C">Draft · not published</div></div><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Draft</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:14px 16px;flex:1;min-height:0;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font:600 14px 'Inter'">Recent reviews</span><span style="font:600 12px 'Inter';color:#0C4A38">All</span></div>
+            <div style="display:flex;gap:10px;padding-bottom:10px;border-bottom:1px solid #F2F1EB"><div style="width:30px;height:30px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg);flex:none">AM</div><div><div style="font:600 11.5px 'Inter'">Arjun M. <span style="color:#C9A227">★★★★★</span></div><div style="font:400 11px/1.4 'Inter';color:#5A6560;margin-top:2px">Spotless courts and easy check-in. Booking again.</div></div></div>
+            <div style="display:flex;gap:10px;padding-top:10px"><div style="width:30px;height:30px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg);flex:none">SJ</div><div><div style="font:600 11.5px 'Inter'">Sana J. <span style="color:#C9A227">★★★★</span><span style="color:#DcdCd0">★</span></div><div style="font:400 11px/1.4 'Inter';color:#5A6560;margin-top:2px">Lighting on court 2 flickers a bit in the evening.</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="t2" data-screen-label="Venues">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Venue management</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a" data-screen-label="Venues list">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Venues — list</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav on"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings<span style="margin-left:auto;font:600 10px 'Inter';background:#0C4A38;color:#fff;border-radius:9px;padding:2px 7px">18</span></div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="pk-sec">SYSTEM</div>
+      <div class="pk-nav"><span class="mi">notifications</span>Notifications<span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#E4572E"></span></div>
+      <div class="pk-nav"><span class="mi">settings</span>Settings</div>
+    </div>
+    <div style="margin:auto 12px 14px;padding:11px;border:1px solid #EEEDE7;border-radius:11px;display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:9px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div><div style="line-height:1.25"><div style="font:600 12.5px 'Inter'">Greenpoint P&amp;P</div><div style="font:400 11px 'Inter';color:#8A938C">Owner · Meera S.</div></div><span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#B4BBB2">unfold_more</span></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Venues</div><div style="font:400 12px 'Inter';color:#8A938C">3 venues · 16 courts total</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#8A938C">filter_list</span>Filter</div><div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 14px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">add</span>Create venue</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;grid-auto-rows:min-content;gap:16px">
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden">
+        <div style="height:130px;background:repeating-linear-gradient(45deg,#ECEFE3 0 9px,#E3E7D8 9px 18px);position:relative"><span style="position:absolute;bottom:8px;right:10px;font:10px ui-monospace;color:#8A938C">venue photo</span><span style="position:absolute;top:10px;left:10px;font:600 10px 'Inter';color:#3E8E5A;background:#fff;border-radius:20px;padding:4px 9px">● Active</span></div>
+        <div style="padding:14px">
+          <div style="font:600 15px 'Inter'">Greenpoint Padel &amp; Pickle</div>
+          <div style="font:400 12px 'Inter';color:#8A938C;margin-top:3px">Greenpoint · Indoor · ★ 4.8</div>
+          <div style="display:flex;gap:18px;margin-top:12px"><div><div style="font:700 16px var(--sg)">6</div><div style="font:400 10.5px 'Inter';color:#8A938C">courts</div></div><div><div style="font:700 16px var(--sg)">78%</div><div style="font:400 10.5px 'Inter';color:#8A938C">occupancy</div></div><div><div style="font:700 16px var(--sg)">$1.2k</div><div style="font:400 10.5px 'Inter';color:#8A938C">today</div></div></div>
+          <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:34px;border:1px solid #E4E3DC;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px 'Inter'">Manage</div><div style="width:34px;height:34px;border:1px solid #E4E3DC;border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#8A938C">edit</span></div></div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden">
+        <div style="height:130px;background:repeating-linear-gradient(45deg,#ECEFE3 0 9px,#E3E7D8 9px 18px);position:relative"><span style="position:absolute;bottom:8px;right:10px;font:10px ui-monospace;color:#8A938C">venue photo</span><span style="position:absolute;top:10px;left:10px;font:600 10px 'Inter';color:#3E8E5A;background:#fff;border-radius:20px;padding:4px 9px">● Active</span></div>
+        <div style="padding:14px">
+          <div style="font:600 15px 'Inter'">Riverside Pickle Club</div>
+          <div style="font:400 12px 'Inter';color:#8A938C;margin-top:3px">Riverside · Outdoor · ★ 4.6</div>
+          <div style="display:flex;gap:18px;margin-top:12px"><div><div style="font:700 16px var(--sg)">4</div><div style="font:400 10.5px 'Inter';color:#8A938C">courts</div></div><div><div style="font:700 16px var(--sg)">61%</div><div style="font:400 10.5px 'Inter';color:#8A938C">occupancy</div></div><div><div style="font:700 16px var(--sg)">$540</div><div style="font:400 10.5px 'Inter';color:#8A938C">today</div></div></div>
+          <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:34px;border:1px solid #E4E3DC;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px 'Inter'">Manage</div><div style="width:34px;height:34px;border:1px solid #E4E3DC;border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#8A938C">edit</span></div></div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden">
+        <div style="height:130px;background:repeating-linear-gradient(45deg,#ECEFE3 0 9px,#E3E7D8 9px 18px);position:relative"><span style="position:absolute;bottom:8px;right:10px;font:10px ui-monospace;color:#8A938C">venue photo</span><span style="position:absolute;top:10px;left:10px;font:600 10px 'Inter';color:#8A6D1A;background:#fff;border-radius:20px;padding:4px 9px">● Setup</span></div>
+        <div style="padding:14px">
+          <div style="font:600 15px 'Inter'">Northside Academy</div>
+          <div style="font:400 12px 'Inter';color:#8A938C;margin-top:3px">Northside · Indoor · new</div>
+          <div style="display:flex;gap:18px;margin-top:12px"><div><div style="font:700 16px var(--sg)">6</div><div style="font:400 10.5px 'Inter';color:#8A938C">courts</div></div><div><div style="font:700 16px var(--sg)">—</div><div style="font:400 10.5px 'Inter';color:#8A938C">occupancy</div></div><div><div style="font:700 16px var(--sg)">—</div><div style="font:400 10.5px 'Inter';color:#8A938C">today</div></div></div>
+          <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:34px;background:#EAF3DA;color:#0C4A38;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px 'Inter'">Finish setup</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b" data-screen-label="Create venue">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Create / edit venue — gallery, amenities, map</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav on"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings</div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;gap:10px;padding:0 24px">
+      <span style="font-family:var(--ms);font-size:20px;color:#8A938C">arrow_back</span>
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Create venue</div><div style="font:400 12px 'Inter';color:#8A938C">Step 2 of 4 · Details &amp; amenities</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 14px;font:500 12.5px 'Inter'">Save draft</div><div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;padding:0 16px;font:600 12.5px 'Inter'">Continue</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:22px 24px;display:grid;grid-template-columns:180px 1fr;gap:24px">
+      <!-- step rail -->
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px"><div style="width:22px;height:22px;border-radius:50%;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--ms);font-size:15px">check</div><span style="font:500 12.5px 'Inter';color:#8A938C">Basics</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;background:#EAF3DA"><div style="width:22px;height:22px;border-radius:50%;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">2</div><span style="font:600 12.5px 'Inter';color:#0C4A38">Details</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px"><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #D5D8CF;color:#8A938C;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">3</div><span style="font:500 12.5px 'Inter';color:#8A938C">Gallery</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px"><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #D5D8CF;color:#8A938C;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">4</div><span style="font:500 12.5px 'Inter';color:#8A938C">Location</span></div>
+      </div>
+      <!-- form -->
+      <div style="overflow:hidden;display:flex;flex-direction:column;gap:18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div><div style="font:600 12px 'Inter';color:#5A6560;margin-bottom:6px">Venue name</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">Greenpoint Padel &amp; Pickle</div></div>
+          <div><div style="font:600 12px 'Inter';color:#5A6560;margin-bottom:6px">Type</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">Indoor · Pickleball<span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#8A938C">expand_more</span></div></div>
+        </div>
+        <div><div style="font:600 12px 'Inter';color:#5A6560;margin-bottom:6px">Description</div><div style="height:70px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;padding:10px 12px;font:450 13px/1.5 'Inter';color:#5A6560">Six indoor courts with pro lighting, paddle rental and locker rooms. Two minutes from the metro.</div></div>
+        <div>
+          <div style="font:600 12px 'Inter';color:#5A6560;margin-bottom:8px">Amenities</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span style="font:500 12px 'Inter';background:#EAF3DA;color:#0C4A38;border-radius:20px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px">check</span>Lighting</span>
+            <span style="font:500 12px 'Inter';background:#EAF3DA;color:#0C4A38;border-radius:20px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px">check</span>Paddle rental</span>
+            <span style="font:500 12px 'Inter';background:#EAF3DA;color:#0C4A38;border-radius:20px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px">check</span>Showers</span>
+            <span style="font:500 12px 'Inter';background:#EAF3DA;color:#0C4A38;border-radius:20px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px">check</span>Parking</span>
+            <span style="font:500 12px 'Inter';background:#fff;border:1px solid #E4E3DC;color:#5A6560;border-radius:20px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px">add</span>Café</span>
+            <span style="font:500 12px 'Inter';background:#fff;border:1px solid #E4E3DC;color:#5A6560;border-radius:20px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px">add</span>Pro shop</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div style="font:600 12px 'Inter';color:#5A6560;margin-bottom:8px">Gallery</div>
+            <div style="display:flex;gap:8px">
+              <div style="width:76px;height:64px;border-radius:9px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div>
+              <div style="width:76px;height:64px;border-radius:9px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div>
+              <div style="width:76px;height:64px;border:1.5px dashed #C6CCC0;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-family:var(--ms);font-size:20px;color:#8A938C">add_photo_alternate</span><span style="font:500 9.5px 'Inter';color:#8A938C">Upload</span></div>
+            </div>
+          </div>
+          <div>
+            <div style="font:600 12px 'Inter';color:#5A6560;margin-bottom:8px">Location on map</div>
+            <div style="height:64px;border-radius:9px;background:repeating-linear-gradient(0deg,#E7EAE1 0 16px,#E0E4D8 16px 17px),repeating-linear-gradient(90deg,transparent 0 16px,#E0E4D8 16px 17px);position:relative"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);font-family:var(--ms);font-size:22px;color:#0C4A38">location_on</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t3" data-screen-label="Courts and slots">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Courts, pricing &amp; slot management</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a" data-screen-label="Courts and pricing">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Courts — list, pricing &amp; maintenance</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav on"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings<span style="margin-left:auto;font:600 10px 'Inter';background:#0C4A38;color:#fff;border-radius:9px;padding:2px 7px">18</span></div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="pk-sec">SYSTEM</div>
+      <div class="pk-nav"><span class="mi">notifications</span>Notifications<span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#E4572E"></span></div>
+      <div class="pk-nav"><span class="mi">settings</span>Settings</div>
+    </div>
+    <div style="margin:auto 12px 14px;padding:11px;border:1px solid #EEEDE7;border-radius:11px;display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:9px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div><div style="line-height:1.25"><div style="font:600 12.5px 'Inter'">Greenpoint P&amp;P</div><div style="font:400 11px 'Inter';color:#8A938C">Owner · Meera S.</div></div><span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#B4BBB2">unfold_more</span></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Courts</div><div style="font:400 12px 'Inter';color:#8A938C">Greenpoint Padel &amp; Pickle · 6 courts</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#0C4A38">sell</span>Bulk pricing</div><div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 14px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">add</span>Add court</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px">
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <tr><th>Court</th><th>Surface</th><th>Peak / off-peak</th><th>Today's status</th><th>Occupancy</th><th style="text-align:right">Actions</th></tr>
+          <tr><td><div style="font:600 13px 'Inter'">Court 1</div><div style="font:400 11px 'Inter';color:#8A938C">Indoor · lit</div></td><td>Cushioned</td><td style="font-variant-numeric:tabular-nums"><b>$14</b> / $10 per hr</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Available</span></td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:70px;height:5px;border-radius:3px;background:#EEEDE7;overflow:hidden"><div style="width:82%;height:100%;background:#0C4A38"></div></div>82%</div></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:19px;color:#8A938C">edit</span></td></tr>
+          <tr><td><div style="font:600 13px 'Inter'">Court 2</div><div style="font:400 11px 'Inter';color:#8A938C">Indoor · lit</div></td><td>Cushioned</td><td style="font-variant-numeric:tabular-nums"><b>$14</b> / $10 per hr</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">In use</span></td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:70px;height:5px;border-radius:3px;background:#EEEDE7;overflow:hidden"><div style="width:74%;height:100%;background:#0C4A38"></div></div>74%</div></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:19px;color:#8A938C">edit</span></td></tr>
+          <tr><td><div style="font:600 13px 'Inter'">Court 3</div><div style="font:400 11px 'Inter';color:#8A938C">Indoor · lit · premium</div></td><td>Acrylic</td><td style="font-variant-numeric:tabular-nums"><b>$16</b> / $12 per hr</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">In use</span></td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:70px;height:5px;border-radius:3px;background:#EEEDE7;overflow:hidden"><div style="width:91%;height:100%;background:#0C4A38"></div></div>91%</div></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:19px;color:#8A938C">edit</span></td></tr>
+          <tr><td><div style="font:600 13px 'Inter'">Court 4</div><div style="font:400 11px 'Inter';color:#8A938C">Indoor · lit</div></td><td>Cushioned</td><td style="font-variant-numeric:tabular-nums"><b>$14</b> / $10 per hr</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Available</span></td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:70px;height:5px;border-radius:3px;background:#EEEDE7;overflow:hidden"><div style="width:68%;height:100%;background:#0C4A38"></div></div>68%</div></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:19px;color:#8A938C">edit</span></td></tr>
+          <tr><td><div style="font:600 13px 'Inter'">Court 5</div><div style="font:400 11px 'Inter';color:#8A938C">Indoor · lit</div></td><td>Cushioned</td><td style="font-variant-numeric:tabular-nums"><b>$14</b> / $10 per hr</td><td><span style="font:600 11px 'Inter';color:#B45242;background:#F7E7E3;border-radius:20px;padding:3px 9px">Maintenance</span></td><td style="color:#B4BBB2">— net repair</td><td style="text-align:right"><span style="font-family:var(--ms);font-size:19px;color:#8A938C">edit</span></td></tr>
+          <tr><td><div style="font:600 13px 'Inter'">Court 6</div><div style="font:400 11px 'Inter';color:#8A938C">Indoor · lit · premium</div></td><td>Acrylic</td><td style="font-variant-numeric:tabular-nums"><b>$16</b> / $12 per hr</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Available</span></td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:70px;height:5px;border-radius:3px;background:#EEEDE7;overflow:hidden"><div style="width:79%;height:100%;background:#0C4A38"></div></div>79%</div></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:19px;color:#8A938C">edit</span></td></tr>
+        </table>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:14px">
+        <div style="flex:1;background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">schedule</span><div><div style="font:600 13px 'Inter'">Dynamic peak pricing</div><div style="font:400 11.5px 'Inter';color:#8A938C">Auto +$2/hr on Fri–Sun evenings</div></div><div style="margin-left:auto;width:44px;height:26px;border-radius:13px;background:#0C4A38;position:relative"><div style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+        <div style="flex:1;background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="font-family:var(--ms);font-size:22px;color:#B45242">build</span><div><div style="font:600 13px 'Inter'">Court 5 maintenance</div><div style="font:400 11.5px 'Inter';color:#8A938C">Net repair · returns Jul 10, 2 PM</div></div><span style="margin-left:auto;font:600 12px 'Inter';color:#0C4A38">Manage</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b" data-screen-label="Slot calendar">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Slot management — availability calendar &amp; blocked dates</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav on"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings</div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;gap:12px;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Availability</div><div style="font:400 12px 'Inter';color:#8A938C">Thursday, 10 July · all courts</div></div>
+      <div style="display:flex;align-items:center;gap:2px;margin-left:16px"><span style="font-family:var(--ms);font-size:22px;color:#8A938C">chevron_left</span><span style="font:500 12.5px 'Inter';padding:0 8px">Jul 10</span><span style="font-family:var(--ms);font-size:22px;color:#8A938C">chevron_right</span></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#B45242">event_busy</span>Block date</div><div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 14px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">add</span>Add slot</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:16px 24px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:16px;font:400 11.5px 'Inter';color:#5A6560"><span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#fff;border:1px solid #D5D8CF"></span>Open</span><span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#0C4A38"></span>Booked</span><span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#C8F550"></span>TeamUp</span><span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:repeating-linear-gradient(45deg,#EEE7D6 0 4px,#E3DBC4 4px 8px)"></span>Blocked</span></div>
+      <div style="flex:1;background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:64px repeat(6,1fr);border-bottom:1px solid #EEEDE7">
+          <div style="padding:10px 8px"></div>
+          <div style="padding:10px 8px;font:600 11.5px 'Inter';text-align:center;border-left:1px solid #F2F1EB">Court 1</div>
+          <div style="padding:10px 8px;font:600 11.5px 'Inter';text-align:center;border-left:1px solid #F2F1EB">Court 2</div>
+          <div style="padding:10px 8px;font:600 11.5px 'Inter';text-align:center;border-left:1px solid #F2F1EB">Court 3</div>
+          <div style="padding:10px 8px;font:600 11.5px 'Inter';text-align:center;border-left:1px solid #F2F1EB">Court 4</div>
+          <div style="padding:10px 8px;font:600 11.5px 'Inter';text-align:center;border-left:1px solid #F2F1EB;color:#B45242">Court 5</div>
+          <div style="padding:10px 8px;font:600 11.5px 'Inter';text-align:center;border-left:1px solid #F2F1EB">Court 6</div>
+        </div>
+        <div style="flex:1;overflow:hidden">
+          <!-- rows -->
+          <div style="display:grid;grid-template-columns:64px repeat(6,1fr);border-bottom:1px solid #F2F1EB"><div style="padding:9px 8px;font:600 11px 'Inter';color:#8A938C;font-variant-numeric:tabular-nums">5 PM</div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:repeating-linear-gradient(45deg,#EEE7D6 0 4px,#E3DBC4 4px 8px)"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div></div>
+          <div style="display:grid;grid-template-columns:64px repeat(6,1fr);border-bottom:1px solid #F2F1EB"><div style="padding:9px 8px;font:600 11px 'Inter';color:#8A938C;font-variant-numeric:tabular-nums">6 PM</div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#C8F550"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:repeating-linear-gradient(45deg,#EEE7D6 0 4px,#E3DBC4 4px 8px)"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div></div>
+          <div style="display:grid;grid-template-columns:64px repeat(6,1fr);border-bottom:1px solid #F2F1EB"><div style="padding:9px 8px;font:600 11px 'Inter';color:#8A938C;font-variant-numeric:tabular-nums">7 PM</div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:repeating-linear-gradient(45deg,#EEE7D6 0 4px,#E3DBC4 4px 8px)"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div></div>
+          <div style="display:grid;grid-template-columns:64px repeat(6,1fr);border-bottom:1px solid #F2F1EB"><div style="padding:9px 8px;font:600 11px 'Inter';color:#8A938C;font-variant-numeric:tabular-nums">8 PM</div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#C8F550"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:repeating-linear-gradient(45deg,#EEE7D6 0 4px,#E3DBC4 4px 8px)"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div></div>
+          <div style="display:grid;grid-template-columns:64px repeat(6,1fr);border-bottom:1px solid #F2F1EB"><div style="padding:9px 8px;font:600 11px 'Inter';color:#8A938C;font-variant-numeric:tabular-nums">9 PM</div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#0C4A38"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:repeating-linear-gradient(45deg,#EEE7D6 0 4px,#E3DBC4 4px 8px)"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div></div>
+          <div style="display:grid;grid-template-columns:64px repeat(6,1fr)"><div style="padding:9px 8px;font:600 11px 'Inter';color:#8A938C;font-variant-numeric:tabular-nums">10 PM</div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:repeating-linear-gradient(45deg,#EEE7D6 0 4px,#E3DBC4 4px 8px)"></div></div><div style="border-left:1px solid #F2F1EB;padding:6px"><div style="height:26px;border-radius:5px;background:#fff;border:1px dashed #D5D8CF"></div></div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div style="flex:1;background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#B45242">block</span><div><div style="font:600 12.5px 'Inter'">Blocked: Court 5 all day</div><div style="font:400 11px 'Inter';color:#8A938C">Net repair · maintenance</div></div></div>
+        <div style="flex:1;background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#8A6D1A">celebration</span><div><div style="font:600 12.5px 'Inter'">Holiday: Aug 15</div><div style="font:400 11px 'Inter';color:#8A938C">Independence Day · 50% capacity</div></div><span style="margin-left:auto;font:600 12px 'Inter';color:#0C4A38">Edit schedule</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t4" data-screen-label="Bookings">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Bookings &amp; check-in</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a" data-screen-label="Bookings table">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Bookings — tabs, table, check-in</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav on"><span class="mi">calendar_month</span>Bookings<span style="margin-left:auto;font:600 10px 'Inter';background:#0C4A38;color:#fff;border-radius:9px;padding:2px 7px">18</span></div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="pk-sec">SYSTEM</div>
+      <div class="pk-nav"><span class="mi">notifications</span>Notifications<span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#E4572E"></span></div>
+      <div class="pk-nav"><span class="mi">settings</span>Settings</div>
+    </div>
+    <div style="margin:auto 12px 14px;padding:11px;border:1px solid #EEEDE7;border-radius:11px;display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:9px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div><div style="line-height:1.25"><div style="font:600 12.5px 'Inter'">Greenpoint P&amp;P</div><div style="font:400 11px 'Inter';color:#8A938C">Owner · Meera S.</div></div><span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#B4BBB2">unfold_more</span></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Bookings</div><div style="font:400 12px 'Inter';color:#8A938C">42 today · 18 upcoming</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;background:#F4F3EE;border-radius:9px;display:flex;align-items:center;gap:8px;padding:0 12px;width:200px"><span style="font-family:var(--ms);font-size:18px;color:#A7AFA8">search</span><span style="font:400 12.5px 'Inter';color:#A7AFA8">Search customer…</span></div><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#8A938C">download</span>Export</div></div>
+    </div>
+    <div style="padding:0 24px;background:#fff;border-bottom:1px solid #EEEDE7;display:flex;gap:22px">
+      <div style="font:600 13px 'Inter';color:#0C4A38;padding:13px 0;border-bottom:2px solid #0C4A38">Today <span style="color:#8A938C;font-weight:500">42</span></div>
+      <div style="font:500 13px 'Inter';color:#5A6560;padding:13px 0">Upcoming <span style="color:#B4BBB2">18</span></div>
+      <div style="font:500 13px 'Inter';color:#5A6560;padding:13px 0">Completed <span style="color:#B4BBB2">312</span></div>
+      <div style="font:500 13px 'Inter';color:#5A6560;padding:13px 0">Cancelled <span style="color:#B4BBB2">7</span></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px">
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <tr><th style="width:34px"><div style="width:16px;height:16px;border:1.5px solid #D5D8CF;border-radius:4px"></div></th><th>Time</th><th>Customer</th><th>Court</th><th>Type</th><th>Payment</th><th>Status</th><th style="text-align:right">Action</th></tr>
+          <tr><td><div style="width:16px;height:16px;border:1.5px solid #D5D8CF;border-radius:4px"></div></td><td style="font-variant-numeric:tabular-nums;font-weight:600">6:00 PM</td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 10px var(--sg)">AM</div>Arjun Mehta</div></td><td>Court 3</td><td>Friendly</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $28</span></td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Checked in</span></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:18px;color:#8A938C">more_horiz</span></td></tr>
+          <tr><td><div style="width:16px;height:16px;border:1.5px solid #D5D8CF;border-radius:4px"></div></td><td style="font-variant-numeric:tabular-nums;font-weight:600">6:30 PM</td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 10px var(--sg)">SJ</div>Sana Joshi</div></td><td>Court 1</td><td>TeamUp</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $14</span></td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Upcoming</span></td><td style="text-align:right"><span style="font:600 11.5px 'Inter';color:#0C4A38;border:1px solid #0C4A38;border-radius:7px;padding:5px 11px">Check in</span></td></tr>
+          <tr><td><div style="width:16px;height:16px;border:1.5px solid #D5D8CF;border-radius:4px"></div></td><td style="font-variant-numeric:tabular-nums;font-weight:600">7:00 PM</td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 10px var(--sg)">RK</div>Rohan Kapoor</div></td><td>Court 3</td><td>Friendly</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $28</span></td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Upcoming</span></td><td style="text-align:right"><span style="font:600 11.5px 'Inter';color:#0C4A38;border:1px solid #0C4A38;border-radius:7px;padding:5px 11px">Check in</span></td></tr>
+          <tr><td><div style="width:16px;height:16px;border:1.5px solid #D5D8CF;border-radius:4px"></div></td><td style="font-variant-numeric:tabular-nums;font-weight:600">7:30 PM</td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#E9D7EE;color:#6B2E7A;display:flex;align-items:center;justify-content:center;font:700 10px var(--sg)">TP</div>Tara Patel</div></td><td>Court 2</td><td>Coaching</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Pay on site</span></td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Upcoming</span></td><td style="text-align:right"><span style="font:600 11.5px 'Inter';color:#0C4A38;border:1px solid #0C4A38;border-radius:7px;padding:5px 11px">Check in</span></td></tr>
+          <tr><td><div style="width:16px;height:16px;border:1.5px solid #D5D8CF;border-radius:4px"></div></td><td style="font-variant-numeric:tabular-nums;font-weight:600">8:00 PM</td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#DFE8D8;color:#41682F;display:flex;align-items:center;justify-content:center;font:700 10px var(--sg)">NK</div>Nik Kher</div></td><td>Court 1</td><td>Friendly</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $14</span></td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Upcoming</span></td><td style="text-align:right"><span style="font:600 11.5px 'Inter';color:#0C4A38;border:1px solid #0C4A38;border-radius:7px;padding:5px 11px">Check in</span></td></tr>
+          <tr><td><div style="width:16px;height:16px;border:1.5px solid #D5D8CF;border-radius:4px"></div></td><td style="font-variant-numeric:tabular-nums;font-weight:600">8:30 PM</td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#EED9C4;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 10px var(--sg)">MV</div>Maya Verma</div></td><td>Court 6</td><td>Friendly</td><td><span style="font:600 11px 'Inter';color:#B45242;background:#F7E7E3;border-radius:20px;padding:3px 9px">Refunded</span></td><td><span style="font:600 11px 'Inter';color:#8A938C;background:#F0F0EA;border-radius:20px;padding:3px 9px">Cancelled</span></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:18px;color:#8A938C">more_horiz</span></td></tr>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;margin-top:14px;font:400 12px 'Inter';color:#8A938C"><span>Showing 6 of 42</span><div style="margin-left:auto;display:flex;gap:6px"><div style="width:30px;height:30px;border:1px solid #E4E3DC;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--ms);font-size:17px;color:#8A938C">chevron_left</div><div style="width:30px;height:30px;background:#0C4A38;color:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 12px 'Inter'">1</div><div style="width:30px;height:30px;border:1px solid #E4E3DC;border-radius:7px;display:flex;align-items:center;justify-content:center;font:500 12px 'Inter'">2</div><div style="width:30px;height:30px;border:1px solid #E4E3DC;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--ms);font-size:17px;color:#8A938C">chevron_right</div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="4b" data-screen-label="Check-in">
+<div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Check-in — booking detail drawer</div>
+<div class="dv-card" style="width:1280px;height:840px;position:relative;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="flex:1;filter:blur(1.5px);opacity:.5;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;padding:0 24px"><div style="font:700 17px var(--sg)">Bookings</div></div>
+    <div style="padding:20px 24px"><div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;height:400px"></div></div>
+  </div>
+  <!-- drawer -->
+  <div style="position:absolute;top:0;right:0;bottom:0;width:420px;background:#fff;border-left:1px solid #E4E3DC;box-shadow:-12px 0 40px rgba(0,0,0,.1);display:flex;flex-direction:column">
+    <div style="padding:20px 22px;border-bottom:1px solid #EEEDE7;display:flex;align-items:center"><div><div style="font:700 16px var(--sg)">Booking #GP-4471</div><div style="font:400 12px 'Inter';color:#8A938C">Today · 7:00 PM · Court 3</div></div><span style="margin-left:auto;font-family:var(--ms);font-size:22px;color:#8A938C">close</span></div>
+    <div style="flex:1;overflow:hidden;padding:22px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;align-items:center;gap:14px"><div style="width:52px;height:52px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 17px var(--sg)">RK</div><div><div style="font:600 16px 'Inter'">Rohan Kapoor</div><div style="font:400 12.5px 'Inter';color:#8A938C">@rohan_k · Rating 3.9 · 41 visits</div></div></div>
+      <div style="display:flex;justify-content:center;padding:6px 0"><div style="width:150px;height:150px;border-radius:14px;background:#101613;display:flex;align-items:center;justify-content:center"><div style="width:118px;height:118px;background:repeating-linear-gradient(45deg,#fff 0 5px,#101613 5px 10px);border-radius:6px"></div></div></div>
+      <div style="text-align:center;font:400 12px 'Inter';color:#8A938C">Scan the player's QR or check in manually</div>
+      <div style="background:#FAFAF7;border:1px solid #EEEDE7;border-radius:11px;padding:4px 14px">
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F1EB"><span style="font:400 12.5px 'Inter';color:#8A938C">Type</span><span style="font:600 12.5px 'Inter'">Friendly · Doubles</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F1EB"><span style="font:400 12.5px 'Inter';color:#8A938C">Duration</span><span style="font:600 12.5px 'Inter'">7:00–9:00 PM (2 hrs)</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F1EB"><span style="font:400 12.5px 'Inter';color:#8A938C">Players</span><span style="font:600 12.5px 'Inter'">4 · all confirmed</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0"><span style="font:400 12.5px 'Inter';color:#8A938C">Payment</span><span style="font:600 12.5px 'Inter';color:#3E8E5A">Paid · $28.00</span></div>
+      </div>
+    </div>
+    <div style="padding:18px 22px;border-top:1px solid #EEEDE7;display:flex;gap:10px">
+      <div style="flex:none;width:44px;height:46px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#B45242">cancel</span></div>
+      <div style="flex:1;height:46px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:8px;font:600 14px 'Inter'"><span style="font-family:var(--ms);font-size:20px;color:#C8F550">check_circle</span>Check in player</div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t5" data-screen-label="Tournaments">
+<div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Tournament hosting</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="5a" data-screen-label="Create tournament">
+<div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>Create tournament + registration form</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings</div>
+      <div class="pk-nav on"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;gap:10px;padding:0 24px">
+      <span style="font-family:var(--ms);font-size:20px;color:#8A938C">arrow_back</span>
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Create tournament</div><div style="font:400 12px 'Inter';color:#8A938C">Set up format, prize &amp; registration</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 14px;font:500 12.5px 'Inter'">Save draft</div><div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;padding:0 16px;font:600 12.5px 'Inter'">Publish &amp; open registration</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:22px 24px;display:grid;grid-template-columns:1.3fr 1fr;gap:20px">
+      <!-- form -->
+      <div style="display:flex;flex-direction:column;gap:16px;overflow:hidden">
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px">
+          <div style="font:600 13.5px 'Inter';margin-bottom:14px">Basics</div>
+          <div style="display:grid;grid-template-columns:1fr;gap:12px">
+            <div><div style="font:600 11.5px 'Inter';color:#5A6560;margin-bottom:6px">Tournament name</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">Summer Slam Doubles</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div><div style="font:600 11.5px 'Inter';color:#5A6560;margin-bottom:6px">Format</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">Single elimination<span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#8A938C">expand_more</span></div></div>
+              <div><div style="font:600 11.5px 'Inter';color:#5A6560;margin-bottom:6px">Skill bracket</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">3.5 (3.25–3.75)<span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#8A938C">expand_more</span></div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div><div style="font:600 11.5px 'Inter';color:#5A6560;margin-bottom:6px">Dates</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">Jul 19–20</div></div>
+              <div><div style="font:600 11.5px 'Inter';color:#5A6560;margin-bottom:6px">Max teams</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">32</div></div>
+              <div><div style="font:600 11.5px 'Inter';color:#5A6560;margin-bottom:6px">Entry fee</div><div style="height:40px;background:#fff;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;padding:0 12px;font:450 13px 'Inter'">$25 / team</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px">
+          <div style="display:flex;align-items:center;margin-bottom:12px"><span style="font:600 13.5px 'Inter'">Registration form</span><span style="margin-left:auto;font:600 12px 'Inter';color:#0C4A38">+ Add field</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #EEEDE7;border-radius:9px;padding:10px 12px"><span style="font-family:var(--ms);font-size:18px;color:#B4BBB2">drag_indicator</span><span style="font:500 12.5px 'Inter'">Team name</span><span style="font:500 11px 'Inter';color:#8A938C;background:#F0F0EA;border-radius:6px;padding:2px 7px">Text · required</span></div>
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #EEEDE7;border-radius:9px;padding:10px 12px"><span style="font-family:var(--ms);font-size:18px;color:#B4BBB2">drag_indicator</span><span style="font:500 12.5px 'Inter'">Partner's Pickelton ID</span><span style="font:500 11px 'Inter';color:#8A938C;background:#F0F0EA;border-radius:6px;padding:2px 7px">Player · required</span></div>
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #EEEDE7;border-radius:9px;padding:10px 12px"><span style="font-family:var(--ms);font-size:18px;color:#B4BBB2">drag_indicator</span><span style="font:500 12.5px 'Inter'">T-shirt size</span><span style="font:500 11px 'Inter';color:#8A938C;background:#F0F0EA;border-radius:6px;padding:2px 7px">Select · optional</span></div>
+            <div style="display:flex;align-items:center;gap:10px;border:1px dashed #C6CCC0;border-radius:9px;padding:10px 12px;color:#8A938C;justify-content:center;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px">add</span>Add custom question</div>
+          </div>
+        </div>
+      </div>
+      <!-- preview -->
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:12px 16px;border-bottom:1px solid #EEEDE7;font:600 12px 'Inter';color:#8A938C;display:flex;align-items:center;gap:7px"><span style="font-family:var(--ms);font-size:16px">visibility</span>PLAYER-FACING PREVIEW</div>
+        <div style="flex:1;background:#F4F3EE;padding:18px;overflow:hidden">
+          <div style="max-width:300px;margin:0 auto;background:#101613;border-radius:16px;overflow:hidden">
+            <div style="height:80px;background:repeating-linear-gradient(45deg,#1A231D 0 8px,#141B16 8px 16px);position:relative"><span style="position:absolute;bottom:8px;left:14px;font:600 9px 'Inter';letter-spacing:1px;color:#C8F550">CITY OPEN · 3.5</span></div>
+            <div style="padding:14px;color:#fff">
+              <div style="font:700 17px var(--sg)">Summer Slam Doubles</div>
+              <div style="font:400 11px 'Inter';color:#9BA69E;margin-top:4px">Jul 19–20 · Greenpoint P&amp;P · $25/team</div>
+              <div style="display:flex;gap:8px;margin-top:12px"><div style="flex:1;background:#1B241E;border-radius:8px;padding:8px;text-align:center"><div style="font:700 14px var(--sg);color:#C8F550">14/32</div><div style="font:400 9px 'Inter';color:#9BA69E">teams</div></div><div style="flex:1;background:#1B241E;border-radius:8px;padding:8px;text-align:center"><div style="font:700 14px var(--sg);color:#C8F550">$400</div><div style="font:400 9px 'Inter';color:#9BA69E">prize</div></div></div>
+              <div style="height:38px;border-radius:19px;background:#C8F550;color:#0F1512;display:flex;align-items:center;justify-content:center;font:600 12.5px 'Inter';margin-top:12px">Register team</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5b" data-screen-label="Registrations">
+<div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Registrations &amp; approvals</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings</div>
+      <div class="pk-nav on"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Summer Slam Doubles</div><div style="font:400 12px 'Inter';color:#8A938C">Registrations · 14 approved · 3 pending</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#8A938C">download</span>Export CSV</div><div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 14px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">account_tree</span>Generate fixtures</div></div>
+    </div>
+    <div style="padding:0 24px;background:#fff;border-bottom:1px solid #EEEDE7;display:flex;gap:22px">
+      <div style="font:600 13px 'Inter';color:#0C4A38;padding:13px 0;border-bottom:2px solid #0C4A38">Pending <span style="color:#E4572E">3</span></div>
+      <div style="font:500 13px 'Inter';color:#5A6560;padding:13px 0">Approved <span style="color:#B4BBB2">14</span></div>
+      <div style="font:500 13px 'Inter';color:#5A6560;padding:13px 0">Waitlist <span style="color:#B4BBB2">2</span></div>
+      <div style="font:500 13px 'Inter';color:#5A6560;padding:13px 0">Rejected <span style="color:#B4BBB2">1</span></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+      <div style="background:#FBF8EE;border:1px solid #EADFC0;border-radius:11px;padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#8A6D1A">info</span><span style="font:500 12.5px 'Inter';color:#5A4A20">3 teams are waiting for approval. Review skill eligibility before the bracket locks Jul 18.</span></div>
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <tr><th>Team</th><th>Players</th><th>Avg. rating</th><th>Registered</th><th>Payment</th><th style="text-align:right">Decision</th></tr>
+          <tr><td style="font-weight:600">Net Ninjas</td><td>Vik K. &amp; Priya N.</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">3.6 · fits</span></td><td>2h ago</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $25</span></td><td style="text-align:right"><div style="display:flex;gap:6px;justify-content:flex-end"><span style="font:600 11.5px 'Inter';color:#B45242;border:1px solid #E4C6C0;border-radius:7px;padding:5px 12px">Reject</span><span style="font:600 11.5px 'Inter';color:#fff;background:#0C4A38;border-radius:7px;padding:5px 12px">Approve</span></div></td></tr>
+          <tr><td style="font-weight:600">Dink Squad</td><td>Maya V. &amp; Dev R.</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">3.9 · high</span></td><td>5h ago</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $25</span></td><td style="text-align:right"><div style="display:flex;gap:6px;justify-content:flex-end"><span style="font:600 11.5px 'Inter';color:#B45242;border:1px solid #E4C6C0;border-radius:7px;padding:5px 12px">Reject</span><span style="font:600 11.5px 'Inter';color:#fff;background:#0C4A38;border-radius:7px;padding:5px 12px">Approve</span></div></td></tr>
+          <tr><td style="font-weight:600">Paddle Pals</td><td>Ito S. &amp; Cruz M.</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">3.4 · fits</span></td><td>1d ago</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Pending</span></td><td style="text-align:right"><div style="display:flex;gap:6px;justify-content:flex-end"><span style="font:600 11.5px 'Inter';color:#B45242;border:1px solid #E4C6C0;border-radius:7px;padding:5px 12px">Reject</span><span style="font:600 11.5px 'Inter';color:#fff;background:#0C4A38;border-radius:7px;padding:5px 12px">Approve</span></div></td></tr>
+        </table>
+      </div>
+      <div style="font:600 12px 'Inter';color:#8A938C;padding-top:4px">APPROVED · 14</div>
+      <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden;opacity:.9">
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td style="font-weight:600">Court Kings</td><td>Arjun M. &amp; Rohan K.</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">3.7 · fits</span></td><td>3d ago</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $25</span></td><td style="text-align:right"><span style="font:600 11px 'Inter';color:#3E8E5A;display:inline-flex;align-items:center;gap:4px"><span style="font-family:var(--ms);font-size:15px">check_circle</span>Seeded #1</span></td></tr>
+          <tr><td style="font-weight:600">Smash Sisters</td><td>Sana J. &amp; Tara P.</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">3.6 · fits</span></td><td>3d ago</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Paid $25</span></td><td style="text-align:right"><span style="font:600 11px 'Inter';color:#3E8E5A;display:inline-flex;align-items:center;gap:4px"><span style="font-family:var(--ms);font-size:15px">check_circle</span>Seeded #2</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5c" data-screen-label="Fixtures live scoring">
+<div class="dv-olabel"><a class="dv-oid" href="#5c">5c</a>Fixtures &amp; live scoring — host console</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#0F1512;color:#F4F6F1">
+  <div style="width:236px;flex:none;background:#141B16;border-right:1px solid #232D26;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#C8F550;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#0F1512">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px;color:#fff">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#C8F550;background:#1B241E;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:9px;font:500 13.5px 'Inter';color:#8A938C"><span style="font-family:var(--ms);font-size:20px;color:#6E786F">dashboard</span>Dashboard</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:9px;font:600 13.5px 'Inter';color:#C8F550;background:#1B241E"><span style="font-family:var(--ms);font-size:20px;color:#C8F550">trophy</span>Tournaments</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:9px;font:500 13.5px 'Inter';color:#8A938C"><span style="font-family:var(--ms);font-size:20px;color:#6E786F">calendar_month</span>Bookings</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:9px;font:500 13.5px 'Inter';color:#8A938C"><span style="font-family:var(--ms);font-size:20px;color:#6E786F">payments</span>Payments</div>
+    </div>
+    <div style="margin-top:auto;padding:16px;font:400 11px 'Inter';color:#6E786F">Live console · dark for courtside</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #232D26;display:flex;align-items:center;gap:12px;padding:0 24px">
+      <span style="font-family:var(--ms);font-size:20px;color:#8A938C">arrow_back</span>
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px;color:#fff">Summer Slam · Fixtures</div><div style="font:400 12px 'Inter';color:#8A938C">Semifinals · Sat 2:30 PM</div></div>
+      <span style="margin-left:auto;font:600 12px 'Inter';color:#E4572E;display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#E4572E"></span>2 LIVE</span>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px;display:grid;grid-template-columns:1.1fr 1fr;gap:20px">
+      <!-- bracket -->
+      <div style="background:#141B16;border:1px solid #232D26;border-radius:14px;padding:18px;display:flex;flex-direction:column">
+        <div style="font:600 13px 'Inter';color:#9BA69E;margin-bottom:16px">Bracket</div>
+        <div style="flex:1;display:flex;gap:16px">
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:space-around">
+            <div style="font:600 9.5px 'Inter';letter-spacing:1px;color:#6E786F">SEMIS</div>
+            <div style="background:#1B241E;border:1px solid #2A362D;border-radius:9px;padding:9px 11px"><div style="display:flex;justify-content:space-between;font:600 11.5px 'Inter';color:#fff">Court Kings<span style="color:#C8F550">9</span></div><div style="display:flex;justify-content:space-between;font:600 11.5px 'Inter';color:#8A938C;margin-top:6px">Smash Sisters<span>7</span></div><div style="font:600 9px 'Inter';color:#E4572E;margin-top:6px">● LIVE · Court 1</div></div>
+            <div style="background:#1B241E;border:1px solid #2A362D;border-radius:9px;padding:9px 11px"><div style="display:flex;justify-content:space-between;font:600 11.5px 'Inter';color:#fff">Net Ninjas<span style="color:#C8F550">11</span></div><div style="display:flex;justify-content:space-between;font:600 11.5px 'Inter';color:#8A938C;margin-top:6px">Dink Squad<span>6</span></div><div style="font:600 9px 'Inter';color:#E4572E;margin-top:6px">● LIVE · Court 2</div></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px">
+            <div style="font:600 9.5px 'Inter';letter-spacing:1px;color:#6E786F">FINAL</div>
+            <div style="background:#1B241E;border:1.5px dashed #2A362D;border-radius:9px;padding:14px 11px"><div style="font:500 11.5px 'Inter';color:#6E786F">Winner SF1</div><div style="font:500 11.5px 'Inter';color:#6E786F;margin-top:8px">Winner SF2</div></div>
+            <div style="font:400 10px 'Inter';color:#6E786F">Sat · 4:00 PM · Court 1</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;background:#1B241E;border-radius:9px;padding:9px 11px"><span style="font-family:var(--ms);font-size:18px;color:#C9A227;font-variation-settings:'FILL' 1">trophy</span><div><div style="font:600 11px 'Inter';color:#fff">Champion</div><div style="font:400 10px 'Inter';color:#8A938C">$400 prize</div></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- live scoring -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:#141B16;border:1px solid #232D26;border-radius:14px;padding:18px">
+          <div style="display:flex;justify-content:space-between;font:600 10px 'Inter';letter-spacing:1px;color:#C8F550"><span>SEMIFINAL 1 · COURT 1 · GAME 2</span><span style="color:#E4572E">● LIVE</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+            <div style="text-align:center"><div style="font:600 12.5px 'Inter';color:#fff">Court Kings</div><div style="font:700 48px var(--sg);color:#C8F550">9</div></div>
+            <div style="font:600 13px var(--sg);color:#6E786F">vs</div>
+            <div style="text-align:center"><div style="font:600 12.5px 'Inter';color:#8A938C">Smash Sisters</div><div style="font:700 48px var(--sg);color:#6E786F">7</div></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <div style="flex:1;height:52px;border-radius:11px;background:#C8F550;color:#0F1512;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 16px var(--sg)">+1</span><span style="font:600 9.5px 'Inter'">Court Kings</span></div>
+            <div style="flex:1;height:52px;border-radius:11px;background:#232D26;color:#F4F6F1;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 16px var(--sg)">+1</span><span style="font:600 9.5px 'Inter';color:#8A938C">Smash Sisters</span></div>
+            <div style="flex:none;width:52px;height:52px;border-radius:11px;border:1px solid #2A362D;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#8A938C">undo</span></div>
+          </div>
+        </div>
+        <div style="background:#141B16;border:1px solid #232D26;border-radius:14px;padding:16px;flex:1;overflow:hidden">
+          <div style="font:600 13px 'Inter';color:#9BA69E;margin-bottom:12px">Recent results</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #1F2822"><span style="font:600 10px 'Inter';color:#C8F550;background:#1B241E;border-radius:6px;padding:3px 7px">QF</span><span style="font:500 12px 'Inter';color:#fff">Court Kings def. Ito/Cruz</span><span style="margin-left:auto;font:600 12px var(--sg);color:#8A938C">11-6, 11-4</span></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #1F2822"><span style="font:600 10px 'Inter';color:#C8F550;background:#1B241E;border-radius:6px;padding:3px 7px">QF</span><span style="font:500 12px 'Inter';color:#fff">Smash Sisters def. Kim/Lee</span><span style="margin-left:auto;font:600 12px var(--sg);color:#8A938C">11-8, 9-11, 11-7</span></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 0"><span style="font:600 10px 'Inter';color:#C8F550;background:#1B241E;border-radius:6px;padding:3px 7px">QF</span><span style="font:500 12px 'Inter';color:#fff">Net Ninjas def. Verma/Rao</span><span style="margin-left:auto;font:600 12px var(--sg);color:#8A938C">11-3, 11-9</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t6" data-screen-label="Money and insight">
+<div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">Payments &amp; analytics</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="6a" data-screen-label="Payments">
+<div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a>Payments — revenue, payouts, invoices</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings</div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav on"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav"><span class="mi">monitoring</span>Analytics</div>
+    </div>
+    <div style="margin:auto 12px 14px;padding:11px;border:1px solid #EEEDE7;border-radius:11px;display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:9px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div><div style="line-height:1.25"><div style="font:600 12.5px 'Inter'">Greenpoint P&amp;P</div><div style="font:400 11px 'Inter';color:#8A938C">Owner · Meera S.</div></div></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Payments</div><div style="font:400 12px 'Inter';color:#8A938C">Next payout Fri, 11 Jul</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#8A938C">receipt_long</span>Invoices</div><div style="height:36px;background:#0C4A38;color:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 14px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">account_balance</span>Payout settings</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <div style="background:#101613;color:#fff;border-radius:12px;padding:16px"><div style="font:500 12px 'Inter';color:#9BA69E">Available balance</div><div style="font:700 26px var(--sg);color:#C8F550;margin-top:8px">$3,240</div><div style="font:500 11px 'Inter';color:#9BA69E;margin-top:3px">Payout Fri, 11 Jul</div></div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px"><div style="font:500 12px 'Inter';color:#8A938C">Revenue · July</div><div style="font:700 26px var(--sg);margin-top:8px">$18,940</div><div style="font:500 11px 'Inter';color:#3E8E5A;margin-top:3px">▲ 14% vs June</div></div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px"><div style="font:500 12px 'Inter';color:#8A938C">Pending payouts</div><div style="font:700 26px var(--sg);margin-top:8px">$1,180</div><div style="font:500 11px 'Inter';color:#8A938C;margin-top:3px">2 in transit</div></div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px"><div style="font:500 12px 'Inter';color:#8A938C">Platform fees</div><div style="font:700 26px var(--sg);margin-top:8px">$946</div><div style="font:500 11px 'Inter';color:#8A938C;margin-top:3px">5% of gross</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;flex:1;min-height:0">
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;padding:14px 16px 10px"><span style="font:600 14px 'Inter'">Transactions</span><span style="margin-left:auto;font:600 12px 'Inter';color:#0C4A38">View all</span></div>
+          <table style="width:100%;border-collapse:collapse">
+            <tr><th>Date</th><th>Description</th><th>Method</th><th>Status</th><th style="text-align:right">Amount</th></tr>
+            <tr><td>Jul 8</td><td>Court booking · Arjun M.</td><td>Card</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Settled</span></td><td style="text-align:right;font-weight:600">+$28.00</td></tr>
+            <tr><td>Jul 8</td><td>TeamUp split · Sana J.</td><td>Wallet</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Settled</span></td><td style="text-align:right;font-weight:600">+$14.00</td></tr>
+            <tr><td>Jul 7</td><td>Tournament entry · Net Ninjas</td><td>Card</td><td><span style="font:600 11px 'Inter';color:#3E8E5A;background:#E7F2E9;border-radius:20px;padding:3px 9px">Settled</span></td><td style="text-align:right;font-weight:600">+$25.00</td></tr>
+            <tr><td>Jul 7</td><td>Refund · Maya V. (rain)</td><td>Card</td><td><span style="font:600 11px 'Inter';color:#B45242;background:#F7E7E3;border-radius:20px;padding:3px 9px">Refunded</span></td><td style="text-align:right;font-weight:600;color:#B45242">−$14.00</td></tr>
+            <tr><td>Jul 6</td><td>Coaching · Tara P.</td><td>Card</td><td><span style="font:600 11px 'Inter';color:#8A6D1A;background:#FBF3DA;border-radius:20px;padding:3px 9px">Pending</span></td><td style="text-align:right;font-weight:600">+$40.00</td></tr>
+          </table>
+        </div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px;display:flex;flex-direction:column">
+          <div style="font:600 14px 'Inter';margin-bottom:12px">Payout history</div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #F2F1EB"><div style="width:34px;height:34px;border-radius:9px;background:#E7F2E9;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#3E8E5A">check</span></div><div style="flex:1"><div style="font:600 12.5px 'Inter'">$2,910 · Jul 4</div><div style="font:400 11px 'Inter';color:#8A938C">HDFC ···· 8842</div></div><span style="font:600 11px 'Inter';color:#3E8E5A">Paid</span></div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #F2F1EB"><div style="width:34px;height:34px;border-radius:9px;background:#E7F2E9;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#3E8E5A">check</span></div><div style="flex:1"><div style="font:600 12.5px 'Inter'">$3,420 · Jun 27</div><div style="font:400 11px 'Inter';color:#8A938C">HDFC ···· 8842</div></div><span style="font:600 11px 'Inter';color:#3E8E5A">Paid</span></div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 0"><div style="width:34px;height:34px;border-radius:9px;background:#FBF3DA;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#8A6D1A">schedule</span></div><div style="flex:1"><div style="font:600 12.5px 'Inter'">$1,180 · Jul 11</div><div style="font:400 11px 'Inter';color:#8A938C">Scheduled</div></div><span style="font:600 11px 'Inter';color:#8A6D1A">In transit</span></div>
+          <div style="margin-top:auto;background:#FAFAF7;border:1px solid #EEEDE7;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">verified</span><div style="font:400 11.5px/1.4 'Inter';color:#5A6560">Payouts auto-transfer every Friday to your linked bank.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="6b" data-screen-label="Analytics">
+<div class="dv-olabel"><a class="dv-oid" href="#6b">6b</a>Analytics — revenue, occupancy, peak hours</div>
+<div class="dv-card" style="width:1280px;height:840px;display:flex;background:#FAFAF7;color:#28312C">
+  <div style="width:236px;flex:none;background:#fff;border-right:1px solid #EEEDE7;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 14px"><div style="width:32px;height:32px;border-radius:9px;background:#0C4A38;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div style="font:700 16px var(--sg);letter-spacing:-0.3px">Pickelton</div><span style="font:600 9px 'Inter';letter-spacing:.1em;color:#0C4A38;background:#EAF3DA;border-radius:5px;padding:3px 6px;margin-left:auto">PARTNER</span></div>
+    <div style="padding:6px 12px;display:flex;flex-direction:column;gap:2px">
+      <div class="pk-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="pk-nav"><span class="mi">stadium</span>Venues</div>
+      <div class="pk-nav"><span class="mi">sports_tennis</span>Courts</div>
+      <div class="pk-nav"><span class="mi">calendar_month</span>Bookings</div>
+      <div class="pk-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="pk-nav"><span class="mi">groups</span>Customers</div>
+      <div class="pk-nav"><span class="mi">payments</span>Payments</div>
+      <div class="pk-nav on"><span class="mi">monitoring</span>Analytics</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:60px;flex:none;border-bottom:1px solid #EEEDE7;background:#fff;display:flex;align-items:center;padding:0 24px">
+      <div><div style="font:700 17px var(--sg);letter-spacing:-0.3px">Analytics</div><div style="font:400 12px 'Inter';color:#8A938C">Last 30 days · all venues</div></div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#0C4A38">calendar_today</span>Last 30 days</div><div style="height:36px;border:1px solid #E4E3DC;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 12px;font:500 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px;color:#8A938C">download</span>Export</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;flex:none">
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px">
+          <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px"><span style="font:600 14px 'Inter'">Revenue &amp; customer growth</span><span style="font:400 11.5px 'Inter';color:#8A938C">— revenue &nbsp; <span style="color:#C8A800">— new customers</span></span><span style="margin-left:auto;font:700 16px var(--sg)">$18,940</span></div>
+          <div style="position:relative;height:150px">
+            <svg viewBox="0 0 560 150" preserveAspectRatio="none" style="width:100%;height:100%">
+              <polyline points="0,120 62,110 124,115 186,90 248,95 310,70 372,74 434,50 496,44 560,26" fill="none" stroke="#0C4A38" stroke-width="2.5"/>
+              <polyline points="0,135 62,132 124,128 186,124 248,118 310,112 372,108 434,98 496,92 560,84" fill="none" stroke="#C8A800" stroke-width="2" stroke-dasharray="5 4"/>
+            </svg>
+          </div>
+          <div style="display:flex;justify-content:space-between;font:400 10.5px 'Inter';color:#A7AFA8;margin-top:6px"><span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span></div>
+        </div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px">
+          <div style="font:600 14px 'Inter';margin-bottom:14px">Popular sports</div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="width:96px;height:96px;border-radius:50%;background:conic-gradient(#0C4A38 0 72%,#C8F550 72% 90%,#DDE7DF 90%);display:flex;align-items:center;justify-content:center"><div style="width:58px;height:58px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 15px var(--sg)">2.1k</span><span style="font:400 9px 'Inter';color:#8A938C">games</span></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:9px">
+              <div style="display:flex;align-items:center;gap:8px;font:500 12px 'Inter'"><span style="width:10px;height:10px;border-radius:3px;background:#0C4A38"></span>Pickleball<span style="margin-left:auto;font:700 12px var(--sg)">72%</span></div>
+              <div style="display:flex;align-items:center;gap:8px;font:500 12px 'Inter'"><span style="width:10px;height:10px;border-radius:3px;background:#C8F550"></span>Padel<span style="margin-left:auto;font:700 12px var(--sg)">18%</span></div>
+              <div style="display:flex;align-items:center;gap:8px;font:500 12px 'Inter'"><span style="width:10px;height:10px;border-radius:3px;background:#DDE7DF"></span>Tennis<span style="margin-left:auto;font:700 12px var(--sg)">10%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;flex:1;min-height:0">
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px;display:flex;flex-direction:column">
+          <div style="font:600 14px 'Inter';margin-bottom:6px">Peak hours &amp; occupancy heatmap</div>
+          <div style="font:400 11px 'Inter';color:#8A938C;margin-bottom:12px">Darker = busier · Mon–Sun × 9AM–10PM</div>
+          <div style="flex:1;display:grid;grid-template-rows:repeat(7,1fr);gap:4px">
+            <div style="display:grid;grid-template-columns:36px repeat(13,1fr);gap:4px;align-items:center"><span style="font:600 10px 'Inter';color:#8A938C">Mon</span><div style="background:#EEF3E3;border-radius:3px;height:100%"></div><div style="background:#EEF3E3;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#EEF3E3;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div></div>
+            <div style="display:grid;grid-template-columns:36px repeat(13,1fr);gap:4px;align-items:center"><span style="font:600 10px 'Inter';color:#8A938C">Tue</span><div style="background:#EEF3E3;border-radius:3px"></div><div style="background:#EEF3E3;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div></div>
+            <div style="display:grid;grid-template-columns:36px repeat(13,1fr);gap:4px;align-items:center"><span style="font:600 10px 'Inter';color:#8A938C">Wed</span><div style="background:#EEF3E3;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div></div>
+            <div style="display:grid;grid-template-columns:36px repeat(13,1fr);gap:4px;align-items:center"><span style="font:600 10px 'Inter';color:#8A938C">Thu</span><div style="background:#EEF3E3;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div></div>
+            <div style="display:grid;grid-template-columns:36px repeat(13,1fr);gap:4px;align-items:center"><span style="font:600 10px 'Inter';color:#8A938C">Fri</span><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#1F6416;border-radius:3px"></div><div style="background:#1F6416;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div></div>
+            <div style="display:grid;grid-template-columns:36px repeat(13,1fr);gap:4px;align-items:center"><span style="font:600 10px 'Inter';color:#8A938C">Sat</span><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#1F6416;border-radius:3px"></div><div style="background:#1F6416;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div></div>
+            <div style="display:grid;grid-template-columns:36px repeat(13,1fr);gap:4px;align-items:center"><span style="font:600 10px 'Inter';color:#8A938C">Sun</span><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#1F6416;border-radius:3px"></div><div style="background:#2C7A1E;border-radius:3px"></div><div style="background:#3E8E2A;border-radius:3px"></div><div style="background:#5EA33F;border-radius:3px"></div><div style="background:#8FBF66;border-radius:3px"></div><div style="background:#C6DDA0;border-radius:3px"></div><div style="background:#DDE9C8;border-radius:3px"></div><div style="background:#EEF3E3;border-radius:3px"></div></div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #EEEDE7;border-radius:12px;padding:16px;display:flex;flex-direction:column">
+          <div style="font:600 14px 'Inter';margin-bottom:14px">Court occupancy</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div><div style="display:flex;justify-content:space-between;font:500 12px 'Inter';margin-bottom:5px">Court 3<span style="font:700 12px var(--sg)">91%</span></div><div style="height:7px;border-radius:4px;background:#EEEDE7;overflow:hidden"><div style="width:91%;height:100%;background:#0C4A38"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font:500 12px 'Inter';margin-bottom:5px">Court 1<span style="font:700 12px var(--sg)">82%</span></div><div style="height:7px;border-radius:4px;background:#EEEDE7;overflow:hidden"><div style="width:82%;height:100%;background:#0C4A38"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font:500 12px 'Inter';margin-bottom:5px">Court 6<span style="font:700 12px var(--sg)">79%</span></div><div style="height:7px;border-radius:4px;background:#EEEDE7;overflow:hidden"><div style="width:79%;height:100%;background:#0C4A38"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font:500 12px 'Inter';margin-bottom:5px">Court 2<span style="font:700 12px var(--sg)">74%</span></div><div style="height:7px;border-radius:4px;background:#EEEDE7;overflow:hidden"><div style="width:74%;height:100%;background:#0C4A38"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font:500 12px 'Inter';margin-bottom:5px">Court 4<span style="font:700 12px var(--sg)">68%</span></div><div style="height:7px;border-radius:4px;background:#EEEDE7;overflow:hidden"><div style="width:68%;height:100%;background:#0C4A38"></div></div></div>
+          </div>
+          <div style="margin-top:auto;background:#EAF3DA;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">lightbulb</span><div style="font:400 11.5px/1.4 'Inter';color:#0C4A38">Fri–Sun 7–9 PM sells out. Consider +$2/hr peak pricing.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "add the Customers &amp; Notifications screens" · "empty + loading states for these tables" · "dark mode for the whole dashboard" · "build the Admin console next"</p>
+</section></x-dc>
+</body>
+</html>

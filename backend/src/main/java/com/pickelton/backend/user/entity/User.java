@@ -4,8 +4,11 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pickelton.backend.common.entity.BaseEntity;
+import com.pickelton.backend.enums.PlatformRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,6 +54,11 @@ public class User extends BaseEntity {
 
     @Column(name = "google_subject", unique = true, length = 255)
     private String googleSubject;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private PlatformRole role = PlatformRole.USER;
 
     @Column(length = 280)
     private String bio;

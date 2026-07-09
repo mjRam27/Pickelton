@@ -8,5 +8,7 @@ public enum MatchStatus {
     IN_PROGRESS,
     LIVE,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    VOIDED,
+    ARCHIVED
 }

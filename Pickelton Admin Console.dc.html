@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0B0C;font-family:'Inter',system-ui,sans-serif;--ms:'Material Symbols Rounded';--sg:'Space Grotesk',sans-serif;--mo:'JetBrains Mono',ui-monospace,monospace}
+a{color:#C8F550}a:hover{color:#b3e02f}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.07);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px var(--mo);padding:3px 7px;background:#C8F550;color:#0B0B0C;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 'Inter';color:#E8E8E6}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px var(--mo);padding:3px 7px;background:rgba(255,255,255,.09);color:#E8E8E6;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter';color:rgba(255,255,255,.5)}
+.dv-card{max-width:100%;background:#131315;border:1px solid #232326;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.4);overflow:hidden}
+.dv-opt:target .dv-oid{background:#C8F550;color:#0B0B0C}
+.dv-next{margin:22px 0 0;font:12px/1.5 'Inter';color:rgba(255,255,255,.45)}
+/* shell helpers */
+.ad-nav{display:flex;align-items:center;gap:11px;padding:7px 11px;border-radius:7px;font:450 13px 'Inter';color:#9A9A97;cursor:default}
+.ad-nav .mi{font-family:var(--ms);font-size:19px;color:#6E6E6B}
+.ad-nav.on{background:#1E1E21;color:#F3F3F1}
+.ad-nav.on .mi{color:#C8F550}
+.ad-sec{font:600 10px 'Inter';letter-spacing:.1em;color:#5E5E5B;padding:15px 11px 6px}
+th{font:600 10.5px 'Inter';letter-spacing:.04em;color:#7A7A77;text-align:left;padding:10px 16px;border-bottom:1px solid #232326;text-transform:uppercase}
+td{font:450 12.5px 'Inter';color:#D4D4D1;padding:12px 16px;border-bottom:1px solid #1C1C1F}
+.mono{font-family:var(--mo)}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t0" data-screen-label="System overview">
+<div class="dv-thd"><a class="dv-tid" href="#t0">0</a><span class="dv-tname">Pickelton Admin — internal operations console</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="0a">
+<div class="dv-olabel"><a class="dv-oid" href="#0a">0a</a>Approach</div>
+<div class="dv-card" style="width:720px;padding:30px;box-sizing:border-box;box-shadow:none">
+  <div style="display:flex;align-items:center;gap:12px"><div style="width:38px;height:38px;border-radius:10px;background:#1E1E21;border:1px solid #2E2E32;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:22px;color:#C8F550">shield_person</span></div><div style="font:700 22px var(--sg);letter-spacing:-0.4px;color:#F3F3F1">Pickelton <span style="font-weight:500;color:#8A8A87">Admin</span></div></div>
+  <div style="font:400 14px/1.6 'Inter';color:#9A9A97;margin-top:14px;max-width:600px">The internal control plane for ops, moderation, support and finance — modeled on Supabase / Vercel / Stripe. Dark, dense, keyboard-driven, monospace where precision matters (IDs, amounts, timestamps). Not customer-facing: it optimizes for triage speed, auditability and trust &amp; safety, not delight.</div>
+  <div style="display:flex;gap:10px;margin-top:22px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#0B0B0C;border:1px solid #232326"></div><span style="font:11px var(--mo);color:#7A7A77">#0B0B0C canvas</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#131315;border:1px solid #232326"></div><span style="font:11px var(--mo);color:#7A7A77">#131315 panel</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#C8F550"></div><span style="font:11px var(--mo);color:#7A7A77">#C8F550 accent</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#3ECF8E"></div><span style="font:11px var(--mo);color:#7A7A77">#3ECF8E ok</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:44px;border-radius:8px;background:#E5484D"></div><span style="font:11px var(--mo);color:#7A7A77">#E5484D risk</span></div>
+  </div>
+  <div style="margin-top:20px;font:400 12.5px/1.6 'Inter';color:#9A9A97;max-width:600px">Nav: Dashboard · Users · Clubs · Partners · Tournaments · Payments · Refunds · Verification · Disputes · Reports · Analytics · Audit Logs · Configuration. Role-scoped: moderators see trust &amp; safety, finance sees escrow/payouts. Screens at 1360 desktop width.</div>
+</div>
+</div>
+</div>
+</section>
+
+
+<section class="dv-turn" id="t1" data-screen-label="Admin dashboard">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Ops dashboard — KPIs, live activity, queues</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="1a" data-screen-label="Dashboard">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Dashboard</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <!-- SIDEBAR -->
+  <div style="width:214px;flex:none;background:#0E0E10;border-right:1px solid #1E1E21;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:9px;padding:16px 16px 12px"><div style="width:28px;height:28px;border-radius:8px;background:#1E1E21;border:1px solid #2E2E32;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#C8F550">shield_person</span></div><div style="font:700 14px var(--sg);letter-spacing:-0.3px;color:#F3F3F1">Pickelton</div><span style="font:600 8.5px 'Inter';letter-spacing:.1em;color:#C8F550;background:#1B2410;border-radius:5px;padding:3px 6px;margin-left:auto">ADMIN</span></div>
+    <div style="padding:6px 10px;display:flex;flex-direction:column;gap:1px;overflow:hidden">
+      <div class="ad-nav on"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="ad-nav"><span class="mi">group</span>Users</div>
+      <div class="ad-nav"><span class="mi">diversity_3</span>Clubs</div>
+      <div class="ad-nav"><span class="mi">handshake</span>Partners<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A2E10;color:#E0B341;border-radius:9px;padding:1px 6px">7</span></div>
+      <div class="ad-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="ad-sec">FINANCE</div>
+      <div class="ad-nav"><span class="mi">account_balance</span>Payments</div>
+      <div class="ad-nav"><span class="mi">undo</span>Refunds</div>
+      <div class="ad-sec">TRUST &amp; SAFETY</div>
+      <div class="ad-nav"><span class="mi">verified_user</span>Verification<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">12</span></div>
+      <div class="ad-nav"><span class="mi">gavel</span>Disputes<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">4</span></div>
+      <div class="ad-nav"><span class="mi">flag</span>Reports</div>
+      <div class="ad-sec">SYSTEM</div>
+      <div class="ad-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="ad-nav"><span class="mi">receipt_long</span>Audit Logs</div>
+      <div class="ad-nav"><span class="mi">tune</span>Configuration</div>
+    </div>
+    <div style="margin-top:auto;padding:12px;border-top:1px solid #1E1E21;display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">DK</div><div style="line-height:1.2"><div style="font:600 11.5px 'Inter';color:#E8E8E6">Dana Kohli</div><div style="font:400 10px var(--mo);color:#6E6E6B">ROLE · SUPER_ADMIN</div></div></div>
+  </div>
+  <!-- MAIN -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;gap:14px;padding:0 22px">
+      <div style="font:600 14px 'Inter';color:#F3F3F1">Overview</div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <div style="height:32px;background:#131315;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 11px;width:230px"><span style="font-family:var(--ms);font-size:16px;color:#6E6E6B">search</span><span style="font:400 12px 'Inter';color:#6E6E6B">Search</span><span style="margin-left:auto;font:500 10px var(--mo);color:#6E6E6B;border:1px solid #2E2E32;border-radius:4px;padding:1px 5px">⌘K</span></div>
+        <div style="height:32px;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 11px;font:500 12px 'Inter';color:#B8B8B5"><span style="width:6px;height:6px;border-radius:50%;background:#3ECF8E"></span>All systems normal</div>
+        <div style="width:32px;height:32px;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative"><span style="font-family:var(--ms);font-size:18px;color:#B8B8B5">notifications</span><div style="position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:#E5484D"></div></div>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+      <!-- KPI ROW -->
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px">
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:13px 14px"><div style="font:500 11px 'Inter';color:#8A8A87">GMV · today</div><div style="font:700 21px var(--sg);color:#F3F3F1;margin-top:6px">$48.2k</div><div style="font:500 10.5px 'Inter';color:#3ECF8E;margin-top:3px">▲ 9.4%</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:13px 14px"><div style="font:500 11px 'Inter';color:#8A8A87">Take rate</div><div style="font:700 21px var(--sg);color:#F3F3F1;margin-top:6px">$2.41k</div><div style="font:500 10.5px 'Inter';color:#8A8A87;margin-top:3px">5.0% avg</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:13px 14px"><div style="font:500 11px 'Inter';color:#8A8A87">Active users</div><div style="font:700 21px var(--sg);color:#F3F3F1;margin-top:6px">18,204</div><div style="font:500 10.5px 'Inter';color:#3ECF8E;margin-top:3px">▲ 3.1%</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:13px 14px"><div style="font:500 11px 'Inter';color:#8A8A87">Bookings · today</div><div style="font:700 21px var(--sg);color:#F3F3F1;margin-top:6px">3,417</div><div style="font:500 10.5px 'Inter';color:#3ECF8E;margin-top:3px">▲ 6.7%</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:13px 14px"><div style="font:500 11px 'Inter';color:#8A8A87">Live matches</div><div style="font:700 21px var(--sg);color:#C8F550;margin-top:6px">142</div><div style="font:500 10.5px 'Inter';color:#8A8A87;margin-top:3px">● realtime</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:13px 14px"><div style="font:500 11px 'Inter';color:#8A8A87">Active tourneys</div><div style="font:700 21px var(--sg);color:#F3F3F1;margin-top:6px">28</div><div style="font:500 10.5px 'Inter';color:#8A8A87;margin-top:3px">6 live</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:14px;flex:1;min-height:0">
+        <!-- LEFT -->
+        <div style="display:flex;flex-direction:column;gap:14px;min-height:0">
+          <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:16px;flex:none">
+            <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px"><span style="font:600 13px 'Inter';color:#F3F3F1">Platform GMV · 30 days</span><span style="font:400 11px var(--mo);color:#8A8A87">$1.28M</span><span style="margin-left:auto;font:500 11px 'Inter';color:#3ECF8E">▲ 11.2% MoM</span></div>
+            <div style="position:relative;height:120px">
+              <svg viewBox="0 0 700 120" preserveAspectRatio="none" style="width:100%;height:100%">
+                <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8F550" stop-opacity="0.22"/><stop offset="1" stop-color="#C8F550" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0,96 L58,90 L116,98 L175,80 L233,84 L291,64 L350,70 L408,52 L466,58 L525,38 L583,44 L641,26 L700,20 L700,120 L0,120 Z" fill="url(#g1)"/>
+                <polyline points="0,96 58,90 116,98 175,80 233,84 291,64 350,70 408,52 466,58 525,38 583,44 641,26 700,20" fill="none" stroke="#C8F550" stroke-width="2"/>
+              </svg>
+            </div>
+            <div style="display:flex;justify-content:space-between;font:400 10px var(--mo);color:#6E6E6B;margin-top:6px"><span>Jun 08</span><span>Jun 22</span><span>Jul 08</span></div>
+          </div>
+          <div style="background:#131315;border:1px solid #232326;border-radius:10px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
+            <div style="display:flex;align-items:center;padding:13px 16px 8px"><span style="font:600 13px 'Inter';color:#F3F3F1">Live matches</span><span style="margin-left:auto;font:500 11px 'Inter';color:#C8F550">View all 142</span></div>
+            <table style="width:100%;border-collapse:collapse">
+              <tr><th>Match ID</th><th>Venue</th><th>Type</th><th>Score</th><th>Duration</th></tr>
+              <tr><td class="mono" style="color:#C8F550">MTX-9F21</td><td>Greenpoint P&amp;P</td><td>Tournament</td><td class="mono">9–7</td><td class="mono" style="color:#8A8A87">00:42:11</td></tr>
+              <tr><td class="mono" style="color:#C8F550">MTX-9F18</td><td>Riverside Club</td><td>Friendly</td><td class="mono">11–9 · G2</td><td class="mono" style="color:#8A8A87">00:31:04</td></tr>
+              <tr><td class="mono" style="color:#C8F550">MTX-9F0C</td><td>Northside Rec</td><td>Club ladder</td><td class="mono">4–6</td><td class="mono" style="color:#8A8A87">00:12:55</td></tr>
+              <tr><td class="mono" style="color:#C8F550">MTX-9EF7</td><td>Downtown Padel</td><td>TeamUp</td><td class="mono">2–1</td><td class="mono" style="color:#8A8A87">00:08:20</td></tr>
+            </table>
+          </div>
+        </div>
+        <!-- RIGHT -->
+        <div style="display:flex;flex-direction:column;gap:14px;min-height:0">
+          <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:15px 16px">
+            <div style="font:600 13px 'Inter';color:#F3F3F1;margin-bottom:12px">Action queues</div>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <div style="display:flex;align-items:center;gap:11px"><div style="width:32px;height:32px;border-radius:8px;background:#3A1414;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#E5848A">verified_user</span></div><div style="flex:1"><div style="font:500 12.5px 'Inter';color:#E8E8E6">Player verifications</div><div style="font:400 10.5px 'Inter';color:#8A8A87">Oldest 2d 4h</div></div><span style="font:700 15px var(--sg);color:#E5484D">12</span></div>
+              <div style="display:flex;align-items:center;gap:11px"><div style="width:32px;height:32px;border-radius:8px;background:#3A2E10;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#E0B341">handshake</span></div><div style="flex:1"><div style="font:500 12.5px 'Inter';color:#E8E8E6">Partner approvals</div><div style="font:400 10.5px 'Inter';color:#8A8A87">Docs to review</div></div><span style="font:700 15px var(--sg);color:#E0B341">7</span></div>
+              <div style="display:flex;align-items:center;gap:11px"><div style="width:32px;height:32px;border-radius:8px;background:#3A1414;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#E5848A">gavel</span></div><div style="flex:1"><div style="font:500 12.5px 'Inter';color:#E8E8E6">Open disputes</div><div style="font:400 10.5px 'Inter';color:#8A8A87">$1,240 in escrow</div></div><span style="font:700 15px var(--sg);color:#E5484D">4</span></div>
+              <div style="display:flex;align-items:center;gap:11px"><div style="width:32px;height:32px;border-radius:8px;background:#1E1E21;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#8A8A87">flag</span></div><div style="flex:1"><div style="font:500 12.5px 'Inter';color:#E8E8E6">Content reports</div><div style="font:400 10.5px 'Inter';color:#8A8A87">Reviews &amp; chat</div></div><span style="font:700 15px var(--sg);color:#B8B8B5">9</span></div>
+            </div>
+          </div>
+          <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:15px 16px;flex:1;min-height:0;overflow:hidden">
+            <div style="display:flex;align-items:center;margin-bottom:12px"><span style="font:600 13px 'Inter';color:#F3F3F1">Recent activity</span><span style="margin-left:auto;font:500 11px 'Inter';color:#C8F550">Audit log</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#3ECF8E;margin-top:5px"></div><div style="font:400 11.5px/1.4 'Inter';color:#B8B8B5"><span class="mono" style="color:#8A8A87">10:42</span> &nbsp;<b style="color:#E8E8E6">m.rao</b> approved partner <span class="mono" style="color:#C8F550">Northside Academy</span></div></div>
+              <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#E5484D;margin-top:5px"></div><div style="font:400 11.5px/1.4 'Inter';color:#B8B8B5"><span class="mono" style="color:#8A8A87">10:31</span> &nbsp;<b style="color:#E8E8E6">a.system</b> flagged payment <span class="mono" style="color:#C8F550">PAY-88F2</span> for review</div></div>
+              <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#E0B341;margin-top:5px"></div><div style="font:400 11.5px/1.4 'Inter';color:#B8B8B5"><span class="mono" style="color:#8A8A87">10:19</span> &nbsp;<b style="color:#E8E8E6">d.kohli</b> suspended user <span class="mono" style="color:#C8F550">usr_4471</span> · 7 days</div></div>
+              <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#3ECF8E;margin-top:5px"></div><div style="font:400 11.5px/1.4 'Inter';color:#B8B8B5"><span class="mono" style="color:#8A8A87">09:58</span> &nbsp;<b style="color:#E8E8E6">s.iyer</b> issued refund <span class="mono" style="color:#C8F550">$28.00</span> · RF-2210</div></div>
+              <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#8A8A87;margin-top:5px"></div><div style="font:400 11.5px/1.4 'Inter';color:#B8B8B5"><span class="mono" style="color:#8A8A87">09:44</span> &nbsp;<b style="color:#E8E8E6">m.rao</b> featured tournament <span class="mono" style="color:#C8F550">City Open</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="t2" data-screen-label="User management">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">User management &amp; moderation</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a" data-screen-label="Users list">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Users — search, filter, bulk actions</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="width:214px;flex:none;background:#0E0E10;border-right:1px solid #1E1E21;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:9px;padding:16px 16px 12px"><div style="width:28px;height:28px;border-radius:8px;background:#1E1E21;border:1px solid #2E2E32;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#C8F550">shield_person</span></div><div style="font:700 14px var(--sg);letter-spacing:-0.3px;color:#F3F3F1">Pickelton</div><span style="font:600 8.5px 'Inter';letter-spacing:.1em;color:#C8F550;background:#1B2410;border-radius:5px;padding:3px 6px;margin-left:auto">ADMIN</span></div>
+    <div style="padding:6px 10px;display:flex;flex-direction:column;gap:1px">
+      <div class="ad-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="ad-nav on"><span class="mi">group</span>Users</div>
+      <div class="ad-nav"><span class="mi">diversity_3</span>Clubs</div>
+      <div class="ad-nav"><span class="mi">handshake</span>Partners<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A2E10;color:#E0B341;border-radius:9px;padding:1px 6px">7</span></div>
+      <div class="ad-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="ad-sec">FINANCE</div>
+      <div class="ad-nav"><span class="mi">account_balance</span>Payments</div>
+      <div class="ad-nav"><span class="mi">undo</span>Refunds</div>
+      <div class="ad-sec">TRUST &amp; SAFETY</div>
+      <div class="ad-nav"><span class="mi">verified_user</span>Verification<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">12</span></div>
+      <div class="ad-nav"><span class="mi">gavel</span>Disputes<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">4</span></div>
+      <div class="ad-nav"><span class="mi">flag</span>Reports</div>
+      <div class="ad-sec">SYSTEM</div>
+      <div class="ad-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="ad-nav"><span class="mi">receipt_long</span>Audit Logs</div>
+      <div class="ad-nav"><span class="mi">tune</span>Configuration</div>
+    </div>
+    <div style="margin-top:auto;padding:12px;border-top:1px solid #1E1E21;display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">DK</div><div style="line-height:1.2"><div style="font:600 11.5px 'Inter';color:#E8E8E6">Dana Kohli</div><div style="font:400 10px var(--mo);color:#6E6E6B">ROLE · SUPER_ADMIN</div></div></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;gap:14px;padding:0 22px">
+      <div style="font:600 14px 'Inter';color:#F3F3F1">Users</div><span style="font:400 11px var(--mo);color:#6E6E6B">18,204 total</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <div style="height:32px;background:#131315;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 11px;width:260px"><span style="font-family:var(--ms);font-size:16px;color:#6E6E6B">search</span><span style="font:400 12px 'Inter';color:#8A8A87">Search email, ID, phone…</span></div>
+        <div style="height:32px;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 11px;font:500 12px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#8A8A87">filter_list</span>Filters</div>
+      </div>
+    </div>
+    <!-- bulk bar -->
+    <div style="height:44px;flex:none;background:#12160A;border-bottom:1px solid #262E12;display:flex;align-items:center;gap:14px;padding:0 22px">
+      <span style="font:500 12px 'Inter';color:#C8F550">2 selected</span>
+      <div style="width:1px;height:18px;background:#262E12"></div>
+      <div style="display:flex;gap:8px">
+        <span style="font:500 11.5px 'Inter';color:#3ECF8E;border:1px solid #1E3A2A;border-radius:7px;padding:5px 11px;display:flex;align-items:center;gap:5px"><span style="font-family:var(--ms);font-size:15px">verified</span>Verify</span>
+        <span style="font:500 11.5px 'Inter';color:#E0B341;border:1px solid #3A2E10;border-radius:7px;padding:5px 11px;display:flex;align-items:center;gap:5px"><span style="font-family:var(--ms);font-size:15px">pause_circle</span>Suspend</span>
+        <span style="font:500 11.5px 'Inter';color:#E5848A;border:1px solid #3A1414;border-radius:7px;padding:5px 11px;display:flex;align-items:center;gap:5px"><span style="font-family:var(--ms);font-size:15px">block</span>Ban</span>
+        <span style="font:500 11.5px 'Inter';color:#B8B8B5;border:1px solid #232326;border-radius:7px;padding:5px 11px;display:flex;align-items:center;gap:5px"><span style="font-family:var(--ms);font-size:15px">merge</span>Merge accounts</span>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:16px 22px">
+      <div style="background:#131315;border:1px solid #232326;border-radius:10px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <tr><th style="width:34px"><div style="width:15px;height:15px;border:1.5px solid #3A3A3E;border-radius:4px"></div></th><th>User</th><th>ID</th><th>Rating</th><th>Matches</th><th>Joined</th><th>Status</th><th>Flags</th><th style="text-align:right"></th></tr>
+          <tr style="background:#15170C"><td><div style="width:15px;height:15px;border-radius:4px;background:#C8F550;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:12px;color:#0B0B0C">check</span></div></td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:50%;background:#2A3A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 9.5px var(--sg)">AM</div><div><div style="font:500 12.5px 'Inter';color:#E8E8E6">Arjun Mehta</div><div style="font:400 10.5px var(--mo);color:#6E6E6B">arjun@mail.com</div></div></div></td><td class="mono" style="color:#8A8A87">usr_1120</td><td class="mono">3.5</td><td class="mono">104</td><td class="mono" style="color:#8A8A87">2025-01</td><td><span style="font:600 10.5px 'Inter';color:#3ECF8E;background:#12281C;border-radius:20px;padding:2px 9px">● Active</span></td><td class="mono" style="color:#6E6E6B">—</td><td style="text-align:right"><span style="font-family:var(--ms);font-size:17px;color:#6E6E6B">more_horiz</span></td></tr>
+          <tr style="background:#15170C"><td><div style="width:15px;height:15px;border-radius:4px;background:#C8F550;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:12px;color:#0B0B0C">check</span></div></td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:50%;background:#2E3450;color:#9FB0F0;display:flex;align-items:center;justify-content:center;font:700 9.5px var(--sg)">SJ</div><div><div style="font:500 12.5px 'Inter';color:#E8E8E6">Sana Joshi</div><div style="font:400 10.5px var(--mo);color:#6E6E6B">sana.j@mail.com</div></div></div></td><td class="mono" style="color:#8A8A87">usr_1188</td><td class="mono">3.7</td><td class="mono">88</td><td class="mono" style="color:#8A8A87">2025-02</td><td><span style="font:600 10.5px 'Inter';color:#3ECF8E;background:#12281C;border-radius:20px;padding:2px 9px">● Active</span></td><td class="mono" style="color:#6E6E6B">—</td><td style="text-align:right"><span style="font-family:var(--ms);font-size:17px;color:#6E6E6B">more_horiz</span></td></tr>
+          <tr><td><div style="width:15px;height:15px;border:1.5px solid #3A3A3E;border-radius:4px"></div></td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:50%;background:#4A3020;color:#E0B060;display:flex;align-items:center;justify-content:center;font:700 9.5px var(--sg)">RK</div><div><div style="font:500 12.5px 'Inter';color:#E8E8E6">Rohan Kapoor</div><div style="font:400 10.5px var(--mo);color:#6E6E6B">rohan.k@mail.com</div></div></div></td><td class="mono" style="color:#8A8A87">usr_1204</td><td class="mono">3.9</td><td class="mono">120</td><td class="mono" style="color:#8A8A87">2024-11</td><td><span style="font:600 10.5px 'Inter';color:#E0B341;background:#2A2210;border-radius:20px;padding:2px 9px">● Suspended</span></td><td><span style="font:600 10px var(--mo);color:#E5848A;background:#2A1414;border-radius:5px;padding:1px 6px">2 reports</span></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:17px;color:#6E6E6B">more_horiz</span></td></tr>
+          <tr><td><div style="width:15px;height:15px;border:1.5px solid #3A3A3E;border-radius:4px"></div></td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:50%;background:#452A48;color:#D89FE0;display:flex;align-items:center;justify-content:center;font:700 9.5px var(--sg)">TP</div><div><div style="font:500 12.5px 'Inter';color:#E8E8E6">Tara Patel</div><div style="font:400 10.5px var(--mo);color:#6E6E6B">tara.p@mail.com</div></div></div></td><td class="mono" style="color:#8A8A87">usr_1240</td><td class="mono">3.8</td><td class="mono">76</td><td class="mono" style="color:#8A8A87">2025-03</td><td><span style="font:600 10.5px 'Inter';color:#8A8A87;background:#1E1E21;border-radius:20px;padding:2px 9px">○ Unverified</span></td><td class="mono" style="color:#6E6E6B">—</td><td style="text-align:right"><span style="font-family:var(--ms);font-size:17px;color:#6E6E6B">more_horiz</span></td></tr>
+          <tr><td><div style="width:15px;height:15px;border:1.5px solid #3A3A3E;border-radius:4px"></div></td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:50%;background:#3A1A1A;color:#E5848A;display:flex;align-items:center;justify-content:center;font:700 9.5px var(--sg)">XZ</div><div><div style="font:500 12.5px 'Inter';color:#E8E8E6">Xin Zhao</div><div style="font:400 10.5px var(--mo);color:#6E6E6B">xz.play@mail.com</div></div></div></td><td class="mono" style="color:#8A8A87">usr_0991</td><td class="mono">—</td><td class="mono">3</td><td class="mono" style="color:#8A8A87">2025-06</td><td><span style="font:600 10.5px 'Inter';color:#E5848A;background:#2A1414;border-radius:20px;padding:2px 9px">● Banned</span></td><td><span style="font:600 10px var(--mo);color:#E5848A;background:#2A1414;border-radius:5px;padding:1px 6px">fraud</span></td><td style="text-align:right"><span style="font-family:var(--ms);font-size:17px;color:#6E6E6B">more_horiz</span></td></tr>
+          <tr><td><div style="width:15px;height:15px;border:1.5px solid #3A3A3E;border-radius:4px"></div></td><td><div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:50%;background:#203A34;color:#7FD0BB;display:flex;align-items:center;justify-content:center;font:700 9.5px var(--sg)">NK</div><div><div style="font:500 12.5px 'Inter';color:#E8E8E6">Nik Kher</div><div style="font:400 10.5px var(--mo);color:#6E6E6B">nik.k@mail.com</div></div></div></td><td class="mono" style="color:#8A8A87">usr_1302</td><td class="mono">3.6</td><td class="mono">54</td><td class="mono" style="color:#8A8A87">2025-04</td><td><span style="font:600 10.5px 'Inter';color:#3ECF8E;background:#12281C;border-radius:20px;padding:2px 9px">● Active</span></td><td class="mono" style="color:#6E6E6B">—</td><td style="text-align:right"><span style="font-family:var(--ms);font-size:17px;color:#6E6E6B">more_horiz</span></td></tr>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;margin-top:14px;font:400 11.5px var(--mo);color:#6E6E6B"><span>1–6 of 18,204</span><div style="margin-left:auto;display:flex;gap:6px"><div style="width:28px;height:28px;border:1px solid #232326;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--ms);font-size:16px;color:#6E6E6B">chevron_left</div><div style="width:28px;height:28px;background:#1E1E21;color:#F3F3F1;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 11px 'Inter'">1</div><div style="width:28px;height:28px;border:1px solid #232326;border-radius:7px;display:flex;align-items:center;justify-content:center;font:500 11px 'Inter'">2</div><div style="width:28px;height:28px;border:1px solid #232326;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--ms);font-size:16px;color:#6E6E6B">chevron_right</div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b" data-screen-label="User detail">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>User profile — moderation drawer (ban / suspend / verify / merge)</div>
+<div class="dv-card" style="width:1360px;height:840px;position:relative;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="flex:1;filter:blur(1.5px);opacity:.45;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;border-bottom:1px solid #1E1E21;display:flex;align-items:center;padding:0 22px"><div style="font:600 14px 'Inter';color:#F3F3F1">Users</div></div>
+    <div style="padding:16px 22px"><div style="background:#131315;border:1px solid #232326;border-radius:10px;height:400px"></div></div>
+  </div>
+  <div style="position:absolute;top:0;right:0;bottom:0;width:470px;background:#101012;border-left:1px solid #232326;box-shadow:-16px 0 50px rgba(0,0,0,.5);display:flex;flex-direction:column">
+    <div style="padding:18px 22px;border-bottom:1px solid #1E1E21;display:flex;align-items:center"><span style="font:600 13px 'Inter';color:#F3F3F1">User detail</span><span class="mono" style="margin-left:auto;font:11px var(--mo);color:#6E6E6B">usr_1204</span><span style="font-family:var(--ms);font-size:20px;color:#8A8A87;margin-left:14px">close</span></div>
+    <div style="flex:1;overflow:hidden;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;gap:14px"><div style="width:52px;height:52px;border-radius:50%;background:#4A3020;color:#E0B060;display:flex;align-items:center;justify-content:center;font:700 17px var(--sg)">RK</div><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span style="font:600 16px 'Inter';color:#F3F3F1">Rohan Kapoor</span><span style="font:600 10px 'Inter';color:#E0B341;background:#2A2210;border-radius:20px;padding:2px 9px">Suspended</span></div><div style="font:400 11.5px var(--mo);color:#6E6E6B;margin-top:2px">rohan.k@mail.com · +1 415 ···· 0132</div></div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:10px"><div style="font:700 16px var(--sg);color:#F3F3F1">3.9</div><div style="font:400 10px 'Inter';color:#8A8A87">rating</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:10px"><div style="font:700 16px var(--sg);color:#F3F3F1">120</div><div style="font:400 10px 'Inter';color:#8A8A87">matches</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:10px"><div style="font:700 16px var(--sg);color:#F3F3F1">$1.2k</div><div style="font:400 10px 'Inter';color:#8A8A87">spent</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:10px"><div style="font:700 16px var(--sg);color:#E5484D">2</div><div style="font:400 10px 'Inter';color:#8A8A87">reports</div></div>
+      </div>
+      <div>
+        <div style="font:600 11px 'Inter';letter-spacing:.05em;color:#7A7A77;margin-bottom:8px">FLAGS &amp; REPORTS</div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:9px;overflow:hidden">
+          <div style="display:flex;gap:10px;padding:11px 13px;border-bottom:1px solid #1C1C1F"><span style="font-family:var(--ms);font-size:17px;color:#E5848A">flag</span><div style="flex:1"><div style="font:500 12px 'Inter';color:#E8E8E6">Unsportsmanlike conduct</div><div style="font:400 10.5px 'Inter';color:#8A8A87">Reported by 2 players · Jul 3</div></div><span class="mono" style="font:10px var(--mo);color:#6E6E6B">RPT-771</span></div>
+          <div style="display:flex;gap:10px;padding:11px 13px"><span style="font-family:var(--ms);font-size:17px;color:#E0B341">warning</span><div style="flex:1"><div style="font:500 12px 'Inter';color:#E8E8E6">3 late cancellations</div><div style="font:400 10.5px 'Inter';color:#8A8A87">Auto-flag · rolling 30d</div></div><span class="mono" style="font:10px var(--mo);color:#6E6E6B">SYS</span></div>
+        </div>
+      </div>
+      <div>
+        <div style="font:600 11px 'Inter';letter-spacing:.05em;color:#7A7A77;margin-bottom:8px">ACCOUNT LINKS</div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:18px;color:#8A8A87">merge</span><div style="flex:1"><div style="font:500 12px 'Inter';color:#E8E8E6">Possible duplicate: <span class="mono" style="color:#C8F550">usr_0884</span></div><div style="font:400 10.5px 'Inter';color:#8A8A87">Same device fingerprint · 91% match</div></div><span style="font:500 11px 'Inter';color:#C8F550">Review merge</span></div>
+      </div>
+    </div>
+    <div style="padding:16px 22px;border-top:1px solid #1E1E21;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;height:40px;border:1px solid #1E3A2A;color:#3ECF8E;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px">verified</span>Verify</div>
+        <div style="flex:1;height:40px;border:1px solid #232326;color:#B8B8B5;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px">play_circle</span>Reinstate</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;height:40px;border:1px solid #3A2E10;color:#E0B341;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px">pause_circle</span>Extend suspension</div>
+        <div style="flex:1;height:40px;background:#2A1414;border:1px solid #4A1E1E;color:#E5848A;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:18px">block</span>Ban permanently</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t3" data-screen-label="Partner verification">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Partner &amp; venue verification</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a" data-screen-label="Verification queue">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Verification queue — partners, venues, documents</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="width:214px;flex:none;background:#0E0E10;border-right:1px solid #1E1E21;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:9px;padding:16px 16px 12px"><div style="width:28px;height:28px;border-radius:8px;background:#1E1E21;border:1px solid #2E2E32;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#C8F550">shield_person</span></div><div style="font:700 14px var(--sg);letter-spacing:-0.3px;color:#F3F3F1">Pickelton</div><span style="font:600 8.5px 'Inter';letter-spacing:.1em;color:#C8F550;background:#1B2410;border-radius:5px;padding:3px 6px;margin-left:auto">ADMIN</span></div>
+    <div style="padding:6px 10px;display:flex;flex-direction:column;gap:1px">
+      <div class="ad-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="ad-nav"><span class="mi">group</span>Users</div>
+      <div class="ad-nav"><span class="mi">diversity_3</span>Clubs</div>
+      <div class="ad-nav"><span class="mi">handshake</span>Partners<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A2E10;color:#E0B341;border-radius:9px;padding:1px 6px">7</span></div>
+      <div class="ad-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="ad-sec">FINANCE</div>
+      <div class="ad-nav"><span class="mi">account_balance</span>Payments</div>
+      <div class="ad-nav"><span class="mi">undo</span>Refunds</div>
+      <div class="ad-sec">TRUST &amp; SAFETY</div>
+      <div class="ad-nav on"><span class="mi">verified_user</span>Verification<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">12</span></div>
+      <div class="ad-nav"><span class="mi">gavel</span>Disputes<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">4</span></div>
+      <div class="ad-nav"><span class="mi">flag</span>Reports</div>
+      <div class="ad-sec">SYSTEM</div>
+      <div class="ad-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="ad-nav"><span class="mi">receipt_long</span>Audit Logs</div>
+      <div class="ad-nav"><span class="mi">tune</span>Configuration</div>
+    </div>
+    <div style="margin-top:auto;padding:12px;border-top:1px solid #1E1E21;display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">DK</div><div style="line-height:1.2"><div style="font:600 11.5px 'Inter';color:#E8E8E6">Dana Kohli</div><div style="font:400 10px var(--mo);color:#6E6E6B">ROLE · SUPER_ADMIN</div></div></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;padding:0 22px">
+      <div style="font:600 14px 'Inter';color:#F3F3F1">Verification</div><span style="font:400 11px var(--mo);color:#6E6E6B;margin-left:10px">12 pending · SLA 48h</span>
+      <div style="margin-left:auto;display:flex;gap:22px;font:500 12.5px 'Inter'"><span style="color:#F3F3F1;border-bottom:2px solid #C8F550;padding-bottom:14px;margin-top:14px">Partners <span style="color:#E0B341">7</span></span><span style="color:#8A8A87;padding-bottom:14px;margin-top:14px">Players <span style="color:#6E6E6B">5</span></span><span style="color:#8A8A87;padding-bottom:14px;margin-top:14px">Verified <span style="color:#6E6E6B">340</span></span></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:16px 22px;display:grid;grid-template-columns:1fr 1fr 1fr;grid-auto-rows:min-content;gap:14px">
+      <div style="background:#131315;border:1px solid #232326;border-radius:11px;overflow:hidden">
+        <div style="padding:14px 15px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #1C1C1F"><div style="width:38px;height:38px;border-radius:9px;background:#1E1E21;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#C8F550">stadium</span></div><div style="flex:1"><div style="font:600 13px 'Inter';color:#F3F3F1">Northside Academy</div><div class="mono" style="font:10px var(--mo);color:#6E6E6B">prt_0231 · applied 2d ago</div></div><span style="font:600 10px 'Inter';color:#E0B341;background:#2A2210;border-radius:20px;padding:2px 9px">Pending</span></div>
+        <div style="padding:13px 15px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#3ECF8E">check_circle</span>Business license<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#6E6E6B">verified</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#3ECF8E">check_circle</span>Insurance cert<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#6E6E6B">verified</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#E0B341">pending</span>Bank / KYC<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#E0B341">review</span></div>
+        </div>
+        <div style="padding:0 15px 14px;display:flex;gap:8px"><div style="flex:1;height:34px;background:#12281C;border:1px solid #1E3A2A;color:#3ECF8E;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px 'Inter'">Approve</div><div style="height:34px;border:1px solid #232326;color:#B8B8B5;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:600 12px 'Inter'">Docs</div><div style="width:34px;height:34px;border:1px solid #3A1414;color:#E5848A;border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px">close</span></div></div>
+      </div>
+      <div style="background:#131315;border:1px solid #232326;border-radius:11px;overflow:hidden">
+        <div style="padding:14px 15px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #1C1C1F"><div style="width:38px;height:38px;border-radius:9px;background:#1E1E21;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#C8F550">stadium</span></div><div style="flex:1"><div style="font:600 13px 'Inter';color:#F3F3F1">Downtown Padel Co.</div><div class="mono" style="font:10px var(--mo);color:#6E6E6B">prt_0230 · applied 3d ago</div></div><span style="font:600 10px 'Inter';color:#E0B341;background:#2A2210;border-radius:20px;padding:2px 9px">Pending</span></div>
+        <div style="padding:13px 15px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#3ECF8E">check_circle</span>Business license<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#6E6E6B">verified</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#E5848A">error</span>Insurance cert<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#E5848A">expired</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#3ECF8E">check_circle</span>Bank / KYC<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#6E6E6B">verified</span></div>
+        </div>
+        <div style="padding:0 15px 14px;display:flex;gap:8px"><div style="flex:1;height:34px;border:1px solid #3A2E10;color:#E0B341;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px 'Inter'">Request update</div><div style="height:34px;border:1px solid #232326;color:#B8B8B5;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:600 12px 'Inter'">Docs</div></div>
+      </div>
+      <div style="background:#131315;border:1px solid #232326;border-radius:11px;overflow:hidden">
+        <div style="padding:14px 15px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #1C1C1F"><div style="width:38px;height:38px;border-radius:9px;background:#1E1E21;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#C8F550">stadium</span></div><div style="flex:1"><div style="font:600 13px 'Inter';color:#F3F3F1">Eastgate Sports Complex</div><div class="mono" style="font:10px var(--mo);color:#6E6E6B">prt_0228 · applied 4d ago</div></div><span style="font:600 10px 'Inter';color:#E5848A;background:#2A1414;border-radius:20px;padding:2px 9px">SLA risk</span></div>
+        <div style="padding:13px 15px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#3ECF8E">check_circle</span>Business license<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#6E6E6B">verified</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#3ECF8E">check_circle</span>Insurance cert<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#6E6E6B">verified</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:400 11.5px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#3ECF8E">check_circle</span>Bank / KYC<span class="mono" style="margin-left:auto;font:10px var(--mo);color:#6E6E6B">verified</span></div>
+        </div>
+        <div style="padding:0 15px 14px;display:flex;gap:8px"><div style="flex:1;height:34px;background:#12281C;border:1px solid #1E3A2A;color:#3ECF8E;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px 'Inter'">Approve</div><div style="height:34px;border:1px solid #232326;color:#B8B8B5;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:600 12px 'Inter'">Docs</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b" data-screen-label="Document review">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Review documents — split viewer</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;gap:12px;padding:0 22px">
+      <span style="font-family:var(--ms);font-size:20px;color:#8A8A87">arrow_back</span>
+      <div><div style="font:600 14px 'Inter';color:#F3F3F1">Northside Academy</div><div class="mono" style="font:10.5px var(--mo);color:#6E6E6B">prt_0231 · KYC review</div></div>
+      <div style="margin-left:auto;display:flex;gap:8px"><div style="height:34px;border:1px solid #3A1414;color:#E5848A;border-radius:8px;display:flex;align-items:center;padding:0 14px;font:600 12.5px 'Inter'">Reject</div><div style="height:34px;background:#12281C;border:1px solid #1E3A2A;color:#3ECF8E;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 14px;font:600 12.5px 'Inter'"><span style="font-family:var(--ms);font-size:17px">verified</span>Approve partner</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;display:grid;grid-template-columns:1fr 400px">
+      <!-- doc viewer -->
+      <div style="background:#0E0E10;padding:24px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #1E1E21">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><div style="display:flex;gap:6px"><span style="font:500 11.5px 'Inter';color:#0B0B0C;background:#C8F550;border-radius:7px;padding:5px 11px">Bank statement</span><span style="font:500 11.5px 'Inter';color:#B8B8B5;border:1px solid #232326;border-radius:7px;padding:5px 11px">License</span><span style="font:500 11.5px 'Inter';color:#B8B8B5;border:1px solid #232326;border-radius:7px;padding:5px 11px">Insurance</span></div><div style="margin-left:auto;display:flex;align-items:center;gap:8px;font:500 11px var(--mo);color:#8A8A87"><span style="font-family:var(--ms);font-size:16px">zoom_out</span>100%<span style="font-family:var(--ms);font-size:16px">zoom_in</span></div></div>
+        <div style="flex:1;background:#161616;border:1px solid #232326;border-radius:10px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+          <div style="width:60%;height:80%;background:repeating-linear-gradient(0deg,#E8E8E2 0 22px,#DCDCD4 22px 24px);border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.5);position:relative"><span style="position:absolute;top:14px;left:16px;font:700 13px var(--mo);color:#3A3A38">HDFC BANK · STATEMENT</span><span style="position:absolute;bottom:14px;right:16px;font:10px var(--mo);color:#8A8A85">document_p1.pdf</span></div>
+          <div style="position:absolute;top:16px;right:16px;font:600 10px var(--mo);color:#3ECF8E;background:#0B0B0C;border:1px solid #1E3A2A;border-radius:6px;padding:4px 9px">✓ NAME MATCH</div>
+        </div>
+      </div>
+      <!-- checklist -->
+      <div style="padding:20px;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+        <div style="font:600 11px 'Inter';letter-spacing:.05em;color:#7A7A77">REVIEW CHECKLIST</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border-radius:5px;background:#3ECF8E;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:14px;color:#0B0B0C">check</span></div><span style="font:500 12px 'Inter';color:#E8E8E6">Legal name matches license</span></div>
+          <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border-radius:5px;background:#3ECF8E;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:14px;color:#0B0B0C">check</span></div><span style="font:500 12px 'Inter';color:#E8E8E6">Bank account holder verified</span></div>
+          <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border-radius:5px;border:1.5px solid #3A3A3E"></div><span style="font:500 12px 'Inter';color:#B8B8B5">Address on file matches venue</span></div>
+          <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border-radius:5px;border:1.5px solid #3A3A3E"></div><span style="font:500 12px 'Inter';color:#B8B8B5">No sanctions-list hits</span></div>
+        </div>
+        <div style="font:600 11px 'Inter';letter-spacing:.05em;color:#7A7A77;margin-top:4px">AUTOMATED CHECKS</div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:9px;padding:4px 13px">
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #1C1C1F"><span style="font:400 11.5px 'Inter';color:#8A8A87">Document authenticity</span><span style="font:600 11px var(--mo);color:#3ECF8E">98% pass</span></div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #1C1C1F"><span style="font:400 11.5px 'Inter';color:#8A8A87">Face / ID liveness</span><span style="font:600 11px var(--mo);color:#3ECF8E">pass</span></div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0"><span style="font:400 11.5px 'Inter';color:#8A8A87">Duplicate business check</span><span style="font:600 11px var(--mo);color:#E0B341">1 similar</span></div>
+        </div>
+        <div style="margin-top:auto"><div style="font:600 11px 'Inter';letter-spacing:.05em;color:#7A7A77;margin-bottom:8px">DECISION NOTE</div><div style="background:#131315;border:1px solid #232326;border-radius:9px;height:56px;padding:10px 12px;font:400 11.5px 'Inter';color:#6E6E6B">Add a note for the audit trail…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t4" data-screen-label="Finance and disputes">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Payments, escrow &amp; disputes</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a" data-screen-label="Payments escrow">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Payments — escrow, host payouts, failed payments</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="width:214px;flex:none;background:#0E0E10;border-right:1px solid #1E1E21;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:9px;padding:16px 16px 12px"><div style="width:28px;height:28px;border-radius:8px;background:#1E1E21;border:1px solid #2E2E32;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#C8F550">shield_person</span></div><div style="font:700 14px var(--sg);letter-spacing:-0.3px;color:#F3F3F1">Pickelton</div><span style="font:600 8.5px 'Inter';letter-spacing:.1em;color:#C8F550;background:#1B2410;border-radius:5px;padding:3px 6px;margin-left:auto">ADMIN</span></div>
+    <div style="padding:6px 10px;display:flex;flex-direction:column;gap:1px">
+      <div class="ad-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="ad-nav"><span class="mi">group</span>Users</div>
+      <div class="ad-nav"><span class="mi">diversity_3</span>Clubs</div>
+      <div class="ad-nav"><span class="mi">handshake</span>Partners<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A2E10;color:#E0B341;border-radius:9px;padding:1px 6px">7</span></div>
+      <div class="ad-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="ad-sec">FINANCE</div>
+      <div class="ad-nav on"><span class="mi">account_balance</span>Payments</div>
+      <div class="ad-nav"><span class="mi">undo</span>Refunds</div>
+      <div class="ad-sec">TRUST &amp; SAFETY</div>
+      <div class="ad-nav"><span class="mi">verified_user</span>Verification<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">12</span></div>
+      <div class="ad-nav"><span class="mi">gavel</span>Disputes<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">4</span></div>
+      <div class="ad-nav"><span class="mi">flag</span>Reports</div>
+      <div class="ad-sec">SYSTEM</div>
+      <div class="ad-nav"><span class="mi">monitoring</span>Analytics</div>
+      <div class="ad-nav"><span class="mi">receipt_long</span>Audit Logs</div>
+      <div class="ad-nav"><span class="mi">tune</span>Configuration</div>
+    </div>
+    <div style="margin-top:auto;padding:12px;border-top:1px solid #1E1E21;display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">SI</div><div style="line-height:1.2"><div style="font:600 11.5px 'Inter';color:#E8E8E6">Sana Iyer</div><div style="font:400 10px var(--mo);color:#6E6E6B">ROLE · FINANCE</div></div></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;padding:0 22px">
+      <div style="font:600 14px 'Inter';color:#F3F3F1">Payments</div>
+      <div style="margin-left:auto;display:flex;gap:22px;font:500 12.5px 'Inter'"><span style="color:#F3F3F1;border-bottom:2px solid #C8F550;padding-bottom:14px;margin-top:14px">Escrow</span><span style="color:#8A8A87;padding-bottom:14px;margin-top:14px">Host payouts</span><span style="color:#8A8A87;padding-bottom:14px;margin-top:14px">Failed <span style="color:#E5848A">6</span></span><span style="color:#8A8A87;padding-bottom:14px;margin-top:14px">Refunds</span></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:16px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">In escrow</div><div style="font:700 22px var(--sg);color:#F3F3F1;margin-top:6px">$84,210</div><div style="font:400 10.5px var(--mo);color:#8A8A87;margin-top:3px">1,204 holds</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">Payouts due · Fri</div><div style="font:700 22px var(--sg);color:#C8F550;margin-top:6px">$61,940</div><div style="font:400 10.5px var(--mo);color:#8A8A87;margin-top:3px">88 partners</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">Failed payments</div><div style="font:700 22px var(--sg);color:#E5484D;margin-top:6px">$1,842</div><div style="font:400 10.5px var(--mo);color:#8A8A87;margin-top:3px">6 need retry</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">Disputed / held</div><div style="font:700 22px var(--sg);color:#E0B341;margin-top:6px">$1,240</div><div style="font:400 10.5px var(--mo);color:#8A8A87;margin-top:3px">4 open</div></div>
+      </div>
+      <div style="background:#131315;border:1px solid #232326;border-radius:10px;overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;padding:13px 16px 10px"><span style="font:600 13px 'Inter';color:#F3F3F1">Escrow ledger</span><span style="margin-left:auto;font:400 11px var(--mo);color:#6E6E6B">auto-release 2h after match</span></div>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><th>Txn</th><th>Player</th><th>Partner</th><th>Booking</th><th>Hold since</th><th>Status</th><th style="text-align:right">Amount</th><th style="text-align:right"></th></tr>
+          <tr><td class="mono" style="color:#C8F550">PAY-88F4</td><td>Arjun Mehta</td><td>Greenpoint P&amp;P</td><td class="mono" style="color:#8A8A87">BKG-4471</td><td class="mono" style="color:#8A8A87">42m</td><td><span style="font:600 10.5px 'Inter';color:#E0B341;background:#2A2210;border-radius:20px;padding:2px 9px">Holding</span></td><td style="text-align:right" class="mono">$28.00</td><td style="text-align:right"><span style="font:500 10.5px 'Inter';color:#C8F550">Release</span></td></tr>
+          <tr><td class="mono" style="color:#C8F550">PAY-88F2</td><td>Xin Zhao</td><td>Downtown Padel</td><td class="mono" style="color:#8A8A87">BKG-4468</td><td class="mono" style="color:#8A8A87">3h 10m</td><td><span style="font:600 10.5px 'Inter';color:#E5848A;background:#2A1414;border-radius:20px;padding:2px 9px">Flagged</span></td><td style="text-align:right" class="mono">$40.00</td><td style="text-align:right"><span style="font:500 10.5px 'Inter';color:#E5848A">Review</span></td></tr>
+          <tr><td class="mono" style="color:#C8F550">PAY-88EF</td><td>Sana Joshi</td><td>Riverside Club</td><td class="mono" style="color:#8A8A87">BKG-4462</td><td class="mono" style="color:#8A8A87">released</td><td><span style="font:600 10.5px 'Inter';color:#3ECF8E;background:#12281C;border-radius:20px;padding:2px 9px">Released</span></td><td style="text-align:right" class="mono">$14.00</td><td style="text-align:right"><span style="font-family:var(--ms);font-size:16px;color:#6E6E6B">more_horiz</span></td></tr>
+          <tr><td class="mono" style="color:#C8F550">PAY-88EA</td><td>Nik Kher</td><td>Northside Rec</td><td class="mono" style="color:#8A8A87">BKG-4459</td><td class="mono" style="color:#8A8A87">failed</td><td><span style="font:600 10.5px 'Inter';color:#E5848A;background:#2A1414;border-radius:20px;padding:2px 9px">Failed · card</span></td><td style="text-align:right" class="mono">$22.00</td><td style="text-align:right"><span style="font:500 10.5px 'Inter';color:#C8F550">Retry</span></td></tr>
+          <tr><td class="mono" style="color:#C8F550">PAY-88E1</td><td>Tara Patel</td><td>Greenpoint P&amp;P</td><td class="mono" style="color:#8A8A87">BKG-4455</td><td class="mono" style="color:#8A8A87">refunded</td><td><span style="font:600 10.5px 'Inter';color:#8A8A87;background:#1E1E21;border-radius:20px;padding:2px 9px">Refunded</span></td><td style="text-align:right" class="mono" style="color:#8A8A87">−$28.00</td><td style="text-align:right"><span style="font-family:var(--ms);font-size:16px;color:#6E6E6B">more_horiz</span></td></tr>
+        </table>
+        <div style="margin-top:auto;padding:12px 16px;border-top:1px solid #1C1C1F;display:flex;align-items:center;gap:12px"><span style="font:400 11px var(--mo);color:#6E6E6B">Reconciled against processor · 10:44 UTC</span><span style="margin-left:auto;font:600 11.5px 'Inter';color:#0B0B0C;background:#C8F550;border-radius:7px;padding:6px 13px">Run payout batch</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="4b" data-screen-label="Dispute detail">
+<div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Dispute resolution</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;gap:12px;padding:0 22px">
+      <span style="font-family:var(--ms);font-size:20px;color:#8A8A87">arrow_back</span>
+      <div><div style="font:600 14px 'Inter';color:#F3F3F1">Dispute <span class="mono" style="color:#C8F550">DSP-2210</span></div><div style="font:400 10.5px 'Inter';color:#6E6E6B">Opened 1d ago · $28.00 held in escrow</div></div>
+      <span style="margin-left:14px;font:600 10px 'Inter';color:#E0B341;background:#2A2210;border-radius:20px;padding:3px 10px">Awaiting decision</span>
+      <div style="margin-left:auto;font:400 11px var(--mo);color:#6E6E6B">SLA 22h left</div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:18px 22px;display:grid;grid-template-columns:1fr 1fr 360px;gap:14px">
+      <!-- claimant -->
+      <div style="background:#131315;border:1px solid #232326;border-radius:11px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:#2A3A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">AM</div><div><div style="font:600 12.5px 'Inter';color:#F3F3F1">Arjun Mehta</div><div style="font:400 10px 'Inter';color:#8A8A87">Claimant · player</div></div></div>
+        <div style="font:600 10px 'Inter';letter-spacing:.05em;color:#7A7A77">CLAIM</div>
+        <div style="font:400 12px/1.5 'Inter';color:#B8B8B5">"Court 3 was flooded and unplayable. Staff told us to leave after 15 minutes. Requesting full refund."</div>
+        <div style="font:600 10px 'Inter';letter-spacing:.05em;color:#7A7A77;margin-top:2px">EVIDENCE</div>
+        <div style="display:flex;gap:8px"><div style="width:66px;height:54px;border-radius:7px;background:repeating-linear-gradient(45deg,#1C1C1F 0 6px,#242428 6px 12px)"></div><div style="width:66px;height:54px;border-radius:7px;background:repeating-linear-gradient(45deg,#1C1C1F 0 6px,#242428 6px 12px)"></div></div>
+      </div>
+      <!-- respondent -->
+      <div style="background:#131315;border:1px solid #232326;border-radius:11px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:8px;background:#1E1E21;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:19px;color:#C8F550">stadium</span></div><div><div style="font:600 12.5px 'Inter';color:#F3F3F1">Greenpoint P&amp;P</div><div style="font:400 10px 'Inter';color:#8A8A87">Respondent · partner</div></div></div>
+        <div style="font:600 10px 'Inter';letter-spacing:.05em;color:#7A7A77">RESPONSE</div>
+        <div style="font:400 12px/1.5 'Inter';color:#B8B8B5">"Minor leak on court 3, offered Court 5 immediately. Player declined and left. Willing to refund 50%."</div>
+        <div style="font:600 10px 'Inter';letter-spacing:.05em;color:#7A7A77;margin-top:2px">SYSTEM SIGNALS</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font:400 11px 'Inter';color:#8A8A87">Check-in recorded<span class="mono" style="color:#3ECF8E">yes · 6:02 PM</span></div>
+          <div style="display:flex;justify-content:space-between;font:400 11px 'Inter';color:#8A8A87">Session duration<span class="mono" style="color:#E0B341">14 min</span></div>
+          <div style="display:flex;justify-content:space-between;font:400 11px 'Inter';color:#8A8A87">Partner dispute rate<span class="mono" style="color:#3ECF8E">0.4%</span></div>
+        </div>
+      </div>
+      <!-- decision -->
+      <div style="background:#131315;border:1px solid #232326;border-radius:11px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="font:600 13px 'Inter';color:#F3F3F1">Resolution</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border:1px solid #1E3A2A;background:#12281C;border-radius:9px;padding:11px 13px"><div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;border:4px solid #3ECF8E"></div><span style="font:600 12px 'Inter';color:#F3F3F1">Full refund to player</span></div><div style="font:400 10.5px 'Inter';color:#8A8A87;margin-top:4px;margin-left:24px">$28.00 from escrow · no partner penalty</div></div>
+          <div style="border:1px solid #232326;border-radius:9px;padding:11px 13px"><div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #3A3A3E"></div><span style="font:600 12px 'Inter';color:#B8B8B5">Split 50 / 50</span></div><div style="font:400 10.5px 'Inter';color:#8A8A87;margin-top:4px;margin-left:24px">$14 refund · $14 to partner</div></div>
+          <div style="border:1px solid #232326;border-radius:9px;padding:11px 13px"><div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #3A3A3E"></div><span style="font:600 12px 'Inter';color:#B8B8B5">Deny · release to partner</span></div></div>
+        </div>
+        <div style="font:600 10px 'Inter';letter-spacing:.05em;color:#7A7A77;margin-top:2px">DECISION NOTE</div>
+        <div style="background:#0E0E10;border:1px solid #232326;border-radius:9px;height:56px;padding:10px 12px;font:400 11px 'Inter';color:#6E6E6B">Leak confirmed via photos; player left within grace window…</div>
+        <div style="margin-top:auto;display:flex;gap:8px"><div style="flex:1;height:40px;background:#C8F550;color:#0B0B0C;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font:600 13px 'Inter'"><span style="font-family:var(--ms);font-size:18px">gavel</span>Resolve dispute</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t5" data-screen-label="Analytics and audit">
+<div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Platform analytics &amp; audit trail</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="5a" data-screen-label="Analytics">
+<div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>Analytics — retention, growth, utilization, partner performance</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="width:214px;flex:none;background:#0E0E10;border-right:1px solid #1E1E21;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:9px;padding:16px 16px 12px"><div style="width:28px;height:28px;border-radius:8px;background:#1E1E21;border:1px solid #2E2E32;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:17px;color:#C8F550">shield_person</span></div><div style="font:700 14px var(--sg);letter-spacing:-0.3px;color:#F3F3F1">Pickelton</div><span style="font:600 8.5px 'Inter';letter-spacing:.1em;color:#C8F550;background:#1B2410;border-radius:5px;padding:3px 6px;margin-left:auto">ADMIN</span></div>
+    <div style="padding:6px 10px;display:flex;flex-direction:column;gap:1px">
+      <div class="ad-nav"><span class="mi">dashboard</span>Dashboard</div>
+      <div class="ad-nav"><span class="mi">group</span>Users</div>
+      <div class="ad-nav"><span class="mi">diversity_3</span>Clubs</div>
+      <div class="ad-nav"><span class="mi">handshake</span>Partners<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A2E10;color:#E0B341;border-radius:9px;padding:1px 6px">7</span></div>
+      <div class="ad-nav"><span class="mi">trophy</span>Tournaments</div>
+      <div class="ad-sec">FINANCE</div>
+      <div class="ad-nav"><span class="mi">account_balance</span>Payments</div>
+      <div class="ad-nav"><span class="mi">undo</span>Refunds</div>
+      <div class="ad-sec">TRUST &amp; SAFETY</div>
+      <div class="ad-nav"><span class="mi">verified_user</span>Verification<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">12</span></div>
+      <div class="ad-nav"><span class="mi">gavel</span>Disputes<span style="margin-left:auto;font:600 9.5px var(--mo);background:#3A1414;color:#E5848A;border-radius:9px;padding:1px 6px">4</span></div>
+      <div class="ad-nav"><span class="mi">flag</span>Reports</div>
+      <div class="ad-sec">SYSTEM</div>
+      <div class="ad-nav on"><span class="mi">monitoring</span>Analytics</div>
+      <div class="ad-nav"><span class="mi">receipt_long</span>Audit Logs</div>
+      <div class="ad-nav"><span class="mi">tune</span>Configuration</div>
+    </div>
+    <div style="margin-top:auto;padding:12px;border-top:1px solid #1E1E21;display:flex;align-items:center;gap:9px"><div style="width:28px;height:28px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 11px var(--sg)">DK</div><div style="line-height:1.2"><div style="font:600 11.5px 'Inter';color:#E8E8E6">Dana Kohli</div><div style="font:400 10px var(--mo);color:#6E6E6B">ROLE · SUPER_ADMIN</div></div></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;padding:0 22px">
+      <div style="font:600 14px 'Inter';color:#F3F3F1">Analytics</div>
+      <div style="margin-left:auto;display:flex;gap:10px"><div style="height:32px;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 11px;font:500 12px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#8A8A87">calendar_today</span>Last 90 days</div><div style="height:32px;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 11px;font:500 12px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#8A8A87">download</span>Export</div></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:16px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">MRR</div><div style="font:700 22px var(--sg);color:#F3F3F1;margin-top:6px">$142k</div><div style="font:500 10.5px 'Inter';color:#3ECF8E;margin-top:3px">▲ 11.2% MoM</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">D30 retention</div><div style="font:700 22px var(--sg);color:#F3F3F1;margin-top:6px">61%</div><div style="font:500 10.5px 'Inter';color:#3ECF8E;margin-top:3px">▲ 2.4 pts</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">New users · 90d</div><div style="font:700 22px var(--sg);color:#F3F3F1;margin-top:6px">6,120</div><div style="font:500 10.5px 'Inter';color:#3ECF8E;margin-top:3px">▲ 18%</div></div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:14px"><div style="font:500 11px 'Inter';color:#8A8A87">Court utilization</div><div style="font:700 22px var(--sg);color:#F3F3F1;margin-top:6px">73%</div><div style="font:500 10.5px 'Inter';color:#E0B341;margin-top:3px">▼ 1.1 pts</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px;flex:none">
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:16px">
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px"><span style="font:600 13px 'Inter';color:#F3F3F1">User growth</span><span style="font:400 11px 'Inter';color:#8A8A87">new vs churned</span></div>
+          <div style="display:flex;align-items:flex-end;gap:5px;height:120px">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:52px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:14px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:60px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:12px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:48px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:18px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:72px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:14px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:66px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:16px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:84px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:12px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:78px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:15px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:96px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:10px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:90px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:13px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:104px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:11px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:98px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:14px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px"><div style="height:112px;background:#C8F550;border-radius:3px 3px 0 0"></div><div style="height:9px;background:#3A1414;border-radius:0 0 3px 3px"></div></div>
+          </div>
+        </div>
+        <div style="background:#131315;border:1px solid #232326;border-radius:10px;padding:16px">
+          <div style="font:600 13px 'Inter';color:#F3F3F1;margin-bottom:12px">Popular sports</div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="width:90px;height:90px;border-radius:50%;background:conic-gradient(#C8F550 0 72%,#3ECF8E 72% 90%,#2E3450 90%);display:flex;align-items:center;justify-content:center"><div style="width:56px;height:56px;border-radius:50%;background:#131315;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 14px var(--sg);color:#F3F3F1">184k</span><span style="font:400 8.5px 'Inter';color:#8A8A87">matches</span></div></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font:500 11.5px 'Inter';color:#D4D4D1"><span style="width:9px;height:9px;border-radius:3px;background:#C8F550"></span>Pickleball<span style="margin-left:auto;font:700 11.5px var(--sg)">72%</span></div>
+              <div style="display:flex;align-items:center;gap:8px;font:500 11.5px 'Inter';color:#D4D4D1"><span style="width:9px;height:9px;border-radius:3px;background:#3ECF8E"></span>Padel<span style="margin-left:auto;font:700 11.5px var(--sg)">18%</span></div>
+              <div style="display:flex;align-items:center;gap:8px;font:500 11.5px 'Inter';color:#D4D4D1"><span style="width:9px;height:9px;border-radius:3px;background:#2E3450"></span>Tennis<span style="margin-left:auto;font:700 11.5px var(--sg)">10%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#131315;border:1px solid #232326;border-radius:10px;overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;padding:13px 16px 10px"><span style="font:600 13px 'Inter';color:#F3F3F1">Partner performance</span><span style="margin-left:auto;font:400 11px var(--mo);color:#6E6E6B">ranked by GMV</span></div>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><th>Partner</th><th>Venues</th><th>Bookings · 90d</th><th>GMV</th><th>Utilization</th><th>Rating</th><th>Dispute rate</th></tr>
+          <tr><td style="font-weight:600;color:#E8E8E6">Greenpoint P&amp;P</td><td class="mono">1</td><td class="mono">4,210</td><td class="mono" style="color:#C8F550">$118k</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:5px;border-radius:3px;background:#232326;overflow:hidden"><div style="width:82%;height:100%;background:#C8F550"></div></div>82%</div></td><td class="mono">4.8</td><td class="mono" style="color:#3ECF8E">0.4%</td></tr>
+          <tr><td style="font-weight:600;color:#E8E8E6">Riverside Club</td><td class="mono">1</td><td class="mono">2,980</td><td class="mono" style="color:#C8F550">$74k</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:5px;border-radius:3px;background:#232326;overflow:hidden"><div style="width:61%;height:100%;background:#C8F550"></div></div>61%</div></td><td class="mono">4.6</td><td class="mono" style="color:#3ECF8E">0.7%</td></tr>
+          <tr><td style="font-weight:600;color:#E8E8E6">Downtown Padel</td><td class="mono">2</td><td class="mono">2,140</td><td class="mono" style="color:#C8F550">$66k</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:5px;border-radius:3px;background:#232326;overflow:hidden"><div style="width:70%;height:100%;background:#C8F550"></div></div>70%</div></td><td class="mono">4.5</td><td class="mono" style="color:#E0B341">1.9%</td></tr>
+          <tr><td style="font-weight:600;color:#E8E8E6">Northside Rec</td><td class="mono">1</td><td class="mono">1,760</td><td class="mono" style="color:#C8F550">$41k</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:5px;border-radius:3px;background:#232326;overflow:hidden"><div style="width:55%;height:100%;background:#C8F550"></div></div>55%</div></td><td class="mono">4.4</td><td class="mono" style="color:#3ECF8E">0.9%</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5b" data-screen-label="Audit logs">
+<div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Audit logs — immutable trail</div>
+<div class="dv-card" style="width:1360px;height:840px;display:flex;background:#0B0B0C;color:#D4D4D1">
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:52px;flex:none;border-bottom:1px solid #1E1E21;display:flex;align-items:center;gap:12px;padding:0 22px">
+      <div style="font:600 14px 'Inter';color:#F3F3F1">Audit Logs</div><span style="font:400 11px var(--mo);color:#6E6E6B">append-only · retained 7y</span>
+      <div style="margin-left:auto;display:flex;gap:10px">
+        <div style="height:32px;background:#131315;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 11px;width:240px"><span style="font-family:var(--ms);font-size:16px;color:#6E6E6B">search</span><span style="font:400 12px var(--mo);color:#6E6E6B">actor:d.kohli action:ban</span></div>
+        <div style="height:32px;border:1px solid #232326;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 11px;font:500 12px 'Inter';color:#B8B8B5"><span style="font-family:var(--ms);font-size:16px;color:#8A8A87">download</span>Export</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:16px 22px">
+      <div style="background:#131315;border:1px solid #232326;border-radius:10px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <tr><th>Timestamp · UTC</th><th>Actor</th><th>Action</th><th>Target</th><th>IP</th><th style="text-align:right">Result</th></tr>
+          <tr><td class="mono" style="color:#8A8A87">2026-07-08 10:42:03</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 8.5px var(--sg)">MR</div><span class="mono" style="font-size:11.5px">m.rao</span></div></td><td><span style="font:600 10px var(--mo);color:#3ECF8E;background:#12281C;border-radius:5px;padding:2px 7px">partner.approve</span></td><td class="mono" style="color:#C8F550">prt_0231</td><td class="mono" style="color:#8A8A87">10.4.2.11</td><td style="text-align:right"><span class="mono" style="color:#3ECF8E">200 OK</span></td></tr>
+          <tr><td class="mono" style="color:#8A8A87">2026-07-08 10:31:55</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;background:#1E1E21;color:#8A8A87;display:flex;align-items:center;justify-content:center;font-family:var(--ms);font-size:13px">smart_toy</div><span class="mono" style="font-size:11.5px">a.system</span></div></td><td><span style="font:600 10px var(--mo);color:#E5848A;background:#2A1414;border-radius:5px;padding:2px 7px">payment.flag</span></td><td class="mono" style="color:#C8F550">PAY-88F2</td><td class="mono" style="color:#8A8A87">—</td><td style="text-align:right"><span class="mono" style="color:#E0B341">flagged</span></td></tr>
+          <tr><td class="mono" style="color:#8A8A87">2026-07-08 10:19:41</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 8.5px var(--sg)">DK</div><span class="mono" style="font-size:11.5px">d.kohli</span></div></td><td><span style="font:600 10px var(--mo);color:#E0B341;background:#2A2210;border-radius:5px;padding:2px 7px">user.suspend</span></td><td class="mono" style="color:#C8F550">usr_1204</td><td class="mono" style="color:#8A8A87">10.4.2.09</td><td style="text-align:right"><span class="mono" style="color:#3ECF8E">200 OK</span></td></tr>
+          <tr><td class="mono" style="color:#8A8A87">2026-07-08 09:58:12</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 8.5px var(--sg)">SI</div><span class="mono" style="font-size:11.5px">s.iyer</span></div></td><td><span style="font:600 10px var(--mo);color:#3ECF8E;background:#12281C;border-radius:5px;padding:2px 7px">refund.issue</span></td><td class="mono" style="color:#C8F550">RF-2210 · $28.00</td><td class="mono" style="color:#8A8A87">10.4.2.14</td><td style="text-align:right"><span class="mono" style="color:#3ECF8E">200 OK</span></td></tr>
+          <tr><td class="mono" style="color:#8A8A87">2026-07-08 09:44:30</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 8.5px var(--sg)">MR</div><span class="mono" style="font-size:11.5px">m.rao</span></div></td><td><span style="font:600 10px var(--mo);color:#C8F550;background:#1B2410;border-radius:5px;padding:2px 7px">tournament.feature</span></td><td class="mono" style="color:#C8F550">trn_0091</td><td class="mono" style="color:#8A8A87">10.4.2.11</td><td style="text-align:right"><span class="mono" style="color:#3ECF8E">200 OK</span></td></tr>
+          <tr><td class="mono" style="color:#8A8A87">2026-07-08 09:30:02</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;background:#3A1A1A;color:#E5848A;display:flex;align-items:center;justify-content:center;font:700 8.5px var(--sg)">?</div><span class="mono" style="font-size:11.5px;color:#E5848A">unknown</span></div></td><td><span style="font:600 10px var(--mo);color:#E5848A;background:#2A1414;border-radius:5px;padding:2px 7px">auth.login</span></td><td class="mono" style="color:#8A8A87">admin-panel</td><td class="mono" style="color:#E5848A">88.12.4.7</td><td style="text-align:right"><span class="mono" style="color:#E5484D">403 blocked</span></td></tr>
+          <tr><td class="mono" style="color:#8A8A87">2026-07-08 09:12:48</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;background:#2A2A2E;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 8.5px var(--sg)">DK</div><span class="mono" style="font-size:11.5px">d.kohli</span></div></td><td><span style="font:600 10px var(--mo);color:#8A8A87;background:#1E1E21;border-radius:5px;padding:2px 7px">config.update</span></td><td class="mono" style="color:#C8F550">fees.take_rate 5.0→5.0</td><td class="mono" style="color:#8A8A87">10.4.2.09</td><td style="text-align:right"><span class="mono" style="color:#3ECF8E">200 OK</span></td></tr>
+        </table>
+      </div>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px;font:400 11px var(--mo);color:#6E6E6B"><span style="font-family:var(--ms);font-size:15px;color:#3ECF8E">lock</span>Entries are cryptographically chained · last hash <span style="color:#8A8A87">a3f9··c210</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "add Tournaments moderation + Configuration screens" · "role-based views (finance vs moderator)" · "light theme variant" · "empty &amp; loading states for these tables"</p>
+</section></x-dc>
+</body>
+</html>

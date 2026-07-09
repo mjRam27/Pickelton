@@ -11,6 +11,8 @@ import com.pickelton.backend.user.dto.UserDTO;
 import com.pickelton.backend.user.dto.UserSearchResponse;
 import com.pickelton.backend.user.dto.UserStatsDTO;
 import com.pickelton.backend.user.service.UserService;
+import com.pickelton.backend.storage.dto.StorageUploadResponse;
+import com.pickelton.backend.storage.service.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -30,6 +34,7 @@ public class UserController {
 
     private final UserService userService;
     private final CurrentUserService currentUserService;
+    private final StorageService storageService;
 
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
@@ -43,6 +48,14 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserDTO>> updateMe(@Valid @RequestBody UpdateUserRequest request) {
         UserDTO dto = userService.updateMyProfile(currentUserService.getUserId(), request);
         return ResponseEntity.ok(ApiResponse.ok(dto, "Profile updated"));
+    }
+
+    @PostMapping("/me/avatar")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<UserDTO>> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        StorageUploadResponse upload = storageService.upload("profile-avatars", file);
+        UserDTO dto = userService.updateAvatar(currentUserService.getUserId(), upload.url());
+        return ResponseEntity.ok(ApiResponse.ok(dto, "Profile avatar updated"));
     }
 
     @GetMapping("/search")

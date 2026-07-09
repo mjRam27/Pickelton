@@ -14,7 +14,11 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pickelton.backend.config.RateLimitInterceptor;
+import com.pickelton.backend.enums.InvitationStatus;
 import com.pickelton.backend.enums.MatchStatus;
+import com.pickelton.backend.enums.MatchType;
+import com.pickelton.backend.enums.ParticipantRole;
+import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.match.dto.AddPointRequest;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
 import com.pickelton.backend.match.dto.MatchParticipantResponse;
@@ -94,7 +98,7 @@ class MatchControllerTest {
     }
 
     @Test
-    void createCasualMatchWithoutTournamentIdAndRoundShouldPassValidation() throws Exception {
+    void createCasualMatchWithoutTournamentIdShouldPassValidation() throws Exception {
         when(matchService.createMatch(any(CreateMatchRequest.class))).thenReturn(sampleCreatedMatch());
 
         String requestJson = """
@@ -104,7 +108,8 @@ class MatchControllerTest {
                 {"userId":"11111111-1111-1111-1111-111111111111","teamCode":"A","role":"PLAYER"},
                 {"userId":"22222222-2222-2222-2222-222222222222","teamCode":"B","role":"PLAYER"}
               ],
-              "rules":{"pointsToWin":11}
+              "rules":{"pointsToWin":11},
+              "round":"Friendly Match"
             }
             """;
 
@@ -128,8 +133,8 @@ class MatchControllerTest {
             MatchStatus.IN_PROGRESS,
             "Center Court",
             now,
-            List.of(new MatchParticipantResponse(UUID.randomUUID(), "A", com.pickelton.backend.enums.MatchParticipantRole.PLAYER,
-                com.pickelton.backend.enums.MatchParticipantStatus.ACCEPTED)),
+            List.of(new MatchParticipantResponse(UUID.randomUUID(), UUID.randomUUID(), "Player A", "A",
+                ParticipantRole.PLAYER, InvitationStatus.ACCEPTED)),
             Map.of("A", 5, "B", 3),
             1,
             11,
@@ -155,10 +160,14 @@ class MatchControllerTest {
             null,
             "Friendly Match",
             MatchStatus.SCHEDULED,
-            List.of(),
-            Map.of("pointsToWin", 11),
+            SportType.PICKLEBALL,
+            MatchType.SINGLES,
             null,
             now,
+            Map.of("pointsToWin", 11),
+            List.of(),
+            Map.of("A", 0, "B", 0),
+            1,
             List.of(),
             0L,
             now,

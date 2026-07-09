@@ -1,9 +1,10 @@
 package com.pickelton.backend.security;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
+import com.pickelton.backend.enums.PlatformRole;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -57,8 +59,13 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
             UUID userId = jwtUtil.extractUserId(token);
+            PlatformRole role = jwtUtil.extractRole(token);
             UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userId.toString(), null, Collections.emptyList());
+                new UsernamePasswordAuthenticationToken(
+                    userId.toString(),
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))
+                );
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception ex) {

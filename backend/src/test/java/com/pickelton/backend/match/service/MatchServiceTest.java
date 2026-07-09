@@ -2,7 +2,6 @@ package com.pickelton.backend.match.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,11 +18,14 @@ import com.pickelton.backend.common.exception.BadRequestException;
 import com.pickelton.backend.common.exception.ForbiddenException;
 import com.pickelton.backend.common.service.CurrentUserService;
 import com.pickelton.backend.config.ScoreBroadcastService;
+import com.pickelton.backend.analytics.service.AnalyticsService;
+import com.pickelton.backend.enums.InvitationStatus;
 import com.pickelton.backend.enums.MatchMode;
-import com.pickelton.backend.enums.MatchParticipantRole;
-import com.pickelton.backend.enums.MatchParticipantStatus;
 import com.pickelton.backend.enums.MatchStatus;
+import com.pickelton.backend.enums.MatchType;
+import com.pickelton.backend.enums.ParticipantRole;
 import com.pickelton.backend.enums.ScoreEventType;
+import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.mapper.MatchMapper;
 import com.pickelton.backend.match.dto.AddPointRequest;
 import com.pickelton.backend.match.dto.CreateMatchRequest;
@@ -79,7 +81,7 @@ class MatchServiceTest {
     @Mock
     private ScoreBroadcastService scoreBroadcastService;
     @Mock
-    private MatchMapper matchMapper;
+    private AnalyticsService analyticsService;
 
     private MatchService matchService;
 
@@ -108,7 +110,8 @@ class MatchServiceTest {
             currentUserService,
             liveStateService,
             scoreBroadcastService,
-            matchMapper
+            new MatchMapper(),
+            analyticsService
         );
 
         matchId = UUID.randomUUID();
@@ -135,6 +138,9 @@ class MatchServiceTest {
         playerBUser.setPhoneNumber("+13333333333");
 
         match = Match.builder()
+            .createdBy(scorekeeper)
+            .sport(SportType.PICKLEBALL)
+            .matchType(MatchType.SINGLES)
             .round("Round 1")
             .status(MatchStatus.SCHEDULED)
             .rules(new LinkedHashMap<>(Map.of("pointsToWin", 11, "bestOf", 3, "winByTwo", false)))
@@ -145,8 +151,10 @@ class MatchServiceTest {
 
         state = MatchState.builder()
             .match(match)
-            .scores(new LinkedHashMap<>(Map.of("A", 0, "B", 0)))
-            .sets(List.of())
+            .currentScore(new LinkedHashMap<>(Map.of("A", 0, "B", 0)))
+            .currentSet(1)
+            .setSummary(List.of())
+            .liveState(new LinkedHashMap<>(Map.of("status", match.getStatus().name())))
             .revision(0L)
             .lastEventAt(OffsetDateTime.now())
             .build();
@@ -154,23 +162,23 @@ class MatchServiceTest {
         scorekeeperParticipant = MatchParticipant.builder()
             .match(match)
             .user(scorekeeper)
-            .role(MatchParticipantRole.SCORER)
-            .status(MatchParticipantStatus.ACCEPTED)
+            .role(ParticipantRole.SCORER)
+            .invitationStatus(InvitationStatus.ACCEPTED)
             .build();
 
         playerA = MatchParticipant.builder()
             .match(match)
             .user(playerAUser)
-            .teamCode("A")
-            .role(MatchParticipantRole.PLAYER)
-            .status(MatchParticipantStatus.ACCEPTED)
+            .team("A")
+            .role(ParticipantRole.PLAYER)
+            .invitationStatus(InvitationStatus.ACCEPTED)
             .build();
         playerB = MatchParticipant.builder()
             .match(match)
             .user(playerBUser)
-            .teamCode("B")
-            .role(MatchParticipantRole.PLAYER)
-            .status(MatchParticipantStatus.ACCEPTED)
+            .team("B")
+            .role(ParticipantRole.PLAYER)
+            .invitationStatus(InvitationStatus.ACCEPTED)
             .build();
 
         Tournament tournament = Tournament.builder().build();
@@ -179,15 +187,15 @@ class MatchServiceTest {
         TournamentMatch tournamentMatch = TournamentMatch.builder()
             .match(match)
             .tournament(tournament)
-            .displayOrder(1)
+            .round("Round 1")
             .build();
 
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
         when(stateRepository.findByMatchId(matchId)).thenReturn(Optional.of(state));
-        when(participantRepository.findFirstByMatchIdAndRoleAndStatusOrderByCreatedAtDesc(
-            matchId, MatchParticipantRole.SCORER, MatchParticipantStatus.ACCEPTED))
-            .thenReturn(Optional.of(scorekeeperParticipant));
-        when(participantRepository.findByMatchIdAndRoleOrderByCreatedAtDesc(matchId, MatchParticipantRole.SCORER))
+        when(participantRepository.existsByMatchIdAndUserIdAndRoleInAndInvitationStatus(
+            matchId, scorekeeperId, List.of(ParticipantRole.SCORER, ParticipantRole.REFEREE), InvitationStatus.ACCEPTED))
+            .thenReturn(true);
+        when(participantRepository.findByMatchIdAndRole(matchId, ParticipantRole.SCORER))
             .thenReturn(List.of(scorekeeperParticipant));
         when(participantRepository.findByMatchIdOrderByCreatedAtAsc(matchId))
             .thenReturn(List.of(playerA, playerB, scorekeeperParticipant));
@@ -203,7 +211,7 @@ class MatchServiceTest {
         when(stateRepository.save(any(MatchState.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(scoreEventRepository.save(any(ScoreEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(participantRepository.save(any(MatchParticipant.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(scoreEventRepository.findTopByMatchIdOrderBySequenceNumberDesc(any(UUID.class))).thenReturn(Optional.empty());
+        when(scoreEventRepository.findByMatchIdOrderBySequenceNumberAsc(any(UUID.class))).thenReturn(List.of());
     }
 
     @Test
@@ -213,8 +221,8 @@ class MatchServiceTest {
 
         matchService.addPoint(matchId, new AddPointRequest("A"));
 
-        assertEquals(1, state.getScores().get("A"));
-        assertEquals(0, state.getScores().get("B"));
+        assertEquals(1, state.getCurrentScore().get("A"));
+        assertEquals(0, state.getCurrentScore().get("B"));
         verify(stateRepository).save(state);
         verify(scoreBroadcastService).broadcastScoreUpdate(any(UUID.class), any());
     }
@@ -240,32 +248,30 @@ class MatchServiceTest {
     void undoLastEventRestoresPreviousScore() {
         when(currentUserService.getUserId()).thenReturn(scorekeeperId);
         when(currentUserService.getCurrentUser()).thenReturn(scorekeeper);
-        state.setScores(new LinkedHashMap<>(Map.of("A", 3, "B", 2)));
+        state.setCurrentScore(new LinkedHashMap<>(Map.of("A", 3, "B", 2)));
         state.setRevision(4L);
 
         ScoreEvent lastPointEvent = ScoreEvent.builder()
             .match(match)
             .actor(scorekeeper)
-            .eventType(ScoreEventType.POINT_ADDED)
+            .eventType(ScoreEventType.POINT)
             .payload(new LinkedHashMap<>(Map.of(
-                "teamCode", "A",
-                "beforeScores", new LinkedHashMap<>(Map.of("A", 2, "B", 2)),
-                "afterScores", new LinkedHashMap<>(Map.of("A", 3, "B", 2)),
-                "undone", false
+                "team", "A",
+                "oldScore", 2,
+                "newScore", 3,
+                "delta", 1
             )))
             .sequenceNumber(5L)
             .build();
         lastPointEvent.setId(UUID.randomUUID());
 
-        when(scoreEventRepository.findByMatchIdOrderBySequenceNumberDesc(matchId)).thenReturn(List.of(lastPointEvent));
-        when(scoreEventRepository.findTopByMatchIdOrderBySequenceNumberDesc(matchId)).thenReturn(Optional.of(lastPointEvent));
+        when(scoreEventRepository.findByMatchIdOrderBySequenceNumberAsc(matchId)).thenReturn(List.of(lastPointEvent));
 
         matchService.undoLastScore(matchId);
 
-        assertEquals(2, state.getScores().get("A"));
-        assertEquals(2, state.getScores().get("B"));
-        assertTrue(Boolean.TRUE.equals(lastPointEvent.getPayload().get("undone")));
-        verify(scoreEventRepository).save(lastPointEvent);
+        assertEquals(2, state.getCurrentScore().get("A"));
+        assertEquals(2, state.getCurrentScore().get("B"));
+        verify(scoreEventRepository).save(any(ScoreEvent.class));
     }
 
     @Test
@@ -275,8 +281,8 @@ class MatchServiceTest {
 
         matchService.manualCorrection(matchId, new ManualScoreCorrectionRequest(7, 5, "Fix input mistake"));
 
-        assertEquals(7, state.getScores().get("A"));
-        assertEquals(5, state.getScores().get("B"));
+        assertEquals(7, state.getCurrentScore().get("A"));
+        assertEquals(5, state.getCurrentScore().get("B"));
         verify(scoreEventRepository).save(any(ScoreEvent.class));
     }
 
@@ -284,8 +290,7 @@ class MatchServiceTest {
     void completeMatchLocksFurtherEditing() {
         when(currentUserService.getUserId()).thenReturn(scorekeeperId);
         when(currentUserService.getCurrentUser()).thenReturn(scorekeeper);
-        state.setScores(new LinkedHashMap<>(Map.of("A", 11, "B", 9)));
-        when(scoreEventRepository.findTopByMatchIdOrderBySequenceNumberDesc(matchId)).thenReturn(Optional.empty());
+        state.setCurrentScore(new LinkedHashMap<>(Map.of("A", 11, "B", 9)));
 
         matchService.completeMatch(matchId);
 
@@ -294,7 +299,7 @@ class MatchServiceTest {
     }
 
     @Test
-    void casualMatchCanBeCreatedWithoutTournamentIdAndRound() {
+    void casualMatchCanBeCreatedWithoutTournamentId() {
         when(currentUserService.getCurrentUser()).thenReturn(scorekeeper);
 
         User casualPlayerA = new User();
@@ -310,24 +315,18 @@ class MatchServiceTest {
             null,
             null,
             List.of(
-                new CreateMatchRequest.ParticipantRequest(casualPlayerA.getId(), "A", MatchParticipantRole.PLAYER),
-                new CreateMatchRequest.ParticipantRequest(casualPlayerB.getId(), "B", MatchParticipantRole.PLAYER)
+                new CreateMatchRequest.ParticipantRequest(casualPlayerA.getId(), "A", ParticipantRole.PLAYER),
+                new CreateMatchRequest.ParticipantRequest(casualPlayerB.getId(), "B", ParticipantRole.PLAYER)
             ),
             null,
             null,
-            Map.of("pointsToWin", 11),
-            "Court 2",
+            SportType.PICKLEBALL,
+            MatchType.SINGLES,
             OffsetDateTime.now().plusDays(1),
-            null
+            "Court 2",
+            Map.of("pointsToWin", 11),
+            "Friendly Match"
         );
-
-        MatchResponse mapped = new MatchResponse(
-            UUID.randomUUID(), null, casualPlayerA.getId(), casualPlayerB.getId(),
-            0, 0, null, "Friendly Match", MatchStatus.SCHEDULED, List.of(),
-            Map.of("pointsToWin", 11), "Court 2", request.scheduledAt(), List.of(), 0L,
-            OffsetDateTime.now(), OffsetDateTime.now()
-        );
-        when(matchMapper.toResponse(any(Match.class), any(), any(), any())).thenReturn(mapped);
 
         MatchResponse response = matchService.createMatch(request);
 
@@ -347,9 +346,11 @@ class MatchServiceTest {
             List.of(),
             null,
             null,
+            null,
+            null,
+            null,
+            null,
             Map.of(),
-            null,
-            null,
             "Round 1"
         );
 
@@ -367,27 +368,23 @@ class MatchServiceTest {
         casualPlayerB.setId(UUID.randomUUID());
         when(userRepository.findById(casualPlayerA.getId())).thenReturn(Optional.of(casualPlayerA));
         when(userRepository.findById(casualPlayerB.getId())).thenReturn(Optional.of(casualPlayerB));
-        when(matchMapper.toResponse(any(Match.class), any(), any(), any())).thenReturn(new MatchResponse(
-            UUID.randomUUID(), null, casualPlayerA.getId(), casualPlayerB.getId(),
-            0, 0, null, "Friendly Match", MatchStatus.SCHEDULED, List.of(),
-            Map.of(), null, null, List.of(), 0L, OffsetDateTime.now(), OffsetDateTime.now()
-        ));
-
         CreateMatchRequest request = new CreateMatchRequest(
             MatchMode.CASUAL,
             null,
             null,
             null,
             List.of(
-                new CreateMatchRequest.ParticipantRequest(casualPlayerA.getId(), "A", MatchParticipantRole.PLAYER),
-                new CreateMatchRequest.ParticipantRequest(casualPlayerB.getId(), "B", MatchParticipantRole.PLAYER)
+                new CreateMatchRequest.ParticipantRequest(casualPlayerA.getId(), "A", ParticipantRole.PLAYER),
+                new CreateMatchRequest.ParticipantRequest(casualPlayerB.getId(), "B", ParticipantRole.PLAYER)
             ),
             null,
             null,
             null,
             null,
             null,
-            null
+            null,
+            null,
+            "Friendly Match"
         );
 
         matchService.createMatch(request);

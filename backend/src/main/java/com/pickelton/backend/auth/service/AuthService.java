@@ -9,6 +9,7 @@ import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.dto.VerifyCodeRequest;
 import com.pickelton.backend.common.exception.BadRequestException;
 import com.pickelton.backend.common.service.CurrentUserService;
+import com.pickelton.backend.enums.PlatformRole;
 import com.pickelton.backend.security.JwtBlacklistService;
 import com.pickelton.backend.security.JwtUtil;
 import com.pickelton.backend.user.entity.User;
@@ -56,6 +57,7 @@ public class AuthService {
             .emailVerified(false)
             .phoneVerified(false)
             .authProvider("LOCAL")
+            .role(PlatformRole.USER)
             .build();
 
         User saved = userService.save(user);
@@ -102,6 +104,7 @@ public class AuthService {
                 .phoneVerified(false)
                 .authProvider("GOOGLE")
                 .googleSubject(identity.subject())
+                .role(PlatformRole.USER)
                 .build();
             newUser = true;
         } else if (user.getGoogleSubject() == null || user.getGoogleSubject().isBlank()) {
@@ -144,6 +147,7 @@ public class AuthService {
             user.getDateOfBirth(),
             user.isEmailVerified(),
             user.isPhoneVerified(),
+            user.getRole(),
             user.getCreatedAt()
         );
     }
@@ -161,7 +165,7 @@ public class AuthService {
     }
 
     private AuthResponse issueSession(User user) {
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
         RefreshTokenService.IssuedRefreshToken refreshToken = refreshTokenService.issue(user.getId());
         return new AuthResponse(
             token,
@@ -174,7 +178,8 @@ public class AuthService {
             user.getPhoneNumber(),
             user.getDateOfBirth(),
             user.isEmailVerified(),
-            user.isPhoneVerified()
+            user.isPhoneVerified(),
+            user.getRole()
         );
     }
 }

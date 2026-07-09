@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,22 +27,20 @@ public class AdminHostVerificationController {
     private final HostVerificationService hostVerificationService;
 
     @GetMapping("/pending")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<HostVerificationResponse>>> getPending(
-        @RequestHeader(value = "X-Admin-Key", required = false) String adminKey,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(hostVerificationService.getPending(adminKey, page, size)));
+        return ResponseEntity.ok(ApiResponse.ok(hostVerificationService.getPending(page, size)));
     }
 
     @PatchMapping("/{id}/review")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<HostVerificationResponse>> review(
-        @RequestHeader(value = "X-Admin-Key", required = false) String adminKey,
         @PathVariable UUID id,
         @Valid @RequestBody ReviewHostVerificationRequest request
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(hostVerificationService.review(adminKey, id, request), "Host verification reviewed"));
+        return ResponseEntity.ok(ApiResponse.ok(hostVerificationService.review(id, request), "Host verification reviewed"));
     }
 }

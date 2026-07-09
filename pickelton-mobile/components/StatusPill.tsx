@@ -12,14 +12,14 @@ export function StatusPill({ label, tone = "primary" }: { label: string; tone?: 
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  pill: { alignSelf: "flex-start", borderRadius: 14, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 5 },
-  label: { fontSize: 8, fontWeight: "900", letterSpacing: 0.8 },
-  primaryPill: { backgroundColor: colors.primarySoft, borderColor: colors.primaryDim },
+  pill: { alignSelf: "flex-start", borderRadius: 14, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 5 },
+  label: { fontSize: 10, fontWeight: "800", letterSpacing: 0 },
+  primaryPill: { backgroundColor: colors.accent, borderColor: colors.accent },
   primaryLabel: { color: colors.primary },
   mutedPill: { backgroundColor: colors.raised, borderColor: colors.border },
   mutedLabel: { color: colors.muted },
-  dangerPill: { backgroundColor: colors.raised, borderColor: colors.danger },
+  dangerPill: { backgroundColor: colors.dangerSoft, borderColor: colors.dangerSoft },
   dangerLabel: { color: colors.danger },
-  goldPill: { backgroundColor: colors.raised, borderColor: colors.gold },
+  goldPill: { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft },
   goldLabel: { color: colors.gold },
 });

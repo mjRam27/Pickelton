@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS users (
     phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
     auth_provider VARCHAR(30) NOT NULL DEFAULT 'LOCAL',
     google_subject VARCHAR(255) UNIQUE,
+    role VARCHAR(30) NOT NULL DEFAULT 'USER',
     bio VARCHAR(280),
     avatar_url VARCHAR(1000),
     city VARCHAR(100),
@@ -222,8 +223,8 @@ CREATE TABLE IF NOT EXISTS score_history (
 CREATE INDEX IF NOT EXISTS idx_club_members_user_id ON club_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_club_members_club_id ON club_members(club_id);
 CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments(status);
-CREATE INDEX IF NOT EXISTS idx_host_verifications_user_id ON host_verifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_host_verifications_status ON host_verifications(status);
+CREATE INDEX IF NOT EXISTS idx_host_applications_user_id ON host_applications(user_id);
+CREATE INDEX IF NOT EXISTS idx_host_applications_status ON host_applications(status);
 CREATE INDEX IF NOT EXISTS idx_registrations_tournament_id ON registrations(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
@@ -234,4 +235,3 @@ CREATE INDEX IF NOT EXISTS idx_score_events_match_id_seq ON score_events(match_i
 CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id ON tournament_matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
-CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);

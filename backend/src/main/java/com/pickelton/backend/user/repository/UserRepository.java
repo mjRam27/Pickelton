@@ -23,10 +23,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, UUID id);
 
     @Query("""
-        SELECT u FROM User u
+        SELECT DISTINCT u FROM User u
+        LEFT JOIN ClubMember cm ON cm.user = u
         WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%'))
-           OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))
-           OR u.phoneNumber LIKE CONCAT('%', :query, '%')
+           OR LOWER(u.city) LIKE LOWER(CONCAT('%', :query, '%'))
+           OR LOWER(cm.club.name) LIKE LOWER(CONCAT('%', :query, '%'))
         ORDER BY u.name ASC
         """)
     java.util.List<User> searchByNameEmailOrPhone(@Param("query") String query, Pageable pageable);

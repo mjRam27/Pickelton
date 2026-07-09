@@ -6,11 +6,15 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
-import com.pickelton.backend.enums.MatchParticipantRole;
+import com.pickelton.backend.analytics.repository.ClubStatsRepository;
+import com.pickelton.backend.analytics.repository.PlayerStatsRepository;
 import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.enums.RegistrationStatus;
+import com.pickelton.backend.enums.SportType;
+import com.pickelton.backend.leaderboard.dto.ClubLeaderboardEntryResponse;
 import com.pickelton.backend.leaderboard.dto.LeaderboardEntryResponse;
 import com.pickelton.backend.leaderboard.dto.LeaderboardResponse;
+import com.pickelton.backend.leaderboard.dto.PlayerLeaderboardEntryResponse;
 import com.pickelton.backend.enums.ParticipantRole;
 import com.pickelton.backend.match.entity.Match;
 import com.pickelton.backend.match.entity.MatchParticipant;
@@ -32,6 +36,38 @@ public class LeaderboardService {
     private final RegistrationRepository registrationRepository;
     private final TournamentMatchRepository tournamentMatchRepository;
     private final MatchParticipantRepository participantRepository;
+    private final PlayerStatsRepository playerStatsRepository;
+    private final ClubStatsRepository clubStatsRepository;
+
+    public List<PlayerLeaderboardEntryResponse> getPlayerLeaderboard(SportType sportType) {
+        return playerStatsRepository.findTop50BySportTypeOrderByRatingDescWinsDesc(sportType).stream()
+            .map(stats -> new PlayerLeaderboardEntryResponse(
+                stats.getUser().getId(),
+                stats.getUser().getName(),
+                stats.getUser().getAvatarUrl(),
+                stats.getUser().getCity(),
+                stats.getMatchesPlayed(),
+                stats.getWins(),
+                stats.getLosses(),
+                stats.getRating()
+            ))
+            .toList();
+    }
+
+    public List<ClubLeaderboardEntryResponse> getClubLeaderboard(SportType sportType) {
+        return clubStatsRepository.findTop50BySportTypeOrderByClubRatingDescWinsDesc(sportType).stream()
+            .map(stats -> new ClubLeaderboardEntryResponse(
+                stats.getClub().getId(),
+                stats.getClub().getName(),
+                stats.getClub().getLogoUrl(),
+                stats.getClub().getCity(),
+                stats.getMatchesPlayed(),
+                stats.getWins(),
+                stats.getLosses(),
+                stats.getClubRating()
+            ))
+            .toList();
+    }
 
     public LeaderboardResponse getLeaderboard(UUID tournamentId) {
         if (!tournamentRepository.existsById(tournamentId)) {
@@ -39,6 +75,8 @@ public class LeaderboardService {
         }
         Map<UUID, Stats> stats = new HashMap<>();
         registrationRepository.findByTournamentIdAndStatus(tournamentId, RegistrationStatus.REGISTERED)
+            .forEach(registration -> stats.putIfAbsent(registration.getUser().getId(), new Stats(registration.getUser())));
+        registrationRepository.findByTournamentIdAndStatus(tournamentId, RegistrationStatus.APPROVED)
             .forEach(registration -> stats.putIfAbsent(registration.getUser().getId(), new Stats(registration.getUser())));
 
         tournamentMatchRepository.findByTournamentIdOrderByCreatedAtAsc(tournamentId).stream()

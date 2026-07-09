@@ -52,6 +52,11 @@ public class MatchController {
         return ResponseEntity.ok(ApiResponse.success("Live score fetched", matchService.getLiveScore(id)));
     }
 
+    @GetMapping("/{id}/scorecard")
+    public ResponseEntity<ApiResponse<MatchScorecardResponse>> getScorecard(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success("Scorecard fetched", matchService.getScorecard(id)));
+    }
+
     @PostMapping("/{id}/invite")
     public ResponseEntity<ApiResponse<MatchResponse>> inviteParticipant(@PathVariable UUID id,
                                                                         @Valid @RequestBody InviteParticipantRequest request) {

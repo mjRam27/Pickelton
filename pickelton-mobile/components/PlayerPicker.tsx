@@ -56,7 +56,7 @@ export function PlayerPicker({ label, value, onSelect, excludeUserIds = [] }: Pr
         <View style={styles.selected}>
           <View style={styles.selectedInfo}>
             <Text style={styles.selectedName}>{value.name}</Text>
-            <Text style={styles.selectedMeta}>{value.email}</Text>
+            <Text style={styles.selectedMeta}>{playerMeta(value)}</Text>
           </View>
           <Pressable accessibilityLabel={`Change ${label}`} onPress={() => onSelect(null)} style={styles.change}>
             <Text style={styles.changeText}>CHANGE</Text>
@@ -74,7 +74,7 @@ export function PlayerPicker({ label, value, onSelect, excludeUserIds = [] }: Pr
       <TextInput
         value={query}
         onChangeText={setQuery}
-        placeholder="Search by name, email, or phone"
+        placeholder="Search by name, city, or club"
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
         style={styles.input}
@@ -88,7 +88,7 @@ export function PlayerPicker({ label, value, onSelect, excludeUserIds = [] }: Pr
             visible.map((user) => (
               <Pressable key={user.userId} onPress={() => choose(user)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
                 <Text style={styles.rowName}>{user.name}</Text>
-                <Text style={styles.rowMeta}>{user.email} · {user.phoneNumber}</Text>
+                <Text style={styles.rowMeta}>{playerMeta(user)}</Text>
               </Pressable>
             ))
           ) : (
@@ -98,6 +98,11 @@ export function PlayerPicker({ label, value, onSelect, excludeUserIds = [] }: Pr
       ) : null}
     </View>
   );
+}
+
+function playerMeta(user: UserSearchResult) {
+  const clubs = user.clubNames?.join(", ");
+  return [user.city, clubs].filter(Boolean).join(" · ") || "Pickelton player";
 }
 
 const createStyles = (colors: ThemeColors) => ({

@@ -13,7 +13,7 @@ export function ScreenIntro({ title, accent, copy }: { title: string; accent: st
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  title: { color: colors.text, fontSize: 34, fontStyle: "italic", fontWeight: "900", lineHeight: 34, marginTop: 24 },
+  title: { color: colors.text, fontSize: 31, fontWeight: "900", lineHeight: 35, marginTop: 22 },
   primary: { color: colors.primary },
-  copy: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 10 },
+  copy: { color: colors.muted, fontSize: 14, lineHeight: 21, marginTop: 9 },
 });

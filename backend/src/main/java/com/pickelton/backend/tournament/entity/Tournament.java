@@ -68,4 +68,7 @@ public class Tournament extends BaseEntity {
 
     @Column(nullable = false)
     private LocalDateTime startDate;
+
+    @Column(name = "banner_url", length = 1000)
+    private String bannerUrl;
 }

@@ -17,7 +17,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: PropsWithChildren) {
   const systemMode = useColorScheme();
-  const [mode, setMode] = useState<ThemeMode>("system");
+  const [mode, setMode] = useState<ThemeMode>("light");
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {

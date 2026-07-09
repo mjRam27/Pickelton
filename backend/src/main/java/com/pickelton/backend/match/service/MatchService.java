@@ -13,8 +13,10 @@ import com.pickelton.backend.common.exception.BadRequestException;
 import com.pickelton.backend.common.exception.ForbiddenException;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.common.service.CurrentUserService;
+import com.pickelton.backend.analytics.service.AnalyticsService;
 import com.pickelton.backend.config.ScoreBroadcastService;
 import com.pickelton.backend.enums.InvitationStatus;
+import com.pickelton.backend.enums.MatchCategory;
 import com.pickelton.backend.enums.MatchMode;
 import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.enums.MatchType;
@@ -74,6 +76,7 @@ public class MatchService {
     private final LiveMatchStateService liveMatchStateService;
     private final ScoreBroadcastService scoreBroadcastService;
     private final MatchMapper matchMapper;
+    private final AnalyticsService analyticsService;
 
     public MatchResponse createMatch(CreateMatchRequest request) {
         MatchMode mode = request.mode() != null ? request.mode() : MatchMode.TOURNAMENT;
@@ -84,7 +87,10 @@ public class MatchService {
             }
             tournament = requireTournament(request.tournamentId());
             requireOrganizer(tournament);
-            if (tournament.getStatus() == TournamentStatus.FINISHED || tournament.getStatus() == TournamentStatus.CANCELLED) {
+            if (tournament.getStatus() == TournamentStatus.COMPLETED
+                || tournament.getStatus() == TournamentStatus.FINISHED
+                || tournament.getStatus() == TournamentStatus.CANCELLED
+                || tournament.getStatus() == TournamentStatus.ARCHIVED) {
                 throw new BadRequestException("Matches cannot be created for a closed tournament");
             }
         }
@@ -93,6 +99,8 @@ public class MatchService {
             .createdBy(currentUserService.getCurrentUser())
             .sport(request.sport() != null ? request.sport() : sportForMatch(tournament != null ? tournament.getSportType() : SportType.PICKLEBALL))
             .matchType(request.matchType() != null ? request.matchType() : MatchType.SINGLES)
+            .matchCategory(mode == MatchMode.TOURNAMENT ? MatchCategory.TOURNAMENT : MatchCategory.FRIENDLY)
+            .club(tournament != null ? tournament.getClub() : null)
             .round(request.round().trim())
             .status(MatchStatus.CREATED)
             .scheduledAt(request.scheduledAt())
@@ -185,6 +193,7 @@ public class MatchService {
 
     public MatchResponse scorePoint(UUID id, ScorePointRequest request) {
         Match match = requireMatch(id);
+        requireEditableMatch(match);
         requireScoringPermission(match);
         MatchState state = requireState(id);
         String team = normalizeTeam(request.team());
@@ -275,6 +284,7 @@ public class MatchService {
 
     public MatchResponse updateScore(UUID id, UpdateMatchScoreRequest request) {
         Match match = requireMatch(id);
+        requireEditableMatch(match);
         requireScoringPermission(match);
         MatchState state = requireState(id);
         if (request.team() != null && !request.team().isBlank()) {
@@ -289,12 +299,14 @@ public class MatchService {
         match.setWinner(resolveWinner(match.getId(), request.score1(), request.score2()));
         appendEvent(match, state, ScoreEventType.POINT, payload);
         matchRepository.save(match);
+        analyticsService.recordCompletedMatch(match, participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId()));
         publish(match, state);
         return toResponse(match, state);
     }
 
     public MatchResponse undoLastPoint(UUID id, UndoScoreRequest request) {
         Match match = requireMatch(id);
+        requireEditableMatch(match);
         requireScoringPermission(match);
         MatchState state = requireState(id);
         List<ScoreEvent> events = scoreEventRepository.findByMatchIdOrderBySequenceNumberAsc(id);
@@ -331,6 +343,7 @@ public class MatchService {
 
     public MatchResponse endSet(UUID id) {
         Match match = requireMatch(id);
+        requireEditableMatch(match);
         requireScoringPermission(match);
         MatchState state = requireState(id);
         Map<String, Object> set = new LinkedHashMap<>();
@@ -346,12 +359,16 @@ public class MatchService {
 
     public MatchResponse endMatch(UUID id) {
         Match match = requireMatch(id);
+        if (match.getStatus() == MatchStatus.COMPLETED) {
+            return toResponse(match, requireState(id));
+        }
         requireScoringPermission(match);
         MatchState state = requireState(id);
         match.setStatus(MatchStatus.COMPLETED);
         match.setWinner(resolveWinner(match.getId(), scoreForTeam(state, "A"), scoreForTeam(state, "B")));
         appendEvent(match, state, ScoreEventType.END_MATCH, Map.of("finalScore", new LinkedHashMap<>(state.getCurrentScore())));
         matchRepository.save(match);
+        analyticsService.recordCompletedMatch(match, participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId()));
         publish(match, state);
         return toResponse(match, state);
     }
@@ -548,8 +565,16 @@ public class MatchService {
         }
     }
 
+    private void requireEditableMatch(Match match) {
+        if (match.getStatus() == MatchStatus.COMPLETED || match.getStatus() == MatchStatus.CANCELLED) {
+            throw new BadRequestException("Completed or cancelled match cannot be edited");
+        }
+    }
+
     private User requireRegisteredPlayer(UUID tournamentId, UUID userId, String label) {
-        if (!registrationRepository.existsByTournamentIdAndUserIdAndStatus(tournamentId, userId, RegistrationStatus.REGISTERED)) {
+        boolean isAccepted = registrationRepository.existsByTournamentIdAndUserIdAndStatus(tournamentId, userId, RegistrationStatus.APPROVED)
+            || registrationRepository.existsByTournamentIdAndUserIdAndStatus(tournamentId, userId, RegistrationStatus.REGISTERED);
+        if (!isAccepted) {
             throw new BadRequestException(label + " must be registered in the tournament");
         }
         return requireUser(userId, label);

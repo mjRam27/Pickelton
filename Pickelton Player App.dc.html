@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..700,0..1,0&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EDECE6;font-family:system-ui,-apple-system,sans-serif;--ms:'Material Symbols Rounded';--sg:'Space Grotesk',sans-serif}
+a{color:#0C4A38}a:hover{color:#0A3A2C}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#101613;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#101613}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#101613;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:22px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden}
+.dv-opt:target .dv-oid{background:#0C4A38;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t0" data-screen-label="System overview">
+<div class="dv-thd"><a class="dv-tid" href="#t0">0</a><span class="dv-tname">Pickelton Player — design system &amp; assumptions</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="0a">
+<div class="dv-olabel"><a class="dv-oid" href="#0a">0a</a>Foundation</div>
+<div class="dv-card" style="width:560px;padding:28px;box-sizing:border-box">
+  <div style="font:700 26px/1.1 var(--sg);letter-spacing:-0.5px;color:#101613">Pickelton</div>
+  <div style="font:400 13px/1.5 system-ui;color:#5C6660;margin-top:6px">Player app · mobile-first · Strava × Airbnb × Discord energy, Material 3 bones, custom premium skin.</div>
+  <div style="display:flex;gap:10px;margin-top:20px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:48px;border-radius:10px;background:#0C4A38"></div><span style="font:11px ui-monospace;color:#5C6660">#0C4A38 primary</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:48px;border-radius:10px;background:#C8F550"></div><span style="font:11px ui-monospace;color:#5C6660">#C8F550 accent</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:48px;border-radius:10px;background:#101613"></div><span style="font:11px ui-monospace;color:#5C6660">#101613 ink</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:48px;border-radius:10px;background:#F7F7F3;border:1px solid #EAEAE2"></div><span style="font:11px ui-monospace;color:#5C6660">#F7F7F3 surface</span></div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:24px">
+    <div><div style="font:700 22px var(--sg)">Space Grotesk</div><div style="font:11px ui-monospace;color:#5C6660">display · numbers</div></div>
+    <div><div style="font:400 16px system-ui;padding-top:5px">System UI for body copy</div><div style="font:11px ui-monospace;color:#5C6660">body · labels</div></div>
+  </div>
+  <div style="margin-top:20px;font:400 12px/1.6 system-ui;color:#5C6660">Assumptions: pickleball-first · light theme (live scoring goes dark) · $ pricing · nav = Home / Play / Clubs / Courts / Profile with drawer for utilities. Photography arrives later — striped slots mark it.</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="t1" data-screen-label="Onboarding">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Authentication &amp; onboarding</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a" data-screen-label="Welcome">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Welcome</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#0F1512;color:#F4F6F1;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="position:absolute;top:120px;left:-40px;right:-40px;height:420px;border:1.5px solid rgba(200,245,80,.18);border-radius:24px"></div>
+  <div style="position:absolute;top:120px;left:50%;width:1.5px;height:420px;background:rgba(200,245,80,.18)"></div>
+  <div style="position:absolute;top:260px;left:-40px;right:-40px;height:140px;border-top:1.5px solid rgba(200,245,80,.18);border-bottom:1.5px solid rgba(200,245,80,.18)"></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 28px 48px;position:relative">
+    <div style="width:52px;height:52px;border-radius:16px;background:#C8F550;display:flex;align-items:center;justify-content:center;margin-bottom:22px"><span style="font-family:var(--ms);font-size:28px;color:#0F1512">sports_tennis</span></div>
+    <div style="font:700 44px/1.05 var(--sg);letter-spacing:-1px">Find your<br>next game.</div>
+    <div style="font:400 15px/1.5 system-ui;color:#9BA69E;margin-top:14px">Courts, matches, clubs and rivals — all in one place.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:32px">
+      <div style="height:54px;border-radius:27px;background:#C8F550;color:#0F1512;display:flex;align-items:center;justify-content:center;gap:8px;font:600 16px system-ui"><span style="font-family:var(--ms);font-size:20px">smartphone</span>Continue with phone</div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;height:54px;border-radius:27px;border:1px solid #2A332C;display:flex;align-items:center;justify-content:center;font:600 15px system-ui">Apple</div>
+        <div style="flex:1;height:54px;border-radius:27px;border:1px solid #2A332C;display:flex;align-items:center;justify-content:center;font:600 15px system-ui">Google</div>
+      </div>
+    </div>
+    <div style="font:400 11.5px/1.5 system-ui;color:#5F6B62;text-align:center;margin-top:18px">By continuing you agree to our Terms &amp; Privacy Policy.</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b" data-screen-label="Verify code">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Verify — OTP</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="padding:10px 24px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span></div>
+  <div style="padding:18px 28px 0">
+    <div style="font:700 30px/1.15 var(--sg);letter-spacing:-0.5px">Enter the code</div>
+    <div style="font:400 14px/1.5 system-ui;color:#5C6660;margin-top:8px">We sent a 6-digit code to <b style="color:#101613">+1 415 555 0132</b></div>
+    <div style="display:flex;gap:8px;margin-top:28px">
+      <div style="flex:1;height:58px;border-radius:14px;background:#fff;border:2px solid #0C4A38;display:flex;align-items:center;justify-content:center;font:700 24px var(--sg)">4</div>
+      <div style="flex:1;height:58px;border-radius:14px;background:#fff;border:2px solid #0C4A38;display:flex;align-items:center;justify-content:center;font:700 24px var(--sg)">7</div>
+      <div style="flex:1;height:58px;border-radius:14px;background:#fff;border:2px solid #0C4A38;display:flex;align-items:center;justify-content:center;font:700 24px var(--sg)">2</div>
+      <div style="flex:1;height:58px;border-radius:14px;background:#fff;border:1.5px solid #EAEAE2;display:flex;align-items:center;justify-content:center"><div style="width:8px;height:2px;background:#101613"></div></div>
+      <div style="flex:1;height:58px;border-radius:14px;background:#fff;border:1.5px solid #EAEAE2"></div>
+      <div style="flex:1;height:58px;border-radius:14px;background:#fff;border:1.5px solid #EAEAE2"></div>
+    </div>
+    <div style="font:400 13px system-ui;color:#5C6660;margin-top:18px">Didn't get it? <b style="color:#0C4A38">Resend in 0:24</b></div>
+  </div>
+  <div style="margin-top:auto;background:#EFEFEA;padding:8px 6px 28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">1</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">2</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">3</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">4</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">5</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">6</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">7</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">8</div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">9</div>
+    <div></div>
+    <div style="height:46px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 22px var(--sg)">0</div>
+    <div style="height:46px;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:22px">backspace</span></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c" data-screen-label="Profile setup">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Profile setup — skill rating</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 24px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><div style="display:flex;gap:5px"><div style="width:22px;height:4px;border-radius:2px;background:#0C4A38"></div><div style="width:22px;height:4px;border-radius:2px;background:#0C4A38"></div><div style="width:22px;height:4px;border-radius:2px;background:#DDE1DA"></div></div><span style="font:600 13px system-ui;color:#5C6660">Skip</span></div>
+  <div style="padding:18px 28px;display:flex;flex-direction:column;gap:26px">
+    <div>
+      <div style="font:700 30px/1.15 var(--sg);letter-spacing:-0.5px">Set up your player card</div>
+      <div style="font:400 14px/1.5 system-ui;color:#5C6660;margin-top:8px">This helps us match you with the right games.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="width:72px;height:72px;border-radius:50%;background:repeating-linear-gradient(45deg,#ECEFE3 0 8px,#E3E7D8 8px 16px);border:1.5px dashed #B9C2B4;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:24px;color:#8A927F">add_a_photo</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="height:50px;border-radius:14px;background:#fff;border:1.5px solid #EAEAE2;display:flex;align-items:center;padding:0 16px;font:400 15px system-ui">Arjun Mehta</div>
+        <div style="height:50px;border-radius:14px;background:#fff;border:1.5px solid #EAEAE2;display:flex;align-items:center;padding:0 16px;font:400 15px system-ui;color:#9AA39D">@arjun_m</div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 14px system-ui;margin-bottom:10px">How would you rate your game?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="border-radius:16px;background:#fff;border:1.5px solid #EAEAE2;padding:14px"><div style="font:700 18px var(--sg)">2.0–2.5</div><div style="font:400 12px system-ui;color:#5C6660;margin-top:2px">New to the game</div></div>
+        <div style="border-radius:16px;background:#0C4A38;color:#fff;padding:14px;position:relative"><div style="font:700 18px var(--sg)">3.0–3.5</div><div style="font:400 12px system-ui;color:#BFD6C9;margin-top:2px">Consistent rallies</div><span style="position:absolute;top:10px;right:10px;font-family:var(--ms);font-size:18px;color:#C8F550">check_circle</span></div>
+        <div style="border-radius:16px;background:#fff;border:1.5px solid #EAEAE2;padding:14px"><div style="font:700 18px var(--sg)">4.0–4.5</div><div style="font:400 12px system-ui;color:#5C6660;margin-top:2px">Tournament ready</div></div>
+        <div style="border-radius:16px;background:#fff;border:1.5px solid #EAEAE2;padding:14px"><div style="font:700 18px var(--sg)">5.0+</div><div style="font:400 12px system-ui;color:#5C6660;margin-top:2px">Pro level</div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 14px system-ui;margin-bottom:10px">I usually play</div>
+      <div style="display:flex;gap:8px">
+        <div style="padding:10px 18px;border-radius:20px;background:#101613;color:#fff;font:600 13px system-ui">Doubles</div>
+        <div style="padding:10px 18px;border-radius:20px;background:#fff;border:1.5px solid #EAEAE2;font:600 13px system-ui">Singles</div>
+        <div style="padding:10px 18px;border-radius:20px;background:#fff;border:1.5px solid #EAEAE2;font:600 13px system-ui">Both</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding:0 28px 40px"><div style="height:54px;border-radius:27px;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px system-ui">Continue</div></div>
+</div>
+</div>
+
+</div>
+</section>
+
+
+<section class="dv-turn" id="t2" data-screen-label="Home and navigation">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Home, drawer &amp; feed</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a" data-screen-label="Home">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Home — full scroll shown</div>
+<div class="dv-card" style="width:390px;position:relative;background:#F7F7F3;color:#101613;display:flex;flex-direction:column;padding-bottom:88px">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px 4px">
+    <span style="font-family:var(--ms);font-size:24px">menu</span>
+    <div style="flex:1">
+      <div style="font:400 12px system-ui;color:#5C6660">Tuesday evening</div>
+      <div style="font:700 20px var(--sg);letter-spacing:-0.3px">Hey Arjun 👋🏽</div>
+    </div>
+    <div style="width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #EAEAE2;display:flex;align-items:center;justify-content:center;position:relative"><span style="font-family:var(--ms);font-size:21px">notifications</span><div style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:#E4572E;border:1.5px solid #fff"></div></div>
+    <div style="width:40px;height:40px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 14px var(--sg)">AM</div>
+  </div>
+  <div style="display:flex;gap:8px;padding:14px 20px 4px">
+    <div style="flex:1;background:#101613;color:#fff;border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--ms);font-size:22px;color:#C8F550">add_circle</span><span style="font:600 12.5px system-ui">Create match</span></div>
+    <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">event_available</span><span style="font:600 12.5px system-ui">Book a court</span></div>
+    <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">group_add</span><span style="font:600 12.5px system-ui">Join match</span></div>
+  </div>
+  <div style="padding:20px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Upcoming match</span><span style="font:600 12.5px system-ui;color:#0C4A38">See all</span></div>
+    <div style="background:#0C4A38;border-radius:20px;padding:18px;color:#fff">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 11px system-ui;letter-spacing:1px;color:#C8F550">FRIENDLY · DOUBLES</span><span style="font:600 12px system-ui;background:rgba(255,255,255,.12);border-radius:12px;padding:4px 10px">Today · 7:30 PM</span></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:16px">
+        <div style="display:flex"><div style="width:38px;height:38px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg);border:2px solid #0C4A38">AM</div><div style="width:38px;height:38px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg);border:2px solid #0C4A38;margin-left:-10px">RK</div></div>
+        <div style="font:700 15px var(--sg);color:#C8F550">vs</div>
+        <div style="display:flex"><div style="width:38px;height:38px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg);border:2px solid #0C4A38">SJ</div><div style="width:38px;height:38px;border-radius:50%;background:#E9D7EE;color:#6B2E7A;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg);border:2px solid #0C4A38;margin-left:-10px">TP</div></div>
+        <div style="margin-left:auto;text-align:right"><div style="font:600 13px system-ui">Greenpoint Padel &amp; Pickle</div><div style="font:400 12px system-ui;color:#BFD6C9">Court 3 · 2.1 km</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <div style="flex:1;height:42px;border-radius:21px;background:#C8F550;color:#0F1512;display:flex;align-items:center;justify-content:center;font:600 14px system-ui">View match</div>
+        <div style="width:42px;height:42px;border-radius:21px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px">chat</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:22px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Upcoming booking</span><span style="font:600 12.5px system-ui;color:#0C4A38">Bookings</span></div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px;display:flex;align-items:center;gap:14px">
+      <div style="width:52px;height:52px;border-radius:14px;background:#EAF3DA;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 18px var(--sg);color:#0C4A38">12</span><span style="font:600 10px system-ui;color:#0C4A38">JUL</span></div>
+      <div style="flex:1"><div style="font:600 14.5px system-ui">Riverside Pickle Club</div><div style="font:400 12.5px system-ui;color:#5C6660">Sat · 8:00–9:00 AM · Court 1</div></div>
+      <span style="font:600 12px system-ui;color:#0C4A38;background:#EAF3DA;border-radius:12px;padding:5px 10px">Paid</span>
+    </div>
+  </div>
+  <div style="padding:22px 0 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 20px 10px"><span style="font:700 16px var(--sg)">Nearby courts</span><span style="font:600 12.5px system-ui;color:#0C4A38">Map</span></div>
+    <div style="display:flex;gap:12px;padding:0 20px;overflow:hidden">
+      <div style="flex:none;width:200px;background:#fff;border:1px solid #EAEAE2;border-radius:18px;overflow:hidden">
+        <div style="height:104px;background:repeating-linear-gradient(45deg,#ECEFE3 0 8px,#E3E7D8 8px 16px);display:flex;align-items:center;justify-content:center"><span style="font:11px ui-monospace;color:#8A927F">court photo</span></div>
+        <div style="padding:12px"><div style="font:600 14px system-ui">Greenpoint P&amp;P</div><div style="display:flex;justify-content:space-between;margin-top:4px;font:400 12px system-ui;color:#5C6660"><span>★ 4.8 · 2.1 km</span><b style="color:#101613">$14/hr</b></div></div>
+      </div>
+      <div style="flex:none;width:200px;background:#fff;border:1px solid #EAEAE2;border-radius:18px;overflow:hidden">
+        <div style="height:104px;background:repeating-linear-gradient(45deg,#ECEFE3 0 8px,#E3E7D8 8px 16px);display:flex;align-items:center;justify-content:center"><span style="font:11px ui-monospace;color:#8A927F">court photo</span></div>
+        <div style="padding:12px"><div style="font:600 14px system-ui">Riverside Pickle Club</div><div style="display:flex;justify-content:space-between;margin-top:4px;font:400 12px system-ui;color:#5C6660"><span>★ 4.6 · 3.4 km</span><b style="color:#101613">$11/hr</b></div></div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:22px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Clubs for you</span><span style="font:600 12.5px system-ui;color:#0C4A38">Explore</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:14px;background:#101613;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg)">DD</div><div style="flex:1"><div style="font:600 14px system-ui">Dink Dynasty</div><div style="font:400 12px system-ui;color:#5C6660">412 members · 12 matches this week</div></div><span style="font:600 13px system-ui;color:#0C4A38;border:1.5px solid #0C4A38;border-radius:16px;padding:6px 14px">Join</span></div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:14px;background:#E4572E;color:#fff;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg)">KB</div><div style="flex:1"><div style="font:600 14px system-ui">Kitchen Brawlers</div><div style="font:400 12px system-ui;color:#5C6660">188 members · 3.0–4.0 skill</div></div><span style="font:600 13px system-ui;color:#0C4A38;border:1.5px solid #0C4A38;border-radius:16px;padding:6px 14px">Join</span></div>
+    </div>
+  </div>
+  <div style="padding:22px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Tournament for you</span><span style="font:600 12.5px system-ui;color:#0C4A38">All</span></div>
+    <div style="background:#101613;color:#fff;border-radius:20px;padding:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;border:1.5px solid rgba(200,245,80,.25)"></div>
+      <span style="font:600 11px system-ui;letter-spacing:1px;color:#C8F550">CITY OPEN · 3.5 BRACKET</span>
+      <div style="font:700 20px/1.2 var(--sg);margin-top:8px">Summer Slam Doubles</div>
+      <div style="font:400 12.5px system-ui;color:#9BA69E;margin-top:6px">Jul 19–20 · Greenpoint P&amp;P · $25 entry · 14/32 teams</div>
+      <div style="display:inline-flex;margin-top:14px;height:38px;border-radius:19px;background:#C8F550;color:#0F1512;align-items:center;padding:0 18px;font:600 13.5px system-ui">Register</div>
+    </div>
+  </div>
+  <div style="padding:22px 20px 8px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Friends activity</span><span style="font:600 12.5px system-ui;color:#0C4A38">Feed</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px 14px;display:flex;gap:12px;align-items:center"><div style="width:38px;height:38px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">SJ</div><div style="flex:1;font:400 13px/1.4 system-ui"><b>Sana</b> won 11–7, 11–9 vs Kitchen Brawlers <div style="color:#5C6660;font-size:12px;margin-top:2px">Rating 3.4 → 3.5 · 1h ago</div></div><span style="font-family:var(--ms);font-size:18px;color:#9AA39D">favorite</span></div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px 14px;display:flex;gap:12px;align-items:center"><div style="width:38px;height:38px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">RK</div><div style="flex:1;font:400 13px/1.4 system-ui"><b>Rohan</b> is hosting a TeamUp on Thursday <div style="color:#5C6660;font-size:12px;margin-top:2px">2 spots left · 3h ago</div></div><span style="font:600 12.5px system-ui;color:#0C4A38">Join</span></div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid #EAEAE2;padding:8px 6px 26px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#0C4A38;font-variation-settings:'FILL' 1;background:#DDF3A8;border-radius:14px;padding:2px 14px">home</span><span style="font:600 10px system-ui;color:#0C4A38">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">sports_tennis</span><span style="font:500 10px system-ui;color:#9AA39D">Play</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">trophy</span><span style="font:500 10px system-ui;color:#9AA39D">Clubs</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">location_on</span><span style="font:500 10px system-ui;color:#9AA39D">Courts</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">person</span><span style="font:500 10px system-ui;color:#9AA39D">Profile</span></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b" data-screen-label="Side drawer">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Side drawer</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#0C4A38">
+  <div style="position:absolute;inset:0;background:#F7F7F3;opacity:.25"></div>
+  <div style="position:absolute;top:0;bottom:0;left:0;width:312px;background:#F7F7F3;border-radius:0 28px 28px 0;box-shadow:8px 0 40px rgba(0,0,0,.25);display:flex;flex-direction:column;color:#101613">
+    <div style="padding:56px 24px 20px;background:#0C4A38;border-radius:0 28px 0 0;color:#fff">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:52px;height:52px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 17px var(--sg)">AM</div>
+        <div><div style="font:700 17px var(--sg)">Arjun Mehta</div><div style="font:400 12.5px system-ui;color:#BFD6C9">@arjun_m · Rating <b style="color:#C8F550">3.5</b></div></div>
+      </div>
+    </div>
+    <div style="padding:14px 12px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">notifications</span><span style="flex:1;font:500 14.5px system-ui">Notifications</span><span style="font:600 11px system-ui;background:#E4572E;color:#fff;border-radius:10px;padding:2px 8px">3</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">social_leaderboard</span><span style="flex:1;font:500 14.5px system-ui">Leaderboards</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">monitoring</span><span style="flex:1;font:500 14.5px system-ui">Analytics</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">event_available</span><span style="flex:1;font:500 14.5px system-ui">Bookings</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#0C4A38">account_balance_wallet</span><span style="flex:1;font:500 14.5px system-ui">Payments</span></div>
+      <div style="height:1px;background:#E5E5DE;margin:10px 12px"></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#5C6660">support_agent</span><span style="flex:1;font:500 14.5px system-ui">Support</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#5C6660">settings</span><span style="flex:1;font:500 14.5px system-ui">Settings</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#5C6660">help</span><span style="flex:1;font:500 14.5px system-ui">Help</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px"><span style="font-family:var(--ms);font-size:22px;color:#5C6660">info</span><span style="flex:1;font:500 14.5px system-ui">About</span></div>
+    </div>
+    <div style="margin-top:auto;padding:20px 24px;font:400 11.5px ui-monospace;color:#9AA39D">Pickelton v1.0 · build 214</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="2c" data-screen-label="Feed">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Feed — from Home header</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font:700 20px var(--sg)">Feed</span><div style="margin-left:auto;display:flex;background:#EBEBE4;border-radius:18px;padding:3px">
+    <span style="font:600 12.5px system-ui;background:#fff;border-radius:15px;padding:6px 14px;box-shadow:0 1px 2px rgba(0,0,0,.08)">Following</span>
+    <span style="font:600 12.5px system-ui;color:#5C6660;padding:6px 14px">Nearby</span>
+    <span style="font:600 12.5px system-ui;color:#5C6660;padding:6px 14px">Clubs</span>
+  </div></div>
+  <div style="flex:1;overflow:hidden;padding:8px 20px;display:flex;flex-direction:column;gap:12px">
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">SJ</div><div style="flex:1"><div style="font:600 14px system-ui">Sana Joshi</div><div style="font:400 11.5px system-ui;color:#5C6660">1h · Greenpoint P&amp;P</div></div><span style="font:600 11px system-ui;color:#0C4A38;background:#EAF3DA;border-radius:10px;padding:3px 9px">WIN</span></div>
+      <div style="margin-top:12px;background:#F7F7F3;border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font:600 13px system-ui">Sana / Tara</div><div style="font:600 13px system-ui;color:#9AA39D;margin-top:6px">Maya / Dev</div></div>
+        <div style="text-align:right;font:700 17px var(--sg)"><div>11 · 11</div><div style="color:#9AA39D;margin-top:2px">7 · 9</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;margin-top:12px;color:#5C6660"><span style="display:flex;align-items:center;gap:5px;font:500 12.5px system-ui"><span style="font-family:var(--ms);font-size:18px">favorite</span>24</span><span style="display:flex;align-items:center;gap:5px;font:500 12.5px system-ui"><span style="font-family:var(--ms);font-size:18px">chat_bubble</span>6</span><span style="margin-left:auto;font-family:var(--ms);font-size:18px">share</span></div>
+    </div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:12px;background:#101613;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">DD</div><div style="flex:1"><div style="font:600 14px system-ui">Dink Dynasty</div><div style="font:400 11.5px system-ui;color:#5C6660">3h · Club announcement</div></div></div>
+      <div style="font:400 13.5px/1.5 system-ui;margin-top:10px">Ladder night moves to Thursdays starting next week. Sign-ups open now — 24 spots. 🥒</div>
+      <div style="margin-top:12px;height:150px;border-radius:14px;background:repeating-linear-gradient(45deg,#ECEFE3 0 8px,#E3E7D8 8px 16px);display:flex;align-items:center;justify-content:center"><span style="font:11px ui-monospace;color:#8A927F">club photo</span></div>
+      <div style="display:flex;align-items:center;gap:18px;margin-top:12px;color:#5C6660"><span style="display:flex;align-items:center;gap:5px;font:500 12.5px system-ui"><span style="font-family:var(--ms);font-size:18px">favorite</span>51</span><span style="display:flex;align-items:center;gap:5px;font:500 12.5px system-ui"><span style="font-family:var(--ms);font-size:18px">chat_bubble</span>12</span><span style="margin-left:auto;font:600 12.5px system-ui;color:#0C4A38">Sign up</span></div>
+    </div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">RK</div><div style="flex:1"><div style="font:600 14px system-ui">Rohan Kapoor</div><div style="font:400 11.5px system-ui;color:#5C6660">5h · hit a milestone</div></div></div>
+      <div style="margin-top:12px;background:#0C4A38;color:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px"><span style="font-family:var(--ms);font-size:26px;color:#C8F550">military_tech</span><div><div style="font:700 15px var(--sg)">100 matches played</div><div style="font:400 12px system-ui;color:#BFD6C9">Joined 8 months ago</div></div></div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid #EAEAE2;padding:8px 6px 26px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#0C4A38;font-variation-settings:'FILL' 1;background:#DDF3A8;border-radius:14px;padding:2px 14px">home</span><span style="font:600 10px system-ui;color:#0C4A38">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">sports_tennis</span><span style="font:500 10px system-ui;color:#9AA39D">Play</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">trophy</span><span style="font:500 10px system-ui;color:#9AA39D">Clubs</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">location_on</span><span style="font:500 10px system-ui;color:#9AA39D">Courts</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">person</span><span style="font:500 10px system-ui;color:#9AA39D">Profile</span></div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t3" data-screen-label="Play">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Play — hub, create, join, live scoring</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a" data-screen-label="Play hub">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Play hub</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="padding:10px 20px 0"><div style="font:700 26px var(--sg);letter-spacing:-0.5px">Play</div></div>
+  <div style="display:flex;gap:10px;padding:16px 20px 0">
+    <div style="flex:1;background:#0C4A38;color:#fff;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:26px"><span style="font-family:var(--ms);font-size:26px;color:#C8F550">handshake</span><div><div style="font:700 16px var(--sg)">Friendly match</div><div style="font:400 12px system-ui;color:#BFD6C9;margin-top:3px">Pick players, court &amp; time</div></div></div>
+    <div style="flex:1;background:#101613;color:#fff;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:26px"><span style="font-family:var(--ms);font-size:26px;color:#C8F550">diversity_3</span><div><div style="font:700 16px var(--sg)">TeamUp</div><div style="font:400 12px system-ui;color:#9BA69E;margin-top:3px">We find you players</div></div></div>
+  </div>
+  <div style="padding:12px 20px 0">
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px"><span style="font-family:var(--ms);font-size:24px;color:#0C4A38">group_add</span><div style="flex:1"><div style="font:600 15px system-ui">Join a match</div><div style="font:400 12.5px system-ui;color:#5C6660">8 open matches near you tonight</div></div><span style="font-family:var(--ms);font-size:20px;color:#9AA39D">chevron_right</span></div>
+  </div>
+  <div style="padding:24px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Live now</span><span style="display:flex;align-items:center;gap:5px;font:600 12px system-ui;color:#E4572E"><span style="width:7px;height:7px;border-radius:50%;background:#E4572E"></span>2 matches</span></div>
+    <div style="background:#101613;color:#fff;border-radius:20px;padding:16px">
+      <div style="display:flex;justify-content:space-between;font:600 11px system-ui;letter-spacing:1px;color:#C8F550"><span>CLUB LADDER · GAME 2</span><span style="color:#E4572E">● LIVE</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+        <div style="font:600 14px system-ui">Sana / Tara</div>
+        <div style="font:700 26px var(--sg);color:#C8F550">9 – 7</div>
+        <div style="font:600 14px system-ui;color:#9BA69E">Maya / Dev</div>
+      </div>
+      <div style="margin-top:12px;font:600 12.5px system-ui;color:#C8F550">Watch scoreboard →</div>
+    </div>
+  </div>
+  <div style="padding:24px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Recent matches</span><span style="font:600 12.5px system-ui;color:#0C4A38">History</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px"><span style="font:700 11px system-ui;color:#0C4A38;background:#EAF3DA;border-radius:9px;padding:4px 8px">W</span><div style="flex:1"><div style="font:600 13.5px system-ui">vs Rohan / Vik · Friendly</div><div style="font:400 11.5px system-ui;color:#5C6660">Sun · Riverside · 11-6, 9-11, 11-8</div></div><span style="font:600 12px var(--sg);color:#0C4A38">+0.04</span></div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px"><span style="font:700 11px system-ui;color:#8A4444;background:#F5E3E0;border-radius:9px;padding:4px 8px">L</span><div style="flex:1"><div style="font:600 13.5px system-ui">vs Kitchen Brawlers · Club</div><div style="font:400 11.5px system-ui;color:#5C6660">Fri · Greenpoint · 8-11, 9-11</div></div><span style="font:600 12px var(--sg);color:#8A4444">−0.02</span></div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid #EAEAE2;padding:8px 6px 26px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">home</span><span style="font:500 10px system-ui;color:#9AA39D">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#0C4A38;font-variation-settings:'FILL' 1;background:#DDF3A8;border-radius:14px;padding:2px 14px">sports_tennis</span><span style="font:600 10px system-ui;color:#0C4A38">Play</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">trophy</span><span style="font:500 10px system-ui;color:#9AA39D">Clubs</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">location_on</span><span style="font:500 10px system-ui;color:#9AA39D">Courts</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">person</span><span style="font:500 10px system-ui;color:#9AA39D">Profile</span></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b" data-screen-label="Create friendly match">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Create friendly match</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">close</span><span style="font:700 19px var(--sg)">Friendly match</span></div>
+  <div style="padding:8px 20px;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;background:#EBEBE4;border-radius:16px;padding:3px">
+      <span style="flex:1;text-align:center;font:600 13.5px system-ui;background:#fff;border-radius:13px;padding:9px 0;box-shadow:0 1px 2px rgba(0,0,0,.08)">Doubles</span>
+      <span style="flex:1;text-align:center;font:600 13.5px system-ui;color:#5C6660;padding:9px 0">Singles</span>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">WHEN</div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">calendar_today</span><span style="font:600 14px system-ui">Thu, Jul 10</span></div>
+        <div style="flex:1;background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">schedule</span><span style="font:600 14px system-ui">7:00 PM</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">WHERE</div>
+      <div style="background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="width:46px;height:46px;border-radius:12px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div>
+        <div style="flex:1"><div style="font:600 14px system-ui">Greenpoint Padel &amp; Pickle</div><div style="font:400 12px system-ui;color:#5C6660">Court 3 · $14/hr · 2.1 km</div></div>
+        <span style="font:600 12.5px system-ui;color:#0C4A38">Change</span>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">PLAYERS · 3/4</div>
+      <div style="display:flex;gap:12px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:52px;height:52px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg)">AM</div><span style="font:500 11px system-ui">You</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:52px;height:52px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg)">RK</div><span style="font:500 11px system-ui">Rohan</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:52px;height:52px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg)">SJ</div><span style="font:500 11px system-ui">Sana</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:52px;height:52px;border-radius:50%;border:1.5px dashed #B9C2B4;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:22px;color:#8A927F">person_add</span></div><span style="font:500 11px system-ui;color:#5C6660">Invite</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">FORMAT</div>
+      <div style="display:flex;gap:8px">
+        <span style="font:600 13px system-ui;background:#101613;color:#fff;border-radius:18px;padding:9px 16px">Best of 3 · to 11</span>
+        <span style="font:600 13px system-ui;background:#fff;border:1.5px solid #EAEAE2;border-radius:18px;padding:9px 16px">Single game</span>
+        <span style="font:600 13px system-ui;background:#fff;border:1.5px solid #EAEAE2;border-radius:18px;padding:9px 16px">To 15</span>
+      </div>
+    </div>
+    <div style="background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1"><div style="font:600 14px system-ui">Open to nearby players</div><div style="font:400 12px system-ui;color:#5C6660">Anyone 3.0–4.0 can request the last spot</div></div>
+      <div style="width:48px;height:28px;border-radius:14px;background:#0C4A38;position:relative"><div style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff"></div></div>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding:14px 20px 36px;background:linear-gradient(transparent,#F7F7F3 30%)">
+    <div style="height:54px;border-radius:27px;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px system-ui">Create match · invites send now</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3c" data-screen-label="Create TeamUp">
+<div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Create TeamUp</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">close</span><span style="font:700 19px var(--sg)">TeamUp</span></div>
+  <div style="padding:8px 20px;display:flex;flex-direction:column;gap:18px">
+    <div style="background:#101613;color:#fff;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center"><span style="font-family:var(--ms);font-size:24px;color:#C8F550">diversity_3</span><div style="font:400 13px/1.45 system-ui">Short on players? Set your terms and Pickelton fills the court with matched players.</div></div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">PLAYERS NEEDED</div>
+      <div style="display:flex;align-items:center;gap:16px;background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:12px 16px">
+        <div style="width:40px;height:40px;border-radius:50%;border:1.5px solid #EAEAE2;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px">remove</span></div>
+        <div style="flex:1;text-align:center"><span style="font:700 30px var(--sg)">2</span><span style="font:400 13px system-ui;color:#5C6660"> of 4</span></div>
+        <div style="width:40px;height:40px;border-radius:50%;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px">add</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font:600 13px system-ui;color:#5C6660">SKILL RANGE</span><span style="font:700 13px var(--sg);color:#0C4A38">3.0 – 4.0</span></div>
+      <div style="background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:22px 18px 14px">
+        <div style="position:relative;height:4px;border-radius:2px;background:#EAEAE2">
+          <div style="position:absolute;left:25%;right:30%;top:0;bottom:0;background:#0C4A38;border-radius:2px"></div>
+          <div style="position:absolute;left:25%;top:50%;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid #0C4A38;transform:translate(-12px,-12px)"></div>
+          <div style="position:absolute;right:30%;top:50%;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid #0C4A38;transform:translate(12px,-12px)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font:500 11px ui-monospace;color:#9AA39D;margin-top:12px"><span>2.0</span><span>3.0</span><span>4.0</span><span>5.0</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">WHEN &amp; WHERE</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">calendar_today</span><span style="font:600 14px system-ui">Thu, Jul 10 · 7:00 PM</span><span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#9AA39D">chevron_right</span></div>
+        <div style="background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">location_on</span><span style="font:600 14px system-ui">Any court within 5 km</span><span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#9AA39D">chevron_right</span></div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1"><div style="font:600 14px system-ui">Auto-confirm matches</div><div style="font:400 12px system-ui;color:#5C6660">Accept players who fit without review</div></div>
+      <div style="width:48px;height:28px;border-radius:14px;background:#D9DDD6;position:relative"><div style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div></div>
+    </div>
+    <div style="font:400 12px/1.5 system-ui;color:#5C6660;display:flex;gap:8px;align-items:flex-start"><span style="font-family:var(--ms);font-size:16px;color:#0C4A38">info</span>Cost splits equally once the match is full. You'll be notified as players join.</div>
+  </div>
+  <div style="margin-top:auto;padding:14px 20px 36px"><div style="height:54px;border-radius:27px;background:#101613;color:#C8F550;display:flex;align-items:center;justify-content:center;font:600 16px system-ui">Post TeamUp</div></div>
+</div>
+</div>
+
+<div class="dv-opt" id="3d" data-screen-label="Join match">
+<div class="dv-olabel"><a class="dv-oid" href="#3d">3d</a>Join a match</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font:700 19px var(--sg)">Open matches</span><span style="margin-left:auto;font-family:var(--ms);font-size:22px">tune</span></div>
+  <div style="display:flex;gap:8px;padding:6px 20px 14px;overflow:hidden">
+    <span style="font:600 12.5px system-ui;background:#101613;color:#fff;border-radius:16px;padding:8px 14px">Today</span>
+    <span style="font:600 12.5px system-ui;background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:8px 14px">My skill ±0.5</span>
+    <span style="font:600 12.5px system-ui;background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:8px 14px">&lt; 5 km</span>
+    <span style="font:600 12.5px system-ui;background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:8px 14px">Doubles</span>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:0 20px;display:flex;flex-direction:column;gap:10px">
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px">
+      <div style="display:flex;justify-content:space-between"><span style="font:600 11px system-ui;letter-spacing:1px;color:#0C4A38">TEAMUP · DOUBLES</span><span style="font:600 12px system-ui;color:#5C6660">7:00 PM</span></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+        <div style="width:42px;height:42px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 14px var(--sg)">RK</div>
+        <div style="flex:1"><div style="font:600 14px system-ui">Rohan's TeamUp</div><div style="font:400 12px system-ui;color:#5C6660">Greenpoint P&amp;P · 2.1 km · skill 3.0–4.0</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
+        <div style="display:flex;gap:4px"><div style="width:10px;height:10px;border-radius:50%;background:#0C4A38"></div><div style="width:10px;height:10px;border-radius:50%;background:#0C4A38"></div><div style="width:10px;height:10px;border-radius:50%;border:1.5px solid #B9C2B4"></div><div style="width:10px;height:10px;border-radius:50%;border:1.5px solid #B9C2B4"></div></div>
+        <span style="font:500 12px system-ui;color:#5C6660">2 of 4 · $3.50 each</span>
+        <div style="margin-left:auto;height:38px;border-radius:19px;background:#0C4A38;color:#fff;display:flex;align-items:center;padding:0 20px;font:600 13.5px system-ui">Join</div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px">
+      <div style="display:flex;justify-content:space-between"><span style="font:600 11px system-ui;letter-spacing:1px;color:#5C6660">FRIENDLY · SINGLES</span><span style="font:600 12px system-ui;color:#5C6660">8:30 PM</span></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+        <div style="width:42px;height:42px;border-radius:50%;background:#E9D7EE;color:#6B2E7A;display:flex;align-items:center;justify-content:center;font:700 14px var(--sg)">TP</div>
+        <div style="flex:1"><div style="font:600 14px system-ui">Tara wants a hitting partner</div><div style="font:400 12px system-ui;color:#5C6660">Riverside · 3.4 km · skill 3.5+</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
+        <div style="display:flex;gap:4px"><div style="width:10px;height:10px;border-radius:50%;background:#0C4A38"></div><div style="width:10px;height:10px;border-radius:50%;border:1.5px solid #B9C2B4"></div></div>
+        <span style="font:500 12px system-ui;color:#5C6660">1 of 2 · court paid</span>
+        <div style="margin-left:auto;height:38px;border-radius:19px;border:1.5px solid #0C4A38;color:#0C4A38;display:flex;align-items:center;padding:0 20px;font:600 13.5px system-ui">Request</div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px;opacity:.65">
+      <div style="display:flex;justify-content:space-between"><span style="font:600 11px system-ui;letter-spacing:1px;color:#5C6660">FRIENDLY · DOUBLES</span><span style="font:600 12px system-ui;color:#5C6660">9:00 PM</span></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+        <div style="width:42px;height:42px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 14px var(--sg)">MV</div>
+        <div style="flex:1"><div style="font:600 14px system-ui">Late-night dinkers</div><div style="font:400 12px system-ui;color:#5C6660">Northside Rec · 6.8 km · skill 4.0+</div></div>
+        <span style="font:600 12px system-ui;color:#9AA39D;background:#EFEFEA;border-radius:12px;padding:5px 10px">Full</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3e" data-screen-label="Live scoring">
+<div class="dv-olabel"><a class="dv-oid" href="#3e">3e</a>Live scoring — dark, glanceable</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#0F1512;color:#F4F6F1;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">close</span><div style="flex:1;text-align:center"><span style="font:600 11px system-ui;letter-spacing:1.5px;color:#9BA69E">FRIENDLY · BEST OF 3 · GAME 2</span></div><span style="font:600 12px system-ui;color:#E4572E">● LIVE</span></div>
+  <div style="display:flex;justify-content:center;gap:8px;padding:8px 0"><div style="width:10px;height:10px;border-radius:50%;background:#C8F550"></div><div style="width:10px;height:10px;border-radius:50%;border:1.5px solid #3A443C"></div><div style="width:10px;height:10px;border-radius:50%;border:1.5px solid #3A443C"></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:0 20px">
+    <div style="background:#17201B;border:1px solid #26302A;border-radius:24px;padding:20px;display:flex;align-items:center;gap:14px;position:relative">
+      <div style="position:absolute;top:14px;right:16px;display:flex;align-items:center;gap:6px;font:600 10.5px system-ui;letter-spacing:1px;color:#C8F550"><span style="width:6px;height:6px;border-radius:50%;background:#C8F550"></span>SERVING · 2</div>
+      <div style="display:flex"><div style="width:44px;height:44px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg);border:2px solid #17201B">AM</div><div style="width:44px;height:44px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg);border:2px solid #17201B;margin-left:-12px">RK</div></div>
+      <div><div style="font:600 15px system-ui">Arjun / Rohan</div><div style="font:400 12px system-ui;color:#9BA69E">Game 1: 11</div></div>
+      <div style="margin-left:auto;font:700 64px/1 var(--sg);color:#C8F550">9</div>
+    </div>
+    <div style="background:#17201B;border:1px solid #26302A;border-radius:24px;padding:20px;display:flex;align-items:center;gap:14px">
+      <div style="display:flex"><div style="width:44px;height:44px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg);border:2px solid #17201B">SJ</div><div style="width:44px;height:44px;border-radius:50%;background:#E9D7EE;color:#6B2E7A;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg);border:2px solid #17201B;margin-left:-12px">TP</div></div>
+      <div><div style="font:600 15px system-ui">Sana / Tara</div><div style="font:400 12px system-ui;color:#9BA69E">Game 1: 7</div></div>
+      <div style="margin-left:auto;font:700 64px/1 var(--sg);color:#5F6B62">7</div>
+    </div>
+    <div style="display:flex;gap:4px;justify-content:center;padding:4px 0">
+      <div style="width:8px;height:22px;border-radius:4px;background:#C8F550"></div><div style="width:8px;height:22px;border-radius:4px;background:#C8F550"></div><div style="width:8px;height:22px;border-radius:4px;background:#3A443C"></div><div style="width:8px;height:22px;border-radius:4px;background:#C8F550"></div><div style="width:8px;height:22px;border-radius:4px;background:#3A443C"></div><div style="width:8px;height:22px;border-radius:4px;background:#C8F550"></div><div style="width:8px;height:22px;border-radius:4px;background:#C8F550"></div><div style="width:8px;height:22px;border-radius:4px;background:#3A443C"></div>
+    </div>
+  </div>
+  <div style="padding:0 20px 40px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;height:76px;border-radius:22px;background:#C8F550;color:#0F1512;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 24px var(--sg)">+1</span><span style="font:600 11px system-ui">Arjun / Rohan</span></div>
+      <div style="flex:1;height:76px;border-radius:22px;background:#26302A;color:#F4F6F1;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 24px var(--sg)">+1</span><span style="font:600 11px system-ui;color:#9BA69E">Sana / Tara</span></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;height:46px;border-radius:23px;border:1px solid #26302A;display:flex;align-items:center;justify-content:center;gap:6px;font:600 13px system-ui;color:#9BA69E"><span style="font-family:var(--ms);font-size:18px">undo</span>Undo</div>
+      <div style="flex:1;height:46px;border-radius:23px;border:1px solid #26302A;display:flex;align-items:center;justify-content:center;font:600 13px system-ui;color:#9BA69E">End game</div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t4" data-screen-label="Clubs and tournaments">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Clubs &amp; tournaments</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a" data-screen-label="Clubs">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Clubs — yours + discover</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;padding:10px 20px"><span style="font:700 26px var(--sg);letter-spacing:-0.5px">Clubs</span><span style="margin-left:auto;font-family:var(--ms);font-size:22px">search</span></div>
+  <div style="padding:6px 20px 0">
+    <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">YOUR CLUBS</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="width:46px;height:46px;border-radius:14px;background:#101613;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg);position:relative">DD<div style="position:absolute;top:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:#E4572E;border:2px solid #fff"></div></div>
+        <div style="flex:1"><div style="font:600 14.5px system-ui">Dink Dynasty</div><div style="font:400 12px system-ui;color:#5C6660">Ladder night Thu · 5 new posts</div></div>
+        <span style="font-family:var(--ms);font-size:20px;color:#9AA39D">chevron_right</span>
+      </div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="width:46px;height:46px;border-radius:14px;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font:700 15px var(--sg)">RP</div>
+        <div style="flex:1"><div style="font:600 14.5px system-ui">Riverside Regulars</div><div style="font:400 12px system-ui;color:#5C6660">Quiet this week</div></div>
+        <span style="font-family:var(--ms);font-size:20px;color:#9AA39D">chevron_right</span>
+      </div>
+    </div>
+  </div>
+  <div style="padding:22px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:600 13px system-ui;color:#5C6660">DISCOVER</span><span style="font:600 12.5px system-ui;color:#0C4A38">Filters</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;overflow:hidden">
+        <div style="height:110px;background:repeating-linear-gradient(45deg,#ECEFE3 0 8px,#E3E7D8 8px 16px);display:flex;align-items:center;justify-content:center;position:relative"><span style="font:11px ui-monospace;color:#8A927F">club cover</span><span style="position:absolute;top:10px;left:12px;font:600 10.5px system-ui;letter-spacing:1px;background:#101613;color:#C8F550;border-radius:10px;padding:4px 9px">COMPETITIVE</span></div>
+        <div style="padding:14px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1"><div style="font:600 15px system-ui">Kitchen Brawlers</div><div style="font:400 12px system-ui;color:#5C6660">188 members · 3.0–4.0 · Greenpoint</div></div>
+          <div style="height:38px;border-radius:19px;background:#0C4A38;color:#fff;display:flex;align-items:center;padding:0 20px;font:600 13.5px system-ui">Join</div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;overflow:hidden">
+        <div style="height:110px;background:repeating-linear-gradient(45deg,#ECEFE3 0 8px,#E3E7D8 8px 16px);display:flex;align-items:center;justify-content:center;position:relative"><span style="font:11px ui-monospace;color:#8A927F">club cover</span><span style="position:absolute;top:10px;left:12px;font:600 10.5px system-ui;letter-spacing:1px;background:#fff;color:#0C4A38;border-radius:10px;padding:4px 9px">SOCIAL</span></div>
+        <div style="padding:14px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1"><div style="font:600 15px system-ui">Sunday Morning Dinks</div><div style="font:400 12px system-ui;color:#5C6660">96 members · all levels · Riverside</div></div>
+          <div style="height:38px;border-radius:19px;border:1.5px solid #0C4A38;color:#0C4A38;display:flex;align-items:center;padding:0 20px;font:600 13.5px system-ui">Join</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid #EAEAE2;padding:8px 6px 26px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">home</span><span style="font:500 10px system-ui;color:#9AA39D">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">sports_tennis</span><span style="font:500 10px system-ui;color:#9AA39D">Play</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#0C4A38;font-variation-settings:'FILL' 1;background:#DDF3A8;border-radius:14px;padding:2px 14px">trophy</span><span style="font:600 10px system-ui;color:#0C4A38">Clubs</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">location_on</span><span style="font:500 10px system-ui;color:#9AA39D">Courts</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">person</span><span style="font:500 10px system-ui;color:#9AA39D">Profile</span></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="4b" data-screen-label="Club detail">
+<div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Club detail — Discord-like home</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="height:170px;background:repeating-linear-gradient(45deg,#1A231D 0 10px,#141B16 10px 20px);position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg);color:#fff"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 20px;color:#fff"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font-family:var(--ms);font-size:24px">more_horiz</span></div>
+    <span style="position:absolute;bottom:12px;right:16px;font:11px ui-monospace;color:#7B857D">club cover photo</span>
+    <div style="position:absolute;bottom:-30px;left:20px;width:64px;height:64px;border-radius:20px;background:#101613;color:#C8F550;display:flex;align-items:center;justify-content:center;font:700 20px var(--sg);border:3px solid #F7F7F3">DD</div>
+  </div>
+  <div style="padding:40px 20px 0">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="flex:1"><div style="font:700 22px var(--sg);letter-spacing:-0.3px">Dink Dynasty</div><div style="font:400 12.5px system-ui;color:#5C6660;margin-top:3px">412 members · Greenpoint · est. 2024</div></div>
+      <span style="font:600 12px system-ui;color:#0C4A38;background:#EAF3DA;border-radius:14px;padding:7px 14px;display:flex;align-items:center;gap:5px"><span style="font-family:var(--ms);font-size:15px">check</span>Member</span>
+    </div>
+    <div style="display:flex;gap:22px;margin-top:16px;border-bottom:1.5px solid #EAEAE2">
+      <span style="font:600 13.5px system-ui;color:#0C4A38;padding-bottom:10px;border-bottom:2.5px solid #0C4A38">Feed</span>
+      <span style="font:500 13.5px system-ui;color:#5C6660;padding-bottom:10px">Matches</span>
+      <span style="font:500 13.5px system-ui;color:#5C6660;padding-bottom:10px">Members</span>
+      <span style="font:500 13.5px system-ui;color:#5C6660;padding-bottom:10px">About</span>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:14px 20px;display:flex;flex-direction:column;gap:10px">
+    <div style="background:#FFFDF2;border:1px solid #EBE4C4;border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:center"><span style="font-family:var(--ms);font-size:19px;color:#8A6D1A">push_pin</span><div style="font:400 13px/1.45 system-ui"><b>Ladder night</b> moves to Thursdays. 24 spots — 9 left.</div><span style="font:600 12.5px system-ui;color:#0C4A38;margin-left:auto">Sign up</span></div>
+    <div style="background:#0C4A38;color:#fff;border-radius:18px;padding:16px">
+      <div style="display:flex;justify-content:space-between"><span style="font:600 11px system-ui;letter-spacing:1px;color:#C8F550">CLUB MATCH · LADDER RD 4</span><span style="font:600 12px system-ui;background:rgba(255,255,255,.12);border-radius:12px;padding:4px 10px">Thu 7 PM</span></div>
+      <div style="font:600 15px system-ui;margin-top:10px">You + Rohan vs Priya + Nik</div>
+      <div style="font:400 12px system-ui;color:#BFD6C9;margin-top:3px">Greenpoint P&amp;P · Court 2 · winner climbs to #6</div>
+      <div style="display:flex;gap:8px;margin-top:12px"><div style="height:36px;border-radius:18px;background:#C8F550;color:#0F1512;display:flex;align-items:center;padding:0 18px;font:600 13px system-ui">Confirm</div><div style="height:36px;border-radius:18px;border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;padding:0 18px;font:600 13px system-ui">Propose new time</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">PN</div><div style="flex:1"><div style="font:600 13.5px system-ui">Priya N. <span style="font:500 11px system-ui;color:#9AA39D">· admin · 2h</span></div></div></div>
+      <div style="font:400 13px/1.5 system-ui;margin-top:8px">Courts 1–3 booked for Saturday open play, 8–11 AM. First come first serve on rotation paddles. 🥇</div>
+      <div style="display:flex;align-items:center;gap:18px;margin-top:10px;color:#5C6660"><span style="display:flex;align-items:center;gap:5px;font:500 12.5px system-ui"><span style="font-family:var(--ms);font-size:17px">favorite</span>18</span><span style="display:flex;align-items:center;gap:5px;font:500 12.5px system-ui"><span style="font-family:var(--ms);font-size:17px">chat_bubble</span>4</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="4c" data-screen-label="Tournament">
+<div class="dv-olabel"><a class="dv-oid" href="#4c">4c</a>Tournament — bracket &amp; register</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="background:#101613;color:#fff;padding-bottom:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font-family:var(--ms);font-size:24px">share</span></div>
+    <div style="padding:10px 20px 0">
+      <span style="font:600 11px system-ui;letter-spacing:1px;color:#C8F550">CITY OPEN · DOUBLES · 3.5 BRACKET</span>
+      <div style="font:700 26px/1.15 var(--sg);margin-top:8px">Summer Slam</div>
+      <div style="font:400 13px system-ui;color:#9BA69E;margin-top:6px">Jul 19–20 · Greenpoint P&amp;P · organized by Dink Dynasty</div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <div style="flex:1;background:#17201B;border-radius:14px;padding:10px 12px"><div style="font:700 17px var(--sg);color:#C8F550">14/32</div><div style="font:400 11px system-ui;color:#9BA69E">teams in</div></div>
+        <div style="flex:1;background:#17201B;border-radius:14px;padding:10px 12px"><div style="font:700 17px var(--sg);color:#C8F550">$25</div><div style="font:400 11px system-ui;color:#9BA69E">per team</div></div>
+        <div style="flex:1;background:#17201B;border-radius:14px;padding:10px 12px"><div style="font:700 17px var(--sg);color:#C8F550">$400</div><div style="font:400 11px system-ui;color:#9BA69E">prize pool</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:16px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Bracket preview</span><span style="font:600 12.5px system-ui;color:#0C4A38">Full bracket</span></div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:16px;display:flex;gap:14px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="font:600 10px system-ui;letter-spacing:1px;color:#9AA39D">QUARTERS</div>
+        <div style="border:1.5px solid #EAEAE2;border-radius:10px;padding:7px 9px;font:600 11.5px system-ui">Arjun/Rohan <span style="float:right;color:#0C4A38">11</span></div>
+        <div style="border:1.5px solid #EAEAE2;border-radius:10px;padding:7px 9px;font:600 11.5px system-ui;color:#9AA39D">Kim/Lee <span style="float:right">8</span></div>
+        <div style="border:1.5px solid #EAEAE2;border-radius:10px;padding:7px 9px;font:600 11.5px system-ui">Sana/Tara <span style="float:right;color:#0C4A38">11</span></div>
+        <div style="border:1.5px solid #EAEAE2;border-radius:10px;padding:7px 9px;font:600 11.5px system-ui;color:#9AA39D">Ito/Cruz <span style="float:right">6</span></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center">
+        <div style="font:600 10px system-ui;letter-spacing:1px;color:#9AA39D">SEMIS</div>
+        <div style="border:1.5px solid #0C4A38;border-radius:10px;padding:7px 9px;font:600 11.5px system-ui;background:#EAF3DA">Arjun/Rohan</div>
+        <div style="border:1.5px solid #EAEAE2;border-radius:10px;padding:7px 9px;font:600 11.5px system-ui">Sana/Tara</div>
+        <div style="font:600 10px system-ui;letter-spacing:1px;color:#9AA39D;margin-top:8px">FINAL</div>
+        <div style="border:1.5px dashed #B9C2B4;border-radius:10px;padding:7px 9px;font:600 11.5px system-ui;color:#9AA39D">Sat 4 PM</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:18px 20px 0">
+    <div style="font:700 16px var(--sg);margin-bottom:10px">Your matches</div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="width:46px;height:46px;border-radius:12px;background:#EAF3DA;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 16px var(--sg);color:#0C4A38">SA</span><span style="font:600 9px system-ui;color:#0C4A38">2:30</span></div><div style="flex:1"><div style="font:600 13.5px system-ui">Semifinal vs Sana / Tara</div><div style="font:400 11.5px system-ui;color:#5C6660">Sat · Court 1 · ref assigned</div></div><span style="font-family:var(--ms);font-size:20px;color:#9AA39D">chevron_right</span></div>
+  </div>
+  <div style="margin-top:auto;padding:14px 20px 36px"><div style="height:54px;border-radius:27px;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px system-ui">You're registered · view ticket</div></div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t5" data-screen-label="Courts and booking">
+<div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Courts — explore &amp; book</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="5a" data-screen-label="Courts explore">
+<div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>Courts — map + sheet</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#E7EAE1;color:#101613;display:flex;flex-direction:column">
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,#E7EAE1 0 40px,#E0E4D8 40px 41px),repeating-linear-gradient(90deg,transparent 0 40px,#E0E4D8 40px 41px)"></div>
+  <span style="position:absolute;top:47%;left:24px;font:11px ui-monospace;color:#8A927F">map view</span>
+  <div style="position:absolute;top:38%;left:30%;display:flex;flex-direction:column;align-items:center"><div style="background:#101613;color:#C8F550;border-radius:14px;padding:5px 11px;font:700 12px var(--sg);box-shadow:0 2px 8px rgba(0,0,0,.25)">$14</div><div style="width:2px;height:8px;background:#101613"></div></div>
+  <div style="position:absolute;top:30%;left:62%;display:flex;flex-direction:column;align-items:center"><div style="background:#0C4A38;color:#fff;border-radius:14px;padding:5px 11px;font:700 12px var(--sg);box-shadow:0 2px 8px rgba(0,0,0,.25)">$11</div><div style="width:2px;height:8px;background:#0C4A38"></div></div>
+  <div style="position:absolute;top:52%;left:48%;display:flex;flex-direction:column;align-items:center"><div style="background:#fff;color:#101613;border-radius:14px;padding:5px 11px;font:700 12px var(--sg);box-shadow:0 2px 8px rgba(0,0,0,.2)">Free</div><div style="width:2px;height:8px;background:#fff"></div></div>
+  <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="position:relative;padding:8px 20px"><div style="height:48px;background:#fff;border-radius:24px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;align-items:center;gap:10px;padding:0 18px"><span style="font-family:var(--ms);font-size:21px;color:#5C6660">search</span><span style="font:400 14.5px system-ui;color:#9AA39D">Courts near Greenpoint…</span><span style="margin-left:auto;font-family:var(--ms);font-size:20px;color:#0C4A38">tune</span></div></div>
+  <div style="position:relative;display:flex;gap:8px;padding:2px 20px">
+    <span style="font:600 12px system-ui;background:#101613;color:#fff;border-radius:15px;padding:7px 13px">Available now</span>
+    <span style="font:600 12px system-ui;background:#fff;border-radius:15px;padding:7px 13px;box-shadow:0 1px 4px rgba(0,0,0,.08)">Indoor</span>
+    <span style="font:600 12px system-ui;background:#fff;border-radius:15px;padding:7px 13px;box-shadow:0 1px 4px rgba(0,0,0,.08)">Free courts</span>
+  </div>
+  <div style="margin-top:auto;position:relative;background:#F7F7F3;border-radius:26px 26px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.12);padding:10px 20px 92px">
+    <div style="width:38px;height:4px;border-radius:2px;background:#D5D8CF;margin:2px auto 12px"></div>
+    <div style="font:700 15px var(--sg);margin-bottom:10px">23 courts nearby</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px;display:flex;gap:12px">
+        <div style="width:84px;height:76px;border-radius:12px;background:repeating-linear-gradient(45deg,#ECEFE3 0 7px,#E3E7D8 7px 14px);display:flex;align-items:center;justify-content:center"><span style="font:9.5px ui-monospace;color:#8A927F">photo</span></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between"><span style="font:600 14.5px system-ui">Greenpoint P&amp;P</span><span style="font:600 12.5px system-ui">★ 4.8</span></div>
+          <div style="font:400 12px system-ui;color:#5C6660;margin-top:2px">Indoor · 6 courts · 2.1 km</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span style="font:700 14px var(--sg)">$14<span style="font:400 11px system-ui;color:#5C6660">/hr</span></span><span style="font:600 12.5px system-ui;color:#fff;background:#0C4A38;border-radius:15px;padding:6px 16px">Book</span></div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:12px;display:flex;gap:12px">
+        <div style="width:84px;height:76px;border-radius:12px;background:repeating-linear-gradient(45deg,#ECEFE3 0 7px,#E3E7D8 7px 14px);display:flex;align-items:center;justify-content:center"><span style="font:9.5px ui-monospace;color:#8A927F">photo</span></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between"><span style="font:600 14.5px system-ui">Riverside Pickle Club</span><span style="font:600 12.5px system-ui">★ 4.6</span></div>
+          <div style="font:400 12px system-ui;color:#5C6660;margin-top:2px">Outdoor · 4 courts · 3.4 km</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span style="font:700 14px var(--sg)">$11<span style="font:400 11px system-ui;color:#5C6660">/hr</span></span><span style="font:600 12.5px system-ui;color:#fff;background:#0C4A38;border-radius:15px;padding:6px 16px">Book</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid #EAEAE2;padding:8px 6px 26px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">home</span><span style="font:500 10px system-ui;color:#9AA39D">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">sports_tennis</span><span style="font:500 10px system-ui;color:#9AA39D">Play</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">trophy</span><span style="font:500 10px system-ui;color:#9AA39D">Clubs</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#0C4A38;font-variation-settings:'FILL' 1;background:#DDF3A8;border-radius:14px;padding:2px 14px">location_on</span><span style="font:600 10px system-ui;color:#0C4A38">Courts</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">person</span><span style="font:500 10px system-ui;color:#9AA39D">Profile</span></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5b" data-screen-label="Court booking">
+<div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Court detail — book a slot</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="height:150px;background:repeating-linear-gradient(45deg,#ECEFE3 0 9px,#E3E7D8 9px 18px);position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 20px"><span style="font-family:var(--ms);font-size:24px;background:#fff;border-radius:50%;padding:6px">arrow_back</span><span style="font-family:var(--ms);font-size:24px;background:#fff;border-radius:50%;padding:6px">favorite</span></div>
+    <span style="position:absolute;bottom:10px;right:14px;font:11px ui-monospace;color:#8A927F">venue photos · 1/6</span>
+  </div>
+  <div style="padding:16px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font:700 21px var(--sg);letter-spacing:-0.3px">Greenpoint Padel &amp; Pickle</div><div style="font:400 12.5px system-ui;color:#5C6660;margin-top:3px">★ 4.8 (212) · Indoor · 2.1 km · open till 11 PM</div></div></div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <span style="font:500 11.5px system-ui;background:#EFEFEA;border-radius:11px;padding:5px 10px">6 courts</span>
+      <span style="font:500 11.5px system-ui;background:#EFEFEA;border-radius:11px;padding:5px 10px">Lighting</span>
+      <span style="font:500 11.5px system-ui;background:#EFEFEA;border-radius:11px;padding:5px 10px">Paddle rental</span>
+      <span style="font:500 11.5px system-ui;background:#EFEFEA;border-radius:11px;padding:5px 10px">Showers</span>
+    </div>
+  </div>
+  <div style="padding:18px 20px 0">
+    <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">DATE</div>
+    <div style="display:flex;gap:7px">
+      <div style="flex:1;background:#0C4A38;color:#fff;border-radius:14px;padding:9px 0;text-align:center"><div style="font:600 10px system-ui;color:#BFD6C9">THU</div><div style="font:700 17px var(--sg)">10</div></div>
+      <div style="flex:1;background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:9px 0;text-align:center"><div style="font:600 10px system-ui;color:#9AA39D">FRI</div><div style="font:700 17px var(--sg)">11</div></div>
+      <div style="flex:1;background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:9px 0;text-align:center"><div style="font:600 10px system-ui;color:#9AA39D">SAT</div><div style="font:700 17px var(--sg)">12</div></div>
+      <div style="flex:1;background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:9px 0;text-align:center"><div style="font:600 10px system-ui;color:#9AA39D">SUN</div><div style="font:700 17px var(--sg)">13</div></div>
+      <div style="flex:1;background:#fff;border:1.5px solid #EAEAE2;border-radius:14px;padding:9px 0;text-align:center"><div style="font:600 10px system-ui;color:#9AA39D">MON</div><div style="font:700 17px var(--sg)">14</div></div>
+    </div>
+  </div>
+  <div style="padding:16px 20px 0">
+    <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">TIME · COURT 3</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px">
+      <div style="border-radius:12px;background:#EFEFEA;color:#B4B9B0;text-align:center;padding:10px 0;font:600 12.5px system-ui;text-decoration:line-through">5 PM</div>
+      <div style="border-radius:12px;background:#fff;border:1.5px solid #EAEAE2;text-align:center;padding:10px 0;font:600 12.5px system-ui">6 PM</div>
+      <div style="border-radius:12px;background:#0C4A38;color:#fff;text-align:center;padding:10px 0;font:600 12.5px system-ui">7 PM</div>
+      <div style="border-radius:12px;background:#0C4A38;color:#fff;text-align:center;padding:10px 0;font:600 12.5px system-ui">8 PM</div>
+      <div style="border-radius:12px;background:#fff;border:1.5px solid #EAEAE2;text-align:center;padding:10px 0;font:600 12.5px system-ui">9 PM</div>
+      <div style="border-radius:12px;background:#EFEFEA;color:#B4B9B0;text-align:center;padding:10px 0;font:600 12.5px system-ui;text-decoration:line-through">10 PM</div>
+      <div style="border-radius:12px;background:#fff;border:1.5px solid #EAEAE2;text-align:center;padding:10px 0;font:600 12.5px system-ui">Court 4 →</div>
+      <div style="border-radius:12px;background:#fff;border:1.5px solid #EAEAE2;text-align:center;padding:10px 0;font:600 12.5px system-ui">Court 5 →</div>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:10px;font:400 11px system-ui;color:#5C6660"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#0C4A38"></span>Selected</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#fff;border:1px solid #D5D8CF"></span>Open</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#EFEFEA"></span>Taken</span></div>
+  </div>
+  <div style="margin-top:auto;background:#fff;border-top:1px solid #EAEAE2;padding:14px 20px 36px;display:flex;align-items:center;gap:14px">
+    <div><div style="font:700 20px var(--sg)">$28</div><div style="font:400 11.5px system-ui;color:#5C6660">7–9 PM · Court 3 · Thu</div></div>
+    <div style="flex:1;height:54px;border-radius:27px;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px system-ui">Reserve &amp; pay</div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t6" data-screen-label="Utility screens">
+<div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">Search &amp; notifications</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="6a" data-screen-label="Search">
+<div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a>Universal search</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 20px">
+    <span style="font-family:var(--ms);font-size:24px">arrow_back</span>
+    <div style="flex:1;height:48px;background:#fff;border:1.5px solid #0C4A38;border-radius:24px;display:flex;align-items:center;gap:10px;padding:0 16px"><span style="font-family:var(--ms);font-size:20px;color:#5C6660">search</span><span style="font:400 15px system-ui">green<span style="display:inline-block;width:1.5px;height:18px;background:#0C4A38;vertical-align:-3px;margin-left:1px"></span></span><span style="margin-left:auto;font-family:var(--ms);font-size:18px;color:#9AA39D">close</span></div>
+  </div>
+  <div style="padding:10px 20px;display:flex;flex-direction:column;gap:20px">
+    <div>
+      <div style="font:600 12px system-ui;letter-spacing:1px;color:#9AA39D;margin-bottom:8px">COURTS</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 0"><div style="width:40px;height:40px;border-radius:12px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div><div style="flex:1"><div style="font:600 14px system-ui"><b style="color:#0C4A38">Green</b>point Padel &amp; Pickle</div><div style="font:400 12px system-ui;color:#5C6660">Indoor · 2.1 km · $14/hr</div></div><span style="font-family:var(--ms);font-size:18px;color:#9AA39D">north_west</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 0"><div style="width:40px;height:40px;border-radius:12px;background:repeating-linear-gradient(45deg,#ECEFE3 0 6px,#E3E7D8 6px 12px)"></div><div style="flex:1"><div style="font:600 14px system-ui"><b style="color:#0C4A38">Green</b>lake Rec Courts</div><div style="font:400 12px system-ui;color:#5C6660">Outdoor · free · 4.8 km</div></div><span style="font-family:var(--ms);font-size:18px;color:#9AA39D">north_west</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 12px system-ui;letter-spacing:1px;color:#9AA39D;margin-bottom:8px">PLAYERS</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:9px 0"><div style="width:40px;height:40px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">GK</div><div style="flex:1"><div style="font:600 14px system-ui"><b style="color:#0C4A38">Green</b>a Kapoor</div><div style="font:400 12px system-ui;color:#5C6660">Rating 3.8 · 2 mutual friends</div></div><span style="font:600 12.5px system-ui;color:#0C4A38;border:1.5px solid #0C4A38;border-radius:15px;padding:5px 13px">Follow</span></div>
+    </div>
+    <div>
+      <div style="font:600 12px system-ui;letter-spacing:1px;color:#9AA39D;margin-bottom:8px">CLUBS</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:9px 0"><div style="width:40px;height:40px;border-radius:12px;background:#0C4A38;color:#fff;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">GG</div><div style="flex:1"><div style="font:600 14px system-ui"><b style="color:#0C4A38">Green</b>point Grinders</div><div style="font:400 12px system-ui;color:#5C6660">74 members · competitive</div></div><span style="font-family:var(--ms);font-size:18px;color:#9AA39D">north_west</span></div>
+    </div>
+    <div>
+      <div style="font:600 12px system-ui;letter-spacing:1px;color:#9AA39D;margin-bottom:8px">RECENT</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="font:500 12.5px system-ui;background:#EFEFEA;border-radius:15px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px;color:#9AA39D">history</span>summer slam</span>
+        <span style="font:500 12.5px system-ui;background:#EFEFEA;border-radius:15px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px;color:#9AA39D">history</span>free courts</span>
+        <span style="font:500 12.5px system-ui;background:#EFEFEA;border-radius:15px;padding:7px 13px;display:flex;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:15px;color:#9AA39D">history</span>rohan</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="6b" data-screen-label="Notifications">
+<div class="dv-olabel"><a class="dv-oid" href="#6b">6b</a>Notifications — actionable</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font:700 19px var(--sg)">Notifications</span><span style="margin-left:auto;font:600 12.5px system-ui;color:#0C4A38">Mark all read</span></div>
+  <div style="padding:6px 20px;display:flex;flex-direction:column;gap:16px">
+    <div>
+      <div style="font:600 12px system-ui;letter-spacing:1px;color:#9AA39D;margin-bottom:8px">TODAY</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:#fff;border:1px solid #EAEAE2;border-left:3px solid #0C4A38;border-radius:16px;padding:14px">
+          <div style="display:flex;gap:12px">
+            <div style="width:40px;height:40px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">RK</div>
+            <div style="flex:1;font:400 13.5px/1.45 system-ui"><b>Rohan</b> invited you to a friendly match — Thu 7 PM, Greenpoint P&amp;P<div style="font:400 11.5px system-ui;color:#9AA39D;margin-top:3px">12 min ago</div></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;margin-left:52px"><div style="height:36px;border-radius:18px;background:#0C4A38;color:#fff;display:flex;align-items:center;padding:0 20px;font:600 13px system-ui">Accept</div><div style="height:36px;border-radius:18px;border:1.5px solid #EAEAE2;display:flex;align-items:center;padding:0 20px;font:600 13px system-ui;color:#5C6660">Decline</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #EAEAE2;border-left:3px solid #0C4A38;border-radius:16px;padding:14px;display:flex;gap:12px">
+          <div style="width:40px;height:40px;border-radius:12px;background:#EAF3DA;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">event_available</span></div>
+          <div style="flex:1;font:400 13.5px/1.45 system-ui">Booking confirmed — <b>Riverside Pickle Club</b>, Sat 8–9 AM, Court 1<div style="font:400 11.5px system-ui;color:#9AA39D;margin-top:3px">1h ago</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:14px;display:flex;gap:12px">
+          <div style="width:40px;height:40px;border-radius:12px;background:#101613;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#C8F550">trophy</span></div>
+          <div style="flex:1;font:400 13.5px/1.45 system-ui"><b>Summer Slam</b> bracket is live — your semifinal is Sat 2:30 PM<div style="font:400 11.5px system-ui;color:#9AA39D;margin-top:3px">3h ago</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 12px system-ui;letter-spacing:1px;color:#9AA39D;margin-bottom:8px">EARLIER</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:14px;display:flex;gap:12px;opacity:.75">
+          <div style="width:40px;height:40px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 13px var(--sg)">SJ</div>
+          <div style="flex:1;font:400 13.5px/1.45 system-ui"><b>Sana</b> started following you<div style="font:400 11.5px system-ui;color:#9AA39D;margin-top:3px">Yesterday</div></div>
+          <span style="font:600 12.5px system-ui;color:#0C4A38;align-self:center">Follow back</span>
+        </div>
+        <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:14px;display:flex;gap:12px;opacity:.75">
+          <div style="width:40px;height:40px;border-radius:12px;background:#EAF3DA;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#0C4A38">trending_up</span></div>
+          <div style="flex:1;font:400 13.5px/1.45 system-ui">Your rating moved up to <b>3.5</b> after Sunday's win<div style="font:400 11.5px system-ui;color:#9AA39D;margin-top:3px">2 days ago</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:14px;display:flex;gap:12px;opacity:.75">
+          <div style="width:40px;height:40px;border-radius:12px;background:#F5E3E0;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:20px;color:#8A4444">payments</span></div>
+          <div style="flex:1;font:400 13.5px/1.45 system-ui">Refund of <b>$14.00</b> processed — rained-out booking at Riverside<div style="font:400 11.5px system-ui;color:#9AA39D;margin-top:3px">3 days ago</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t7" data-screen-label="Insights">
+<div class="dv-thd"><a class="dv-tid" href="#t7">7</a><span class="dv-tname">Analytics &amp; leaderboards</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="7a" data-screen-label="Analytics">
+<div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a>Analytics — Strava-style</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font:700 19px var(--sg)">Analytics</span><div style="margin-left:auto;display:flex;background:#EBEBE4;border-radius:16px;padding:3px">
+    <span style="font:600 12px system-ui;color:#5C6660;padding:6px 12px">W</span>
+    <span style="font:600 12px system-ui;background:#fff;border-radius:13px;padding:6px 12px;box-shadow:0 1px 2px rgba(0,0,0,.08)">M</span>
+    <span style="font:600 12px system-ui;color:#5C6660;padding:6px 12px">Y</span>
+  </div></div>
+  <div style="padding:8px 20px;display:flex;flex-direction:column;gap:14px">
+    <div style="background:#0C4A38;color:#fff;border-radius:20px;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 11px system-ui;letter-spacing:1px;color:#BFD6C9">RATING</span><span style="font:600 12px system-ui;color:#C8F550">+0.2 this month</span></div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-top:6px">
+        <span style="font:700 46px/1 var(--sg);color:#C8F550">3.5</span>
+        <div style="flex:1;display:flex;align-items:flex-end;gap:5px;height:52px;padding-bottom:4px">
+          <div style="flex:1;height:38%;border-radius:3px;background:rgba(200,245,80,.35)"></div><div style="flex:1;height:42%;border-radius:3px;background:rgba(200,245,80,.35)"></div><div style="flex:1;height:40%;border-radius:3px;background:rgba(200,245,80,.35)"></div><div style="flex:1;height:52%;border-radius:3px;background:rgba(200,245,80,.5)"></div><div style="flex:1;height:48%;border-radius:3px;background:rgba(200,245,80,.5)"></div><div style="flex:1;height:60%;border-radius:3px;background:rgba(200,245,80,.7)"></div><div style="flex:1;height:58%;border-radius:3px;background:rgba(200,245,80,.7)"></div><div style="flex:1;height:72%;border-radius:3px;background:#C8F550"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px"><div style="font:700 24px var(--sg)">18</div><div style="font:400 11.5px system-ui;color:#5C6660;margin-top:2px">matches</div></div>
+      <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px"><div style="font:700 24px var(--sg);color:#0C4A38">67%</div><div style="font:400 11.5px system-ui;color:#5C6660;margin-top:2px">win rate</div></div>
+      <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px"><div style="font:700 24px var(--sg)">14<span style="font:600 13px var(--sg)">h</span></div><div style="font:400 11.5px system-ui;color:#5C6660;margin-top:2px">on court</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px">
+      <div style="font:600 14px system-ui;margin-bottom:12px">Wins by format</div>
+      <div style="display:flex;align-items:center;gap:18px">
+        <div style="width:92px;height:92px;border-radius:50%;background:conic-gradient(#0C4A38 0 62%,#C8F550 62% 84%,#EAEAE2 84%);display:flex;align-items:center;justify-content:center"><div style="width:58px;height:58px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font:700 16px var(--sg)">12W</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font:500 12.5px system-ui"><span style="width:10px;height:10px;border-radius:3px;background:#0C4A38"></span>Doubles<span style="margin-left:auto;font:700 12.5px var(--sg)">8W – 3L</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:500 12.5px system-ui"><span style="width:10px;height:10px;border-radius:3px;background:#C8F550"></span>Singles<span style="margin-left:auto;font:700 12.5px var(--sg)">3W – 2L</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:500 12.5px system-ui"><span style="width:10px;height:10px;border-radius:3px;background:#EAEAE2"></span>Tournament<span style="margin-left:auto;font:700 12.5px var(--sg)">1W – 1L</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:20px;padding:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font:600 14px system-ui">Frequent partners</span><span style="font:600 12.5px system-ui;color:#0C4A38">All</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:36px;height:36px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">RK</div><span style="font:500 13.5px system-ui">Rohan Kapoor</span><span style="margin-left:auto;font:600 12.5px var(--sg);color:#0C4A38">75% together</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:36px;height:36px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">SJ</div><span style="font:500 13.5px system-ui">Sana Joshi</span><span style="margin-left:auto;font:600 12.5px var(--sg);color:#0C4A38">60% together</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="7b" data-screen-label="Leaderboards">
+<div class="dv-olabel"><a class="dv-oid" href="#7b">7b</a>Leaderboards</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font:700 19px var(--sg)">Leaderboard</span></div>
+  <div style="display:flex;gap:8px;padding:2px 20px 10px">
+    <span style="font:600 12.5px system-ui;background:#101613;color:#fff;border-radius:16px;padding:8px 16px">Dink Dynasty</span>
+    <span style="font:600 12.5px system-ui;background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:8px 16px">City</span>
+    <span style="font:600 12.5px system-ui;background:#fff;border:1.5px solid #EAEAE2;border-radius:16px;padding:8px 16px">Friends</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:center;gap:14px;padding:18px 20px 22px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:56px;height:56px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 17px var(--sg);border:3px solid #C9CDC4">PN</div><div style="font:600 12px system-ui">Priya</div><div style="width:64px;height:52px;background:#E3E5DD;border-radius:12px 12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 17px var(--sg);color:#5C6660">2</span><span style="font:600 10px var(--sg);color:#9AA39D">4.1</span></div></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:22px;color:#C9A227;font-variation-settings:'FILL' 1">crown</span><div style="width:64px;height:64px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 19px var(--sg);border:3px solid #C8F550">VK</div><div style="font:600 12px system-ui">Vikram</div><div style="width:70px;height:72px;background:#0C4A38;border-radius:12px 12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 19px var(--sg);color:#C8F550">1</span><span style="font:600 10px var(--sg);color:#BFD6C9">4.4</span></div></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:56px;height:56px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 17px var(--sg);border:3px solid #E0C9A6">RK</div><div style="font:600 12px system-ui">Rohan</div><div style="width:64px;height:40px;background:#EBE3D6;border-radius:12px 12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:700 17px var(--sg);color:#8A6D1A">3</span><span style="font:600 10px var(--sg);color:#B49B6C">3.9</span></div></div>
+  </div>
+  <div style="flex:1;background:#fff;border-radius:24px 24px 0 0;border:1px solid #EAEAE2;padding:8px 20px 90px;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #F0F0EA"><span style="font:700 13px var(--sg);color:#9AA39D;width:22px">4</span><div style="width:36px;height:36px;border-radius:50%;background:#E9D7EE;color:#6B2E7A;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">TP</div><span style="font:500 13.5px system-ui">Tara Patel</span><span style="margin-left:auto;font:700 14px var(--sg)">3.8</span><span style="font-family:var(--ms);font-size:16px;color:#0C4A38">arrow_drop_up</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #F0F0EA"><span style="font:700 13px var(--sg);color:#9AA39D;width:22px">5</span><div style="width:36px;height:36px;border-radius:50%;background:#D7DCF0;color:#2C3A78;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">SJ</div><span style="font:500 13.5px system-ui">Sana Joshi</span><span style="margin-left:auto;font:700 14px var(--sg)">3.7</span><span style="font-family:var(--ms);font-size:16px;color:#0C4A38">arrow_drop_up</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #F0F0EA"><span style="font:700 13px var(--sg);color:#9AA39D;width:22px">6</span><div style="width:36px;height:36px;border-radius:50%;background:#DFE8D8;color:#41682F;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">NK</div><span style="font:500 13.5px system-ui">Nik Kher</span><span style="margin-left:auto;font:700 14px var(--sg)">3.6</span><span style="font-family:var(--ms);font-size:16px;color:#8A4444">arrow_drop_down</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;margin:6px -6px 0;background:#EAF3DA;border-radius:14px"><span style="font:700 13px var(--sg);color:#0C4A38;width:22px">7</span><div style="width:36px;height:36px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">AM</div><span style="font:600 13.5px system-ui">You</span><span style="margin-left:auto;font:700 14px var(--sg);color:#0C4A38">3.5</span><span style="font-family:var(--ms);font-size:16px;color:#0C4A38">arrow_drop_up</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #F0F0EA"><span style="font:700 13px var(--sg);color:#9AA39D;width:22px">8</span><div style="width:36px;height:36px;border-radius:50%;background:#F0D9B8;color:#7A5218;display:flex;align-items:center;justify-content:center;font:700 12px var(--sg)">MV</div><span style="font:500 13.5px system-ui">Maya Verma</span><span style="margin-left:auto;font:700 14px var(--sg)">3.4</span><span style="font-family:var(--ms);font-size:16px;color:#9AA39D">remove</span></div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t8" data-screen-label="Account">
+<div class="dv-thd"><a class="dv-tid" href="#t8">8</a><span class="dv-tname">Profile, payments &amp; settings</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="8a" data-screen-label="Profile">
+<div class="dv-olabel"><a class="dv-oid" href="#8a">8a</a>Profile — player card</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="background:#0C4A38;color:#fff;padding-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 20px"><span style="font-family:var(--ms);font-size:24px">menu</span><div style="display:flex;gap:16px"><span style="font-family:var(--ms);font-size:24px">share</span><span style="font-family:var(--ms);font-size:24px">settings</span></div></div>
+    <div style="display:flex;align-items:center;gap:16px;padding:12px 24px 0">
+      <div style="width:76px;height:76px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 24px var(--sg);border:3px solid #C8F550">AM</div>
+      <div style="flex:1">
+        <div style="font:700 22px var(--sg);letter-spacing:-0.3px">Arjun Mehta</div>
+        <div style="font:400 12.5px system-ui;color:#BFD6C9">@arjun_m · Greenpoint · since 2025</div>
+        <div style="display:flex;gap:6px;margin-top:8px"><span style="font:700 12px var(--sg);background:#C8F550;color:#0F1512;border-radius:11px;padding:4px 10px">3.5 rated</span><span style="font:600 11.5px system-ui;background:rgba(255,255,255,.12);border-radius:11px;padding:4px 10px">Doubles main</span></div>
+      </div>
+    </div>
+    <div style="display:flex;padding:18px 24px 0;gap:26px">
+      <div><div style="font:700 20px var(--sg);color:#C8F550">104</div><div style="font:400 11.5px system-ui;color:#BFD6C9">matches</div></div>
+      <div><div style="font:700 20px var(--sg);color:#C8F550">64%</div><div style="font:400 11.5px system-ui;color:#BFD6C9">win rate</div></div>
+      <div><div style="font:700 20px var(--sg);color:#C8F550">86</div><div style="font:400 11.5px system-ui;color:#BFD6C9">followers</div></div>
+      <div><div style="font:700 20px var(--sg);color:#C8F550">2</div><div style="font:400 11.5px system-ui;color:#BFD6C9">clubs</div></div>
+    </div>
+  </div>
+  <div style="padding:18px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Badges</span><span style="font:600 12.5px system-ui;color:#0C4A38">All 12</span></div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:26px;color:#C9A227;font-variation-settings:'FILL' 1">military_tech</span><span style="font:600 10.5px system-ui;text-align:center">100 matches</span></div>
+      <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:26px;color:#0C4A38;font-variation-settings:'FILL' 1">local_fire_department</span><span style="font:600 10.5px system-ui;text-align:center">6-win streak</span></div>
+      <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-family:var(--ms);font-size:26px;color:#2C3A78;font-variation-settings:'FILL' 1">wb_twilight</span><span style="font:600 10.5px system-ui;text-align:center">Early bird</span></div>
+      <div style="flex:1;background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.45"><span style="font-family:var(--ms);font-size:26px;color:#9AA39D">lock</span><span style="font:600 10.5px system-ui;text-align:center;color:#9AA39D">Tourney win</span></div>
+    </div>
+  </div>
+  <div style="padding:20px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:700 16px var(--sg)">Match history</span><span style="font:600 12.5px system-ui;color:#0C4A38">All</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px"><span style="font:700 11px system-ui;color:#0C4A38;background:#EAF3DA;border-radius:9px;padding:4px 8px">W</span><div style="flex:1"><div style="font:600 13.5px system-ui">w/ Rohan vs Sana / Tara</div><div style="font:400 11.5px system-ui;color:#5C6660">Sun · 11-6, 9-11, 11-8</div></div><span style="font:600 12px var(--sg);color:#0C4A38">+0.04</span></div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px"><span style="font:700 11px system-ui;color:#0C4A38;background:#EAF3DA;border-radius:9px;padding:4px 8px">W</span><div style="flex:1"><div style="font:600 13.5px system-ui">Singles vs Nik</div><div style="font:400 11.5px system-ui;color:#5C6660">Thu · 11-9, 11-7</div></div><span style="font:600 12px var(--sg);color:#0C4A38">+0.03</span></div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid #EAEAE2;padding:8px 6px 26px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">home</span><span style="font:500 10px system-ui;color:#9AA39D">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">sports_tennis</span><span style="font:500 10px system-ui;color:#9AA39D">Play</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">trophy</span><span style="font:500 10px system-ui;color:#9AA39D">Clubs</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#9AA39D;padding:2px 14px">location_on</span><span style="font:500 10px system-ui;color:#9AA39D">Courts</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-family:var(--ms);font-size:23px;color:#0C4A38;font-variation-settings:'FILL' 1;background:#DDF3A8;border-radius:14px;padding:2px 14px">person</span><span style="font:600 10px system-ui;color:#0C4A38">Profile</span></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="8b" data-screen-label="Payments">
+<div class="dv-olabel"><a class="dv-oid" href="#8b">8b</a>Payments &amp; wallet</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font:700 19px var(--sg)">Payments</span></div>
+  <div style="padding:6px 20px;display:flex;flex-direction:column;gap:16px">
+    <div style="background:#101613;color:#fff;border-radius:22px;padding:20px;position:relative;overflow:hidden">
+      <div style="position:absolute;right:-24px;bottom:-24px;width:110px;height:110px;border-radius:50%;border:1.5px solid rgba(200,245,80,.25)"></div>
+      <div style="font:600 11px system-ui;letter-spacing:1px;color:#9BA69E">PICKELTON CREDIT</div>
+      <div style="font:700 36px var(--sg);color:#C8F550;margin-top:8px">$22.50</div>
+      <div style="display:flex;gap:8px;margin-top:14px"><div style="height:36px;border-radius:18px;background:#C8F550;color:#0F1512;display:flex;align-items:center;padding:0 18px;font:600 13px system-ui">Add money</div><div style="height:36px;border-radius:18px;border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;padding:0 18px;font:600 13px system-ui">Withdraw</div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font:600 13px system-ui;color:#5C6660">PAYMENT METHODS</span><span style="font:600 12.5px system-ui;color:#0C4A38">Add</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px"><div style="width:42px;height:28px;border-radius:6px;background:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 9px var(--sg);color:#fff;letter-spacing:1px">VISA</div><div style="flex:1"><div style="font:600 13.5px system-ui">Visa ···· 4417</div><div style="font:400 11.5px system-ui;color:#5C6660">Default · expires 08/28</div></div><span style="font-family:var(--ms);font-size:19px;color:#9AA39D">more_vert</span></div>
+        <div style="background:#fff;border:1px solid #EAEAE2;border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px"><div style="width:42px;height:28px;border-radius:6px;background:#101613;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:15px;color:#fff">smartphone</span></div><div style="flex:1"><div style="font:600 13.5px system-ui">Apple Pay</div><div style="font:400 11.5px system-ui;color:#5C6660">Linked</div></div><span style="font-family:var(--ms);font-size:19px;color:#9AA39D">more_vert</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">ACTIVITY</div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:4px 14px">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F0F0EA"><div style="width:36px;height:36px;border-radius:12px;background:#EAF3DA;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#0C4A38">event_available</span></div><div style="flex:1"><div style="font:600 13px system-ui">Court booking · Greenpoint</div><div style="font:400 11.5px system-ui;color:#5C6660">Jul 10 · Visa ···· 4417</div></div><span style="font:700 13.5px var(--sg)">−$28.00</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F0F0EA"><div style="width:36px;height:36px;border-radius:12px;background:#EAF3DA;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#0C4A38">diversity_3</span></div><div style="flex:1"><div style="font:600 13px system-ui">TeamUp split · Riverside</div><div style="font:400 11.5px system-ui;color:#5C6660">Jul 6 · wallet</div></div><span style="font:700 13.5px var(--sg)">−$3.50</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F0F0EA"><div style="width:36px;height:36px;border-radius:12px;background:#DDF3A8;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#0C4A38">undo</span></div><div style="flex:1"><div style="font:600 13px system-ui">Refund · rained out</div><div style="font:400 11.5px system-ui;color:#5C6660">Jul 4 · to wallet</div></div><span style="font:700 13.5px var(--sg);color:#0C4A38">+$14.00</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0"><div style="width:36px;height:36px;border-radius:12px;background:#101613;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">trophy</span></div><div style="flex:1"><div style="font:600 13px system-ui">Summer Slam entry</div><div style="font:400 11.5px system-ui;color:#5C6660">Jul 2 · Visa ···· 4417</div></div><span style="font:700 13.5px var(--sg)">−$12.50</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="8c" data-screen-label="Settings">
+<div class="dv-olabel"><a class="dv-oid" href="#8c">8c</a>Settings</div>
+<div class="dv-card" style="width:390px;height:844px;position:relative;overflow:hidden;background:#F7F7F3;color:#101613;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 8px;font:600 14px var(--sg)"><span>9:41</span><span style="font-family:var(--ms);font-size:15px">signal_cellular_alt wifi battery_full</span></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font-family:var(--ms);font-size:24px">arrow_back</span><span style="font:700 19px var(--sg)">Settings</span></div>
+  <div style="padding:6px 20px;display:flex;flex-direction:column;gap:16px">
+    <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px">
+      <div style="width:48px;height:48px;border-radius:50%;background:#DDE7DF;color:#0C4A38;display:flex;align-items:center;justify-content:center;font:700 16px var(--sg)">AM</div>
+      <div style="flex:1"><div style="font:600 14.5px system-ui">Arjun Mehta</div><div style="font:400 12px system-ui;color:#5C6660">Edit profile, photo &amp; skill rating</div></div>
+      <span style="font-family:var(--ms);font-size:20px;color:#9AA39D">chevron_right</span>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">PREFERENCES</div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:0 14px">
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid #F0F0EA"><span style="font-family:var(--ms);font-size:21px;color:#0C4A38">dark_mode</span><span style="flex:1;font:500 14px system-ui">Dark mode</span><div style="width:48px;height:28px;border-radius:14px;background:#D9DDD6;position:relative"><div style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div></div></div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid #F0F0EA"><span style="font-family:var(--ms);font-size:21px;color:#0C4A38">notifications</span><span style="flex:1;font:500 14px system-ui">Notifications</span><span style="font:400 12.5px system-ui;color:#9AA39D">Matches only</span><span style="font-family:var(--ms);font-size:19px;color:#9AA39D">chevron_right</span></div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid #F0F0EA"><span style="font-family:var(--ms);font-size:21px;color:#0C4A38">location_on</span><span style="flex:1;font:500 14px system-ui">Search radius</span><span style="font:400 12.5px system-ui;color:#9AA39D">5 km</span><span style="font-family:var(--ms);font-size:19px;color:#9AA39D">chevron_right</span></div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0"><span style="font-family:var(--ms);font-size:21px;color:#0C4A38">straighten</span><span style="flex:1;font:500 14px system-ui">Units</span><span style="font:400 12.5px system-ui;color:#9AA39D">Kilometers</span><span style="font-family:var(--ms);font-size:19px;color:#9AA39D">chevron_right</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">PRIVACY</div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:0 14px">
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid #F0F0EA"><span style="font-family:var(--ms);font-size:21px;color:#5C6660">visibility</span><span style="flex:1;font:500 14px system-ui">Profile visibility</span><span style="font:400 12.5px system-ui;color:#9AA39D">Everyone</span><span style="font-family:var(--ms);font-size:19px;color:#9AA39D">chevron_right</span></div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid #F0F0EA"><span style="font-family:var(--ms);font-size:21px;color:#5C6660">show_chart</span><span style="flex:1;font:500 14px system-ui">Show my rating publicly</span><div style="width:48px;height:28px;border-radius:14px;background:#0C4A38;position:relative"><div style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff"></div></div></div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0"><span style="font-family:var(--ms);font-size:21px;color:#5C6660">block</span><span style="flex:1;font:500 14px system-ui">Blocked players</span><span style="font-family:var(--ms);font-size:19px;color:#9AA39D">chevron_right</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font:600 13px system-ui;color:#5C6660;margin-bottom:8px">ACCOUNT</div>
+      <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:0 14px">
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid #F0F0EA"><span style="font-family:var(--ms);font-size:21px;color:#5C6660">logout</span><span style="flex:1;font:500 14px system-ui">Sign out</span></div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 0"><span style="font-family:var(--ms);font-size:21px;color:#8A4444">delete</span><span style="flex:1;font:500 14px system-ui;color:#8A4444">Delete account</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t9" data-screen-label="System states">
+<div class="dv-thd"><a class="dv-tid" href="#t9">9</a><span class="dv-tname">State system — empty, loading, error (applies to every list/screen)</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="9a">
+<div class="dv-olabel"><a class="dv-oid" href="#9a">9a</a>Empty state</div>
+<div class="dv-card" style="width:390px;background:#F7F7F3;color:#101613;padding:44px 32px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px">
+  <div style="width:72px;height:72px;border-radius:24px;background:#EAF3DA;display:flex;align-items:center;justify-content:center;margin-bottom:8px"><span style="font-family:var(--ms);font-size:34px;color:#0C4A38">sports_tennis</span></div>
+  <div style="font:700 18px var(--sg)">No matches yet</div>
+  <div style="font:400 13.5px/1.5 system-ui;color:#5C6660;max-width:250px">Your upcoming matches will live here. Start one, or join a game nearby.</div>
+  <div style="display:flex;gap:8px;margin-top:14px"><div style="height:42px;border-radius:21px;background:#0C4A38;color:#fff;display:flex;align-items:center;padding:0 20px;font:600 13.5px system-ui">Create match</div><div style="height:42px;border-radius:21px;border:1.5px solid #EAEAE2;display:flex;align-items:center;padding:0 20px;font:600 13.5px system-ui">Browse open games</div></div>
+</div>
+</div>
+
+<div class="dv-opt" id="9b">
+<div class="dv-olabel"><a class="dv-oid" href="#9b">9b</a>Loading — skeletons, never spinners on lists</div>
+<div class="dv-card" style="width:390px;background:#F7F7F3;padding:24px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+  <div style="width:140px;height:16px;border-radius:8px;background:#E7E7E0"></div>
+  <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center">
+    <div style="width:46px;height:46px;border-radius:50%;background:#EDEDE6"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="width:70%;height:12px;border-radius:6px;background:#EDEDE6"></div><div style="width:45%;height:10px;border-radius:5px;background:#F1F1EB"></div></div>
+  </div>
+  <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center;opacity:.7">
+    <div style="width:46px;height:46px;border-radius:50%;background:#EDEDE6"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="width:60%;height:12px;border-radius:6px;background:#EDEDE6"></div><div style="width:38%;height:10px;border-radius:5px;background:#F1F1EB"></div></div>
+  </div>
+  <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center;opacity:.4">
+    <div style="width:46px;height:46px;border-radius:50%;background:#EDEDE6"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="width:66%;height:12px;border-radius:6px;background:#EDEDE6"></div><div style="width:42%;height:10px;border-radius:5px;background:#F1F1EB"></div></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="9c">
+<div class="dv-olabel"><a class="dv-oid" href="#9c">9c</a>Error — offline &amp; inline failure</div>
+<div class="dv-card" style="width:390px;background:#F7F7F3;color:#101613;padding:24px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+  <div style="background:#101613;color:#fff;border-radius:14px;padding:11px 16px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:18px;color:#C8F550">wifi_off</span><span style="font:500 13px system-ui">You're offline — showing saved data</span><span style="margin-left:auto;font:600 12.5px system-ui;color:#C8F550">Retry</span></div>
+  <div style="background:#fff;border:1px solid #EAEAE2;border-radius:18px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px">
+    <span style="font-family:var(--ms);font-size:32px;color:#8A4444">error</span>
+    <div style="font:700 15px var(--sg)">Couldn't load open matches</div>
+    <div style="font:400 12.5px/1.5 system-ui;color:#5C6660">Check your connection and try again.</div>
+    <div style="height:38px;border-radius:19px;border:1.5px solid #0C4A38;color:#0C4A38;display:flex;align-items:center;padding:0 20px;font:600 13px system-ui;margin-top:8px">Try again</div>
+  </div>
+  <div style="background:#F5E3E0;border:1px solid #E7C7C1;border-radius:14px;padding:11px 16px;display:flex;align-items:center;gap:10px"><span style="font-family:var(--ms);font-size:18px;color:#8A4444">credit_card_off</span><span style="font:500 13px system-ui;color:#5A2E2E">Payment failed — your slot is held for 10 min</span><span style="margin-left:auto;font:600 12.5px system-ui;color:#8A4444">Fix</span></div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "make this an interactive prototype of the booking flow" · "dark theme pass" · "same system for Pickelton Partner" · "riff on <a class="dv-oid" href="#2a">2a</a> home layout"</p>
+</section></x-dc>
+</body>
+</html>

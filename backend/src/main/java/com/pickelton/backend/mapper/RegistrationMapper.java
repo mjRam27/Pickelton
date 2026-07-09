@@ -15,7 +15,7 @@ public class RegistrationMapper {
             registration.getUser().getId(),
             registration.getTournament().getId(),
             registration.getStatus(),
-            registration.getCreatedAt(),
+            registration.getSubmittedAt() == null ? registration.getCreatedAt() : registration.getSubmittedAt(),
             registration.getUpdatedAt()
         );
     }
@@ -25,7 +25,7 @@ public class RegistrationMapper {
             registration.getId(),
             registration.getUser().getId(),
             registration.getUser().getName(),
-            RegistrationStatus.REGISTERED
+            registration.getStatus()
         );
     }
 }

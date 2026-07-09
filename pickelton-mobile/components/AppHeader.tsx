@@ -1,21 +1,28 @@
 import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 import { getCurrentUser } from "../services/api";
 import type { ThemeColors } from "../theme/colors";
-import { useThemeStyles } from "../theme/ThemeProvider";
+import { useTheme, useThemeStyles } from "../theme/ThemeProvider";
 import { AccountMenu, initials } from "./AccountMenu";
-import { BrandMark } from "./BrandMark";
 
 export function AppHeader({ eyebrow, title }: { eyebrow?: string; title?: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { colors } = useTheme();
   const styles = useThemeStyles(createStyles);
   return (
     <><View style={styles.header}>
+      <Pressable accessibilityLabel="Open account menu" onPress={() => setMenuOpen(true)} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+        <Ionicons color={colors.text} name="menu" size={23} />
+      </Pressable>
       <View>
-        <BrandMark compact />
         {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
         {title ? <Text style={styles.title}>{title}</Text> : null}
       </View>
+      <Pressable accessibilityLabel="Open notifications" style={({ pressed }) => [styles.notification, pressed && styles.pressed]}>
+        <Ionicons color={colors.text} name="notifications-outline" size={20} />
+        <View style={styles.dot} />
+      </Pressable>
       <Pressable accessibilityLabel="Open account menu" onPress={() => setMenuOpen(true)} style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}>
         <Text style={styles.avatarText}>{initials(getCurrentUser()?.name)}</Text>
       </Pressable>
@@ -24,10 +31,13 @@ export function AppHeader({ eyebrow, title }: { eyebrow?: string; title?: string
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  header: { alignItems: "flex-start", flexDirection: "row", justifyContent: "space-between" },
-  eyebrow: { color: colors.muted, fontSize: 9, fontWeight: "900", letterSpacing: 1, marginTop: 8 },
-  title: { color: colors.text, fontSize: 21, fontWeight: "900", marginTop: 3 },
-  avatar: { alignItems: "center", backgroundColor: colors.primarySoft, borderColor: colors.primaryDim, borderRadius: 18, borderWidth: 1, height: 36, justifyContent: "center", width: 36 },
-  avatarText: { color: colors.primary, fontSize: 10, fontWeight: "900" },
+  header: { alignItems: "center", flexDirection: "row", gap: 12 },
+  iconButton: { alignItems: "center", height: 40, justifyContent: "center", width: 28 },
+  eyebrow: { color: colors.muted, fontSize: 12, fontWeight: "400" },
+  title: { color: colors.text, fontSize: 20, fontWeight: "900", marginTop: 1 },
+  notification: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 20, borderWidth: 1, height: 40, justifyContent: "center", marginLeft: "auto", position: "relative", width: 40 },
+  dot: { backgroundColor: colors.danger, borderColor: colors.surface, borderRadius: 5, borderWidth: 1.5, height: 8, position: "absolute", right: 9, top: 8, width: 8 },
+  avatar: { alignItems: "center", backgroundColor: "#DDE7DF", borderRadius: 20, height: 40, justifyContent: "center", width: 40 },
+  avatarText: { color: colors.primary, fontSize: 12, fontWeight: "900" },
   pressed: { opacity: 0.75 },
 });
