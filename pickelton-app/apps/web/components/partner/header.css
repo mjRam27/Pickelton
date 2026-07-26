@@ -1,0 +1,264 @@
+/* ==========================================================================
+   PREMIUM PARTNER HEADER
+   ========================================================================== */
+
+/* 1. Google Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+/* 2. Theme Variables & Tokens */
+:root {
+  /* Brand Accents & Colors */
+  --header-bg: #F7F9F3;
+  --header-border: #D8E5D2;
+  --brand-neon: #C8F550;
+  --brand-green: #84CC16;
+  --brand-dark: #0C0F0D;
+  
+  /* Text Colors */
+  --text-primary: #18181B;
+  --text-secondary: #52525B;
+  --text-muted: #8A948D;
+  --text-light: #E0E0E0;
+
+  /* Typography & Effects */
+  --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --shadow-ambient: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-neon: 0 2px 8px rgba(200, 245, 80, 0.25);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.2s ease;
+}
+
+/* 3. Base Header Structure */
+.partner-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  height: 76px;
+  padding: 0 32px;
+  
+  /* Glassmorphism & Surface */
+  background: var(--header-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  
+  border-bottom: 1px solid var(--header-border);
+  box-shadow: var(--shadow-ambient);
+  font-family: var(--font-main);
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   LEFT SIDE: BRANDING & TITLE
+   ========================================================================== */
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.header-page-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 245, 80, 0.25);
+  background: radial-gradient(circle at top left, rgba(200, 245, 80, 0.15), rgba(200, 245, 80, 0.03));
+  color: var(--brand-neon);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.header-page-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.header-eyebrow,
+.page-kicker {
+  margin: 0 0 2px 0;
+  color: var(--brand-green);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.header-left p {
+  margin: 3px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   RIGHT SIDE: SEARCH, ACTIONS & PROFILE
+   ========================================================================== */
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Search Box */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(280px, 25vw);
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--header-border);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
+  cursor: text;
+  transition: var(--transition-smooth);
+}
+
+.search-box:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(132, 204, 22, 0.4);
+}
+
+.search-box:focus-within {
+  border-color: rgba(200, 245, 80, 0.8);
+  background: var(--brand-dark);
+  box-shadow: 0 0 0 3px rgba(200, 245, 80, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.search-box:focus-within input {
+  color: var(--text-light);
+}
+
+.search-box input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Icon Action Buttons */
+.header-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--brand-neon);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--brand-dark);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.header-icon-btn:hover {
+  border-color: var(--brand-neon);
+  background: rgba(200, 245, 80, 0.15);
+  color: var(--brand-dark);
+  transform: translateY(-1px);
+}
+
+.notification-dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--brand-dark);
+  border-radius: 50%;
+  background: var(--brand-neon);
+  box-shadow: 0 0 8px var(--brand-neon);
+}
+
+/* Profile Badge */
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--header-border);
+  border-radius: 99px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.header-profile:hover {
+  border-color: rgba(132, 204, 22, 0.4);
+  background: var(--header-bg);
+}
+
+.header-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--brand-neon);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: var(--shadow-neon);
+}
+
+.header-profile-copy strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.header-profile-copy p {
+  margin: 1px 0 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .partner-header {
+    height: 66px;
+    padding: 0 16px;
+  }
+
+  .header-left p,
+  .header-profile-copy {
+    display: none;
+  }
+
+  .search-box {
+    justify-content: center;
+    width: 40px;
+    padding: 0;
+  }
+
+  .search-box input {
+    display: none;
+  }
+}

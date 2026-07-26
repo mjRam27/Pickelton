@@ -1,0 +1,33 @@
+.partner-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.partner-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.partner-main {
+  flex: 1;
+  min-width: 0;
+  padding: clamp(20px, 2.4vw, 32px);
+  background: var(--bg);
+}
+
+@media (max-width: 1024px) {
+  .partner-main {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .partner-main {
+    padding: 18px 14px 28px;
+  }
+}

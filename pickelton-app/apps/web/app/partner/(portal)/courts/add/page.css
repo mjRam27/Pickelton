@@ -1,0 +1,72 @@
+.add-court-page{
+    display:flex;
+    flex-direction:column;
+    gap:30px;
+}
+
+.form-card{
+    background:#111;
+    border:1px solid #222;
+    border-radius:20px;
+    padding:32px;
+}
+
+.court-form{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:24px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.form-group label{
+    color:#9ca3af;
+    margin-bottom:8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+    background:#1f2937;
+    color:white;
+    border:1px solid #333;
+    border-radius:12px;
+    padding:14px;
+    outline:none;
+}
+
+.form-group textarea{
+    resize:none;
+}
+
+.full{
+    grid-column:1 / -1;
+}
+
+.form-actions{
+    grid-column:1 / -1;
+    display:flex;
+    justify-content:flex-end;
+    gap:16px;
+}
+
+.secondary-btn{
+    text-decoration:none;
+    padding:14px 24px;
+    border:1px solid #555;
+    border-radius:12px;
+    color:white;
+}
+
+.primary-btn{
+    background:#c6ff00;
+    color:black;
+    border:none;
+    padding:14px 24px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+}
