@@ -5,31 +5,25 @@ import "./header.css";
 
 interface HeaderProps {
   title?: string;
-  userName?: string;
-  avatarInitial?: string;
   onSearchChange?: (value: string) => void;
   onNotificationClick?: () => void;
-  onProfileClick?: () => void;
 }
 
 export default function Header({
-  title = "Dashboard",
-  userName = "AmruthaVashini",
-  avatarInitial = "A",
+  title = "",
   onSearchChange,
   onNotificationClick,
-  onProfileClick,
 }: HeaderProps) {
   return (
     <header className="partner-header">
-      {/* Left Section: Visible Page Title */}
+      {/* Left Section: Page Title */}
       <div className="header-left">
-        <h1>{title}</h1>
+        {title && <h1>{title}</h1>}
       </div>
 
-      {/* Right Section: Controls & User Profile */}
+      {/* Right Section: Search & Notification Only */}
       <div className="header-right">
-        {/* Search Input */}
+        {/* Search Bar */}
         <label className="search-box">
           <Search size={18} aria-hidden="true" />
           <input
@@ -45,26 +39,11 @@ export default function Header({
           type="button"
           className="header-icon-btn"
           aria-label="View notifications"
+          title="Notifications"
           onClick={onNotificationClick}
         >
           <Bell size={19} aria-hidden="true" />
           <span className="notification-dot" aria-hidden="true" />
-        </button>
-
-        {/* Profile Action */}
-        <button
-          type="button"
-          className="header-profile"
-          aria-label={`Open profile for ${userName}`}
-          onClick={onProfileClick}
-        >
-          <div className="header-avatar" aria-hidden="true">
-            {avatarInitial}
-          </div>
-
-          <div className="header-profile-copy">
-            <strong>{userName}</strong>
-          </div>
         </button>
       </div>
     </header>

@@ -1,29 +1,57 @@
 "use client";
 
+import type { CSSProperties, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Mail, Zap } from "lucide-react";
+
 import "./page.css";
+
+const loginTheme = {
+  "--lime": "#b8ff2c",
+  "--bg": "#050505",
+  "--text": "#ffffff",
+} as CSSProperties;
+
+const heroBackground = {
+  backgroundImage: `
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.53) 0%,
+      rgba(0, 0, 0, 0.28) 53%,
+      rgba(0, 0, 0, 0.42) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.14) 0%,
+      rgba(0, 0, 0, 0.04) 58%,
+      rgba(0, 0, 0, 0.28) 100%
+    ),
+    url("/images/partner-hero.png")
+  `,
+} as CSSProperties;
+
 export default function PartnerLoginPage() {
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
     // Temporary until backend integration
     router.push("/partner/dashboard");
   };
+
   return (
-    <main className="partner-login">
-      <section className="hero">
+    <main className="partner-login" style={loginTheme}>
+      <section className="hero" style={heroBackground}>
         <div className="hero-content">
           <div className="hero-top">
             <div className="brand">
-  <span>PICKELTON</span>
+              <span>PICKELTON</span>
 
-  <p className="brand-tagline">
-    PLAY. COMPETE. CONNECT.
-  </p>
-</div>
+              <p className="brand-tagline">
+                PLAY. COMPETE. CONNECT.
+              </p>
+            </div>
 
             <h1>
               Where Great
@@ -32,35 +60,38 @@ export default function PartnerLoginPage() {
             </h1>
 
             <p className="hero-description">
-              Manage courts, bookings, players and club operations from one
-              powerful platform.
+              Manage courts, bookings, players and club operations from
+              one powerful platform.
             </p>
           </div>
 
           <div className="hero-features">
-            <div className="feature">
-              <span>🏟️</span>
+            <article className="feature">
+              <span aria-hidden="true">🏟️</span>
+
               <div>
                 <h3>Court Management</h3>
                 <p>Manage courts and availability.</p>
               </div>
-            </div>
+            </article>
 
-            <div className="feature">
-              <span>📅</span>
+            <article className="feature">
+              <span aria-hidden="true">📅</span>
+
               <div>
                 <h3>Booking Management</h3>
                 <p>Track reservations and players.</p>
               </div>
-            </div>
+            </article>
 
-            <div className="feature">
-              <span>📊</span>
+            <article className="feature">
+              <span aria-hidden="true">📊</span>
+
               <div>
                 <h3>Revenue Analytics</h3>
                 <p>Monitor business performance.</p>
               </div>
-            </div>
+            </article>
           </div>
         </div>
       </section>
@@ -114,9 +145,13 @@ export default function PartnerLoginPage() {
             </label>
 
             <div className="login-options">
-              <label>
-                <input type="checkbox" />
-                Remember me
+              <label htmlFor="remember-partner">
+                <input
+                  id="remember-partner"
+                  name="remember"
+                  type="checkbox"
+                />
+                <span>Remember me</span>
               </label>
 
               <a href="#">Forgot Password?</a>

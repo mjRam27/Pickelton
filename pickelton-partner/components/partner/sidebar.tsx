@@ -37,25 +37,18 @@ function PickeltonLogoIcon(props: React.SVGProps<SVGSVGElement>) {
       viewBox="0 0 32 32"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
       {...props}
     >
-      <ellipse
-        cx="14.8"
-        cy="12"
-        rx="4.3"
-        ry="6.6"
-        transform="rotate(32 14.8 12)"
-      />
+      {/* Outer Ball Outline */}
+      <circle cx="16" cy="16" r="11" />
 
-      <path d="M12.7 16.8c-.9 1.2-1.8 2.3-2.9 3.5" />
-
-      <path d="M9.8 20.3c-.9 1.1-1.4 2.1-1.7 3.2" />
-
-      <circle cx="20.8" cy="20.8" r="2.2" />
+      {/* Seamless Curved Lines */}
+      <path d="M7.5 10.5C11.5 12 14.5 16 14.5 21.5" />
+      <path d="M24.5 21.5C20.5 20 17.5 16 17.5 10.5" />
     </svg>
   );
 }
@@ -107,7 +100,7 @@ function SidebarAccount() {
       <div className="account-avatar">AV</div>
 
       <div className="account-copy">
-        <strong>Amrutha Varshini</strong>
+        <strong>AmruthaVarshini</strong>
       </div>
 
       <Settings

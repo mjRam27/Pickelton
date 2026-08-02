@@ -10,7 +10,7 @@
   flex: 1;
   min-width: 0;
   flex-direction: column;
-  background: var(--bg);
+  background: #E8F5E9;
 }
 
 .partner-main {

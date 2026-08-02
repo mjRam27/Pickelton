@@ -110,10 +110,11 @@
   gap: 20px;
 }
 
-/* Search Box */
+/* Search Box Container */
 .search-box {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
   width: min(280px, 25vw);
   height: 40px;
@@ -137,14 +138,30 @@
   box-shadow: 0 0 0 3px rgba(200, 245, 80, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Center Search Icon Vertically */
+.search-box svg,
+.search-box .search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Center Input Field & Text Vertically */
 .search-box input {
+  display: flex;
+  align-items: center;
   width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
   border: none;
   outline: none;
   background: transparent;
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 500;
+  line-height: normal;
 }
 
 .search-box:focus-within input {
@@ -153,6 +170,7 @@
 
 .search-box input::placeholder {
   color: var(--text-muted);
+  line-height: normal;
 }
 
 /* Icon Action Buttons */
