@@ -1,0 +1,21 @@
+import { Router } from "express";
+import { authenticate } from "./middleware/authenticate.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
+import { bookingsRouter } from "./modules/bookings/bookings.routes.js";
+import { courtsRouter } from "./modules/courts/courts.routes.js";
+import { customersRouter } from "./modules/customers/customers.routes.js";
+import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
+import { profileRouter } from "./modules/profile/profile.routes.js";
+import { reportsRouter } from "./modules/reports/reports.routes.js";
+import { settingsRouter } from "./modules/settings/settings.routes.js";
+
+export const apiRouter=Router();
+apiRouter.use("/auth",authRouter);
+apiRouter.use(authenticate);
+apiRouter.use("/dashboard",dashboardRouter);
+apiRouter.use("/courts",courtsRouter);
+apiRouter.use("/bookings",bookingsRouter);
+apiRouter.use("/customers",customersRouter);
+apiRouter.use("/reports",reportsRouter);
+apiRouter.use("/profile",profileRouter);
+apiRouter.use("/settings",settingsRouter);

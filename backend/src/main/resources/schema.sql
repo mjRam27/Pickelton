@@ -210,11 +210,11 @@ CREATE TABLE IF NOT EXISTS posts (
 -- Legacy score snapshots stay until the final cleanup migration.
 CREATE TABLE IF NOT EXISTS score_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    author_user_id UUID NOT NULL REFERENCES users(id),
-    club_id UUID REFERENCES clubs(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    event_types JSONB NOT NULL DEFAULT '[]'::jsonb,
-    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+    player_id UUID NOT NULL REFERENCES users(id),
+    old_score INT NOT NULL,
+    new_score INT NOT NULL,
+    updated_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -222,8 +222,8 @@ CREATE TABLE IF NOT EXISTS score_history (
 CREATE INDEX IF NOT EXISTS idx_club_members_user_id ON club_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_club_members_club_id ON club_members(club_id);
 CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments(status);
-CREATE INDEX IF NOT EXISTS idx_host_verifications_user_id ON host_verifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_host_verifications_status ON host_verifications(status);
+CREATE INDEX IF NOT EXISTS idx_host_applications_user_id ON host_applications(user_id);
+CREATE INDEX IF NOT EXISTS idx_host_applications_status ON host_applications(status);
 CREATE INDEX IF NOT EXISTS idx_registrations_tournament_id ON registrations(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
@@ -233,5 +233,6 @@ CREATE INDEX IF NOT EXISTS idx_match_state_match_id ON match_state(match_id);
 CREATE INDEX IF NOT EXISTS idx_score_events_match_id_seq ON score_events(match_id, sequence_number);
 CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id ON tournament_matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);

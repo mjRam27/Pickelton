@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: seed
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/dev_seed.sql
+  jpa:
+    defer-datasource-initialization: true

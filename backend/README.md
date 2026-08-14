@@ -90,6 +90,18 @@ java -version
 mvn spring-boot:run
 ```
 
+To populate the development database with 12 persisted accounts, clubs, memberships,
+tournaments, registrations, matches, scorekeepers, referees, and community posts, use
+the `dev,seed` profiles after applying `schema.sql`:
+
+```powershell
+$env:SPRING_PROFILE='dev,seed'
+mvn spring-boot:run
+```
+
+Every seeded account uses the password `Pickelton123!`. The seed is idempotent and is
+never enabled unless the `seed` profile is selected. Do not enable it in production.
+
 3. Open Swagger UI:
 
 ```text

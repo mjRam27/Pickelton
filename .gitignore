@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.expo/
+dist/
+*.tsbuildinfo
+*.log
+.env
+.env.local
+.env.*.local
