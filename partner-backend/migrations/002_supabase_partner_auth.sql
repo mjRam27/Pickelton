@@ -1,0 +1,1 @@
+ALTER TABLE partners ALTER COLUMN password_hash DROP NOT NULL;
