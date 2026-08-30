@@ -1,0 +1,383 @@
+.edit-court-page {
+  min-height: 100vh;
+  padding: 54px 7%;
+  background: #edf8ee;
+  color: #092b25;
+}
+
+.edit-court-header {
+  max-width: 1000px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.edit-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #075442;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.edit-court-header h1 {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 48px;
+  line-height: 1;
+  color: #062d26;
+}
+
+.edit-court-header p {
+  margin: 12px 0 0;
+  color: #6c7d76;
+  font-size: 15px;
+}
+
+.edit-court-header p strong {
+  color: #075442;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #d7e4da;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0b4e3f;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.back-button:hover {
+  background: #f4faf4;
+  transform: translateY(-1px);
+}
+
+.edit-court-card {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 34px;
+  border: 1px solid #dce8de;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(18, 67, 50, 0.08);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.membership-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #dce4dc;
+  border-radius: 12px;
+  background: #f7faf7;
+  cursor: pointer;
+}
+
+.form-field .membership-option input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 2px;
+  padding: 0;
+  accent-color: #0c4a38;
+}
+
+.membership-option span { display: flex; flex-direction: column; gap: 4px; }
+.membership-option strong { color: #14251e; font-size: 13px; }
+.membership-option small { color: #748078; font-size: 11px; line-height: 1.4; }
+
+.form-field label {
+  color: #173b33;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ccd9d0;
+  border-radius: 11px;
+  outline: none;
+  background: #ffffff;
+  color: #102e28;
+  font-family: inherit;
+  font-size: 15px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-field input,
+.form-field select {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.form-field textarea {
+  padding: 14px;
+  resize: vertical;
+  min-height: 130px;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: #0b5b47;
+  box-shadow: 0 0 0 3px rgba(11, 91, 71, 0.1);
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0b5b47;
+  pointer-events: none;
+}
+
+.input-with-icon input {
+  padding-left: 40px;
+}
+
+.form-divider {
+  height: 1px;
+  margin: 30px 0 24px;
+  background: #e5ece7;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.cancel-button,
+.save-button {
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 11px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.cancel-button {
+  border: 1px solid #d7e1da;
+  background: #ffffff;
+  color: #34574d;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #f5f8f5;
+}
+
+.save-button {
+  min-width: 150px;
+  border: none;
+  background: #b7f52b;
+  color: #082e26;
+  box-shadow: 0 8px 20px rgba(118, 165, 22, 0.18);
+}
+
+.save-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(118, 165, 22, 0.24);
+}
+
+.cancel-button:disabled,
+.save-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.alert {
+  max-width: 1000px;
+  margin: 0 auto 20px;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.alert-error {
+  border: 1px solid #f0c8c8;
+  background: #fff4f4;
+  color: #a52c2c;
+}
+
+.alert-success {
+  border: 1px solid #cce6c7;
+  background: #f1faef;
+  color: #19633f;
+}
+
+.edit-loading {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.edit-loading h2 {
+  margin: 16px 0 6px;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #07382e;
+}
+
+.edit-loading p {
+  margin: 0;
+  color: #73827c;
+}
+
+.loading-spinner,
+.button-spinner {
+  border: 3px solid #dce9df;
+  border-top-color: #0a5b47;
+  border-radius: 50%;
+  animation: edit-spin 0.8s linear infinite;
+}
+
+.loading-spinner {
+  width: 34px;
+  height: 34px;
+}
+
+.button-spinner {
+  width: 15px;
+  height: 15px;
+  border-width: 2px;
+}
+
+.edit-error-card {
+  max-width: 600px;
+  margin: 100px auto;
+  padding: 40px;
+  border: 1px solid #ead7d7;
+  border-radius: 20px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(18, 67, 50, 0.08);
+}
+
+.edit-error-card > svg {
+  color: #b13b3b;
+}
+
+.edit-error-card h1 {
+  margin: 16px 0 8px;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #12372f;
+}
+
+.edit-error-card p {
+  margin: 0 0 24px;
+  color: #6f7e78;
+}
+
+.edit-error-card button {
+  height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  background: #0b5b47;
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes edit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 800px) {
+  .edit-court-page {
+    padding: 35px 20px;
+  }
+
+  .edit-court-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .edit-court-header h1 {
+    font-size: 40px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field.full-width {
+    grid-column: auto;
+  }
+
+  .edit-court-card {
+    padding: 22px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .cancel-button,
+  .save-button {
+    width: 100%;
+  }
+}

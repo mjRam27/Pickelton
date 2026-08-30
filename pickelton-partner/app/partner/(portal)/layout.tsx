@@ -1,7 +1,9 @@
 import "./layout.css";
+import "./design-system.css";
 
 import Sidebar from "../../../components/partner/sidebar";
 import Header from "../../../components/partner/header";
+import PartnerSessionGuard from "../../../components/partner/session-guard";
 
 export default function PartnerLayout({
   children,
@@ -9,7 +11,7 @@ export default function PartnerLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="partner-layout">
+    <PartnerSessionGuard><div className="partner-layout">
       <Sidebar />
 
       <div className="partner-content">
@@ -17,6 +19,6 @@ export default function PartnerLayout({
 
         <main className="partner-main">{children}</main>
       </div>
-    </div>
+    </div></PartnerSessionGuard>
   );
 }

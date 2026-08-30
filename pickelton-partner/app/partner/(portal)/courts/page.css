@@ -1,21 +1,35 @@
 .courts-page {
+  /* Core palette — matched to Pickelton reference tokens */
   --forest: #0c4a38;
   --forest-deep: #073b2c;
-  --forest-hover: #093f30;
+  --forest-hover: #0a3a2c;
   --lime: #c8f550;
   --ink: #101613;
-  --muted: #68716b;
-  --subtle: #90978f;
+  --ink-soft: #0f1512;
+  --muted: #5c6660;
+  --subtle: #8a927f;
+  --placeholder: #9aa39d;
   --surface: #ffffff;
-  --surface-soft: #f7f7f3;
-  --surface-green: #eef5e3;
-  --line: #e2e6de;
-  --success: #178451;
-  --warning: #c47a19;
-  --danger: #c45252;
-  --radius: 20px;
-  --shadow: 0 14px 34px rgba(5, 18, 13, 0.08);
-  --shadow-hover: 0 22px 48px rgba(5, 18, 13, 0.13);
+  --surface-soft: #f2f1ec;
+  --surface-green: #eaf3da;
+  --avatar-bg: #dde7df;
+  --line: #e6e5de;
+  --success: #3e8e5a;
+  --warning: #c9a227;
+  --danger: #8a4444;
+  --danger-soft: #f5e3e0;
+  --notify: #e4572e;
+
+  /* Radius scale — cards 16–18px, chips/tags ~12px, buttons/status fully pill */
+  --radius: 18px;
+  --radius-lg: 18px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+
+  /* Reference favors border-defined cards over heavy elevation */
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.08);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   display: flex;
@@ -23,7 +37,7 @@
   flex-direction: column;
   gap: 20px;
   color: var(--ink);
-  font-family: Inter, "SF Pro Display", "IBM Plex Sans", Roboto, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .courts-page *,
@@ -113,11 +127,11 @@
 .courts-page .hero-title-row h1 {
   margin: 0;
   color: #ffffff;
-  font-family: "Space Grotesk", Inter, sans-serif;
-  font-size: clamp(34px, 3.5vw, 45px);
-  font-weight: 750;
-  letter-spacing: -1.5px;
-  line-height: 1;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.5;
 }
 
 .courts-page .hero-title-row p {
@@ -136,7 +150,7 @@
   gap: 8px;
   padding: 0 20px;
   border: 1px solid var(--lime);
-  border-radius: 13px;
+  border-radius: var(--radius-pill);
   background: var(--lime);
   box-shadow: 0 10px 22px rgba(200, 245, 80, 0.18);
   color: #000000;
@@ -155,41 +169,6 @@
   border-color: #d6ff6b;
   background: #d6ff6b;
   box-shadow: 0 14px 28px rgba(200, 245, 80, 0.25);
-}
-
-.courts-page .hero-search {
-  display: flex;
-  height: 42px;
-  max-width: 590px;
-  align-items: center;
-  gap: 9px;
-  margin-top: 21px;
-  padding: 0 13px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
-}
-
-.courts-page .hero-search:focus-within {
-  border-color: rgba(200, 245, 80, 0.7);
-  background: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 0 0 3px rgba(200, 245, 80, 0.1);
-}
-
-.courts-page .hero-search input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #ffffff;
-  font-size: 12px;
-}
-
-.courts-page .hero-search input::placeholder {
-  color: rgba(255, 255, 255, 0.58);
 }
 
 .courts-page .filter-chips {
@@ -267,7 +246,7 @@
   gap: 15px;
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 17px;
+  border-radius: var(--radius-lg);
   background: rgba(4, 43, 32, 0.46);
   backdrop-filter: blur(10px);
 }
@@ -402,7 +381,7 @@
 .courts-page .compact-panel h2 {
   margin: 5px 0 0;
   color: var(--ink);
-  font-family: "Space Grotesk", Inter, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 18px;
   font-weight: 730;
   letter-spacing: -0.45px;
@@ -424,9 +403,9 @@
   justify-content: center;
   gap: 6px;
   padding: 0 13px;
-  border: 1px solid #dce2d8;
-  border-radius: 10px;
-  background: var(--surface-soft);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
   color: var(--forest);
   font-size: 10px;
   font-weight: 720;
@@ -457,16 +436,16 @@
   min-width: 0;
   height: 100%;
   flex-direction: column;
-  border: 1px solid #e0e4dd;
-  border-radius: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: #ffffff;
-  box-shadow: 0 10px 28px rgba(5, 18, 13, 0.07);
+  box-shadow: var(--shadow);
 }
 
 .courts-page .court-card:hover {
   transform: translateY(-5px);
   border-color: #cfd8c8;
-  box-shadow: 0 22px 44px rgba(5, 18, 13, 0.14);
+  box-shadow: var(--shadow-hover);
 }
 
 .courts-page .court-image {
@@ -596,7 +575,7 @@
   margin: 0;
   overflow: hidden;
   color: var(--ink);
-  font-family: "Space Grotesk", Inter, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 15px;
   font-weight: 750;
   letter-spacing: -0.35px;
@@ -690,10 +669,10 @@
   align-items: center;
   gap: 5px;
   padding: 0 8px;
-  border: 1px solid #e0e5dc;
-  border-radius: 999px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   background: #ffffff;
-  color: #536059;
+  color: var(--muted);
   font-size: 7.5px;
   font-weight: 700;
 }
@@ -875,14 +854,14 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border-radius: 10px;
+  border-radius: var(--radius-pill);
   font-size: 8px;
   font-weight: 740;
   text-decoration: none;
 }
 
 .courts-page .court-actions button {
-  border: 1px solid #dce2d8;
+  border: 1.5px solid var(--line);
   background: #ffffff;
   color: var(--forest);
   cursor: pointer;
@@ -1414,8 +1393,8 @@
 .courts-page .booking-list button {
   min-height: 29px;
   padding: 0 9px;
-  border: 1px solid #dce2d8;
-  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
   background: #ffffff;
   color: var(--forest);
   font-size: 8.5px;
@@ -1656,8 +1635,7 @@
     flex-direction: column;
   }
 
-  .courts-page .add-court,
-  .courts-page .hero-search {
+  .courts-page .add-court {
     width: 100%;
     max-width: none;
   }
@@ -1771,4 +1749,48 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+.delete-court-button {
+  color: #b42318;
+  border: 1px solid #f1b8b5;
+  background: #fff;
+}
+
+.delete-court-button:hover {
+  background: #fff1f0;
+  border-color: #b42318;
+}
+
+.courts-page .court-sort-control {
+  width: min(190px, 100%);
+  flex: 0 0 auto;
+}
+
+.courts-page .court-sort-control .partner-select__trigger {
+  min-height: 38px;
+  border-color: rgba(200, 245, 80, 0.5);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.courts-page .membership-status {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.courts-page .membership-status.is-enabled {
+  border-color: rgba(12, 74, 56, 0.2);
+  background: var(--surface-green);
+  color: var(--forest);
 }

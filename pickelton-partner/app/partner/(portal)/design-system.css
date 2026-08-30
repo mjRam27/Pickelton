@@ -1,0 +1,608 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+.partner-layout {
+  --pk-forest: #0c4a38;
+  --pk-forest-dark: #062b21;
+  --pk-forest-hover: #08382b;
+  --pk-lime: #c8f550;
+  --pk-lime-hover: #bdf234;
+  --pk-ink: #0f172a;
+  --pk-text: #334155;
+  --pk-secondary: #64748b;
+  --pk-muted: #64748b;
+  --pk-canvas: #f1f6f3;
+  --pk-surface: #ffffff;
+  --pk-soft: #f6f8f6;
+  --pk-soft-green: #e3ece7;
+  --pk-border: #ccdcd3;
+  --pk-border-soft: #e0eae4;
+  --pk-danger: #b91c1c;
+  --pk-warning: #b45309;
+  --pk-radius-control: 8px;
+  --pk-radius-card: 12px;
+  --pk-shadow-card: 0 2px 4px rgba(12, 74, 56, 0.04);
+  --pk-shadow-hover: 0 8px 20px -4px rgba(12, 74, 56, 0.12);
+  --pk-focus: 0 0 0 3px rgba(200, 245, 80, 0.42);
+  --pk-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bg: var(--pk-canvas);
+  --text: var(--pk-ink);
+}
+
+.partner-layout,
+.partner-layout button,
+.partner-layout input,
+.partner-layout textarea {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.partner-layout h1,
+.partner-layout h2,
+.partner-layout h3,
+.partner-layout [class*="value"],
+.partner-layout [class*="amount"] {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.partner-layout {
+  background: var(--pk-canvas);
+  color: var(--pk-ink);
+}
+
+.partner-layout .partner-content,
+.partner-layout .partner-main {
+  background: var(--pk-canvas);
+}
+
+.partner-layout .partner-main {
+  padding: 22px 28px 32px;
+}
+
+/* One control language for native text fields. Dropdowns use PartnerSelect. */
+.partner-layout .partner-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.partner-layout .partner-main textarea {
+  min-height: 42px;
+  border: 1px solid var(--pk-border);
+  border-radius: var(--pk-radius-control);
+  outline: none;
+  background-color: var(--pk-surface);
+  color: var(--pk-ink);
+  font-size: 13.5px;
+  line-height: 1.35;
+  transition: border-color var(--pk-transition), box-shadow var(--pk-transition), background-color var(--pk-transition);
+}
+
+.partner-layout .partner-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.partner-layout .partner-main textarea {
+  padding: 0 13px;
+}
+
+.partner-layout .partner-main textarea {
+  min-height: 104px;
+  padding-block: 11px;
+  resize: vertical;
+}
+
+.partner-layout .partner-main input::placeholder,
+.partner-layout .partner-main textarea::placeholder {
+  color: #9aa39d;
+  opacity: 1;
+}
+
+.partner-layout .partner-main input:hover:not(:disabled),
+.partner-layout .partner-main textarea:hover:not(:disabled) {
+  border-color: #c7cbc3;
+}
+
+.partner-layout .partner-main input:focus,
+.partner-layout .partner-main textarea:focus {
+  border-color: var(--pk-forest);
+  box-shadow: var(--pk-focus);
+}
+
+.partner-layout .partner-main input:disabled,
+.partner-layout .partner-main textarea:disabled {
+  background-color: #eeeee9;
+  color: var(--pk-muted);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.partner-layout .partner-main label {
+  color: var(--pk-text);
+}
+
+/* Shared button foundation; semantic page classes keep their existing actions. */
+.partner-layout .partner-main button,
+.partner-layout .partner-main a[class*="button"],
+.partner-layout .partner-main a[class*="action"],
+.partner-layout .partner-main [class*="-btn"] {
+  min-height: 42px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background-color var(--pk-transition), border-color var(--pk-transition), color var(--pk-transition), box-shadow var(--pk-transition), transform var(--pk-transition);
+}
+
+.partner-layout .partner-main button:focus-visible,
+.partner-layout .partner-main a:focus-visible {
+  outline: none;
+  box-shadow: var(--pk-focus);
+}
+
+.partner-layout .partner-main button:disabled,
+.partner-layout .partner-main [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.partner-layout .partner-main :is(.primary-btn, .primary-action, .save-button, .submit-button, .login-button, .dashboard-primary-action, .export-button, .add-button) {
+  border-color: var(--pk-forest);
+  background: var(--pk-forest);
+  color: #fff;
+  box-shadow: none;
+}
+
+.partner-layout .partner-main :is(.primary-btn, .primary-action, .save-button, .submit-button, .dashboard-primary-action, .export-button, .add-button):hover:not(:disabled) {
+  border-color: var(--pk-forest-hover);
+  background: var(--pk-forest-hover);
+  transform: translateY(-1px);
+}
+
+.partner-layout .partner-main :is(.cancel-button, .back-button, .reset-button, .secondary-btn, .outline-button, .dashboard-outline-action) {
+  border: 1px solid var(--pk-border);
+  background: var(--pk-surface);
+  color: var(--pk-forest);
+  box-shadow: none;
+}
+
+.partner-layout .partner-main :is(.cancel-button, .back-button, .reset-button, .secondary-btn, .outline-button, .dashboard-outline-action):hover:not(:disabled) {
+  border-color: #cbd0c8;
+  background: var(--pk-soft);
+}
+
+.partner-layout .partner-main :is(.delete-button, .danger-button, .danger-btn) {
+  border-color: #f0c7c3;
+  background: #fff4f2;
+  color: var(--pk-danger);
+}
+
+/* Cards, tables and badges inherit the same quiet surface treatment. */
+.partner-layout .partner-main :is(article, section)[class*="card"],
+.partner-layout .partner-main [class$="-panel"],
+.partner-layout .partner-main .panel {
+  border-color: var(--pk-border);
+  border-radius: var(--pk-radius-card);
+  box-shadow: var(--pk-shadow-card);
+}
+
+.partner-layout .partner-main table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--pk-text);
+  font-size: 13px;
+}
+
+.partner-layout .partner-main thead th {
+  border-bottom-color: var(--pk-border);
+  background: var(--pk-soft);
+  color: var(--pk-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.partner-layout .partner-main tbody td {
+  border-bottom-color: var(--pk-border);
+}
+
+.partner-layout .partner-main tbody tr:hover td {
+  background-color: #fafaf7;
+}
+
+.partner-layout .partner-main :is([class*="status-badge"], [class*="status-chip"], .status-chip, .period-chip) {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.partner-layout .partner-main :is(.status-active, .status-confirmed, .status-completed, .status-paid, .active, .confirmed, .completed, .paid) {
+  border-color: #c8ddce;
+  background: #eaf3da;
+  color: var(--pk-forest);
+}
+
+.partner-layout .partner-main :is(.status-pending, .status-maintenance, .pending, .maintenance) {
+  border-color: #f1d49a;
+  background: #fff7df;
+  color: var(--pk-warning);
+}
+
+.partner-layout .partner-main :is(.status-cancelled, .status-rejected, .status-unpaid, .cancelled, .rejected, .unpaid) {
+  border-color: #f0c7c3;
+  background: #fff1ef;
+  color: var(--pk-danger);
+}
+
+.partner-layout .partner-main :is(.status-inactive, .inactive) {
+  border-color: #d9ddd7;
+  background: #f1f2ef;
+  color: var(--pk-secondary);
+}
+
+/* Authenticated pages share the finalized Dashboard's layered surface system. */
+.partner-layout .partner-main :is(
+  .courts-page,
+  .add-court-page,
+  .edit-court-page,
+  .schedule-page,
+  .bookings-page,
+  .booking-details-page,
+  .customers-page,
+  .reports-page,
+  .profile-page,
+  .settings-page
+) {
+  min-width: 0;
+  min-height: 100%;
+  color: var(--pk-ink);
+  background: var(--pk-canvas);
+}
+
+/* Dashboard-style dark feature headers with a restrained lime transition. */
+.partner-layout .partner-main :is(
+  .courts-page .courts-hero,
+  .bookings-page .bookings-hero,
+  .customers-page .customers-hero,
+  .reports-page .reports-hero,
+  .settings-page .settings-hero,
+  .schedule-page .schedule-hero
+) {
+  border-color: var(--pk-forest-dark);
+  border-bottom: 3px solid var(--pk-lime);
+  border-radius: var(--pk-radius-card);
+  background-color: var(--pk-forest);
+  box-shadow: 0 10px 24px -4px rgba(6, 43, 33, 0.28);
+}
+
+.partner-layout .partner-main :is(
+  .courts-page,
+  .bookings-page,
+  .customers-page,
+  .reports-page,
+  .profile-page,
+  .settings-page,
+  .schedule-page,
+  .edit-court-page,
+  .add-court-page,
+  .booking-details-page
+) :is(h1, h2, h3) {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* White content sits above the tinted canvas with one consistent depth scale. */
+.partner-layout .partner-main :is(
+  .courts-page,
+  .bookings-page,
+  .customers-page,
+  .reports-page,
+  .profile-page,
+  .settings-page,
+  .schedule-page,
+  .edit-court-page,
+  .add-court-page,
+  .booking-details-page
+) :is(
+  .panel,
+  .form-card,
+  .edit-court-card,
+  .booking-details-card,
+  .customer-list-card,
+  .profile-card,
+  .settings-card,
+  .report-card,
+  .schedule-panel,
+  .selected-day,
+  .schedule-actions
+) {
+  border-color: var(--pk-border);
+  border-radius: var(--pk-radius-card);
+  background: var(--pk-surface);
+  color: var(--pk-ink);
+  box-shadow: var(--pk-shadow-card);
+}
+
+.partner-layout .partner-main :is(
+  .courts-page,
+  .bookings-page,
+  .customers-page,
+  .reports-page,
+  .profile-page,
+  .settings-page,
+  .schedule-page,
+  .booking-details-page
+) :is(.panel, .booking-details-card, .customer-list-card, .profile-card, .settings-card, .report-card) {
+  transition: border-color var(--pk-transition), box-shadow var(--pk-transition), transform var(--pk-transition);
+}
+
+.partner-layout .partner-main :is(
+  .courts-page,
+  .bookings-page,
+  .customers-page,
+  .reports-page,
+  .profile-page,
+  .settings-page
+) :is(.panel, .customer-list-card, .profile-card, .settings-card, .report-card):hover {
+  border-color: var(--pk-forest);
+  box-shadow: var(--pk-shadow-hover);
+}
+
+/* Legacy dark form/detail pages are brought into the authenticated portal shell. */
+.partner-layout .partner-main .add-court-page {
+  padding: clamp(18px, 2.2vw, 32px);
+}
+
+.partner-layout .partner-main .add-court-page .form-card {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.partner-layout .partner-main .add-court-page :is(.form-group label, .membership-option strong),
+.partner-layout .partner-main .booking-details-page :is(h1, h2, h3, dd, strong) {
+  color: var(--pk-ink);
+}
+
+.partner-layout .partner-main .add-court-page :is(.form-group > label, .membership-option small),
+.partner-layout .partner-main .booking-details-page :is(p, dt, .booking-notes) {
+  color: var(--pk-secondary);
+}
+
+.partner-layout .partner-main .add-court-page .membership-option,
+.partner-layout .partner-main .booking-details-page :is(.booking-summary-item, .booking-notes) {
+  border-color: var(--pk-border-soft);
+  border-radius: var(--pk-radius-control);
+  background: var(--pk-soft-green);
+}
+
+.partner-layout .partner-main .booking-details-page :is(.booking-customer-profile, .booking-info-row) {
+  border-bottom-color: var(--pk-border-soft);
+}
+
+.partner-layout .partner-main .booking-details-page :is(.booking-page-tag, .booking-section-tag) {
+  color: var(--pk-forest);
+}
+
+.partner-layout .partner-main .booking-details-page .booking-avatar {
+  background: var(--pk-forest);
+  color: var(--pk-lime);
+}
+
+.partner-layout .partner-main :is(.booking-primary-btn, .add-court-page .primary-btn) {
+  border-color: var(--pk-forest);
+  background: var(--pk-forest);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.partner-layout .partner-main :is(.booking-primary-btn, .add-court-page .primary-btn):hover:not(:disabled) {
+  border-color: var(--pk-forest-hover);
+  background: var(--pk-forest-hover);
+  box-shadow: var(--pk-shadow-hover);
+}
+
+.partner-layout .partner-main :is(.booking-back-btn, .add-court-page .secondary-btn) {
+  border-color: var(--pk-border);
+  background: var(--pk-surface);
+  color: var(--pk-forest);
+}
+
+.partner-layout .partner-main :is(.booking-back-btn, .add-court-page .secondary-btn):hover {
+  border-color: var(--pk-forest);
+  background: var(--pk-soft-green);
+  color: var(--pk-forest-dark);
+}
+
+.partner-layout .partner-main :is(.booking-back-btn, .booking-primary-btn, .booking-cancel-btn):focus-visible {
+  outline: none;
+  box-shadow: var(--pk-focus);
+}
+
+/* Shared table containers retain intentional horizontal scrolling on small screens. */
+.partner-layout .partner-main :is(.table-wrap, .table-container, .booking-table-wrap, .reports-table-wrap) {
+  max-width: 100%;
+  overflow-x: auto;
+  border-color: var(--pk-border);
+  border-radius: var(--pk-radius-card);
+  background: var(--pk-surface);
+  box-shadow: var(--pk-shadow-card);
+  scrollbar-color: var(--pk-forest) var(--pk-soft-green);
+}
+
+/* Add/Edit Booking currently render without page classes; keep their markup and logic intact. */
+.partner-layout .partner-main > main:not([class]) {
+  width: 100%;
+  color: var(--pk-ink);
+  background: var(--pk-canvas);
+}
+
+.partner-layout .partner-main > main:not([class]) > a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 0 15px;
+  border: 1px solid var(--pk-border);
+  border-radius: 999px;
+  background: var(--pk-surface);
+  color: var(--pk-forest);
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color var(--pk-transition), background-color var(--pk-transition), transform var(--pk-transition);
+}
+
+.partner-layout .partner-main > main:not([class]) > a:hover {
+  border-color: var(--pk-forest);
+  background: var(--pk-soft-green);
+  transform: translateX(-2px);
+}
+
+.partner-layout .partner-main > main:not([class]) > h1 {
+  color: var(--pk-forest-dark);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.partner-layout .partner-main > main:not([class]) > form {
+  padding: clamp(22px, 3vw, 32px);
+  border: 1px solid var(--pk-border);
+  border-top: 3px solid var(--pk-lime);
+  border-radius: var(--pk-radius-card);
+  background: var(--pk-surface);
+  box-shadow: var(--pk-shadow-card);
+}
+
+.partner-layout .partner-main > main:not([class]) > form label {
+  color: var(--pk-text);
+  font-weight: 600;
+}
+
+.partner-layout .partner-main > main:not([class]) > form button[type="submit"] {
+  border-color: var(--pk-forest);
+  background: var(--pk-forest);
+  color: #ffffff;
+}
+
+.partner-layout .partner-main > main:not([class]) > form button[type="submit"]:hover:not(:disabled) {
+  border-color: var(--pk-forest-hover);
+  background: var(--pk-forest-hover);
+  box-shadow: var(--pk-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Shared premium SaaS typography hierarchy. */
+.partner-layout .partner-main main h1 {
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.partner-layout .partner-main main h2 {
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
+}
+
+.partner-layout .partner-main main h3 {
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+}
+
+.partner-layout .partner-main main :is(p, li, dd, td) {
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: -0.004em;
+}
+
+.partner-layout .partner-main main :is(label, dt, th) {
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.005em;
+}
+
+.partner-layout .partner-main main small {
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+.partner-layout .partner-main main :is(button, [role="button"], a[class*="button"], a[class*="action"], [class*="-btn"]) {
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+}
+
+.partner-layout .partner-main main :is(input, textarea, select) {
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.002em;
+}
+
+.partner-layout :is(nav a, .sidebar-nav-item, .header-profile-copy) {
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+
+.partner-layout .partner-main main table th {
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+.partner-layout .partner-main main table td {
+  font-weight: 400;
+  letter-spacing: -0.002em;
+}
+
+.partner-layout .partner-main main :is(
+  [class*="stat"] strong,
+  [class*="metric"] strong,
+  [class*="kpi"] strong,
+  [class*="value"],
+  [class*="amount"]
+) {
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+}
+
+@media (max-width: 720px) {
+  .partner-layout .partner-main > main:not([class]) > form {
+    padding: 20px 16px;
+  }
+
+  .partner-layout .partner-main .booking-details-page .booking-bottom-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .partner-layout .partner-main .booking-details-page :is(.booking-primary-btn, .booking-cancel-btn) {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .partner-layout .partner-main { padding: 20px; }
+}
+
+@media (max-width: 720px) {
+  .partner-layout .partner-main {
+    padding: 16px 12px 92px;
+  }
+
+  .partner-layout .partner-main :is(input, textarea, button) {
+    max-width: 100%;
+  }
+
+  .partner-layout .partner-main table {
+    min-width: 680px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-layout *,
+  .partner-layout *::before,
+  .partner-layout *::after {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+  }
+}

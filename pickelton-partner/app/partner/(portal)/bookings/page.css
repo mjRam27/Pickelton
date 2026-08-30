@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
-
 .bookings-page {
   --forest: #0c4a38;
   --forest-dark: #073b2d;
@@ -23,7 +21,7 @@
   flex-direction: column;
   gap: 20px;
   color: var(--ink);
-  font-family: "Space Grotesk", Inter, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .bookings-page *,
@@ -131,10 +129,11 @@
 .hero-content h1 {
   margin: 0;
   color: #ffffff;
-  font-size: clamp(32px, 3.3vw, 46px);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 24px;
   font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1;
+  letter-spacing: -0.02em;
+  line-height: 1.5;
 }
 
 .hero-content p {
@@ -183,70 +182,6 @@
   background: #d3ff58;
   box-shadow: 0 12px 26px rgba(112, 153, 14, 0.3);
   transform: translateY(-2px);
-}
-
-.hero-controls {
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(175px, 0.42fr);
-  gap: 9px;
-}
-
-.hero-search,
-.hero-date {
-  display: flex;
-  min-width: 0;
-  min-height: 43px;
-  align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.09);
-  color: rgba(255, 255, 255, 0.74);
-  backdrop-filter: blur(8px);
-  transition:
-    border-color 0.25s ease,
-    background-color 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.hero-search:focus-within,
-.hero-date:focus-within {
-  border-color: rgba(200, 245, 80, 0.62);
-  background: rgba(255, 255, 255, 0.13);
-  box-shadow: 0 0 0 3px rgba(200, 245, 80, 0.09);
-}
-
-.hero-search input,
-.hero-date input {
-  min-width: 0;
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #ffffff;
-  font-size: 12px;
-}
-
-.hero-search input::placeholder {
-  color: rgba(255, 255, 255, 0.58);
-}
-
-.hero-date input {
-  color-scheme: dark;
-}
-
-.hero-search button {
-  display: grid;
-  width: 25px;
-  height: 25px;
-  flex: 0 0 25px;
-  place-items: center;
-  border: 0;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  cursor: pointer;
 }
 
 .hero-filter-chips {
@@ -955,60 +890,12 @@
 
 .booking-controls {
   display: grid;
-  grid-template-columns: minmax(260px, 1.5fr) repeat(2, minmax(140px, 0.55fr)) auto;
+  grid-template-columns: repeat(2, minmax(140px, 1fr)) auto;
   gap: 8px;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface-soft);
-}
-
-.booking-search {
-  display: flex;
-  min-width: 0;
-  min-height: 41px;
-  align-items: center;
-  gap: 9px;
-  padding: 0 11px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #ffffff;
-  color: #89928d;
-  transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.booking-search:focus-within {
-  border-color: #9fbf73;
-  box-shadow: 0 0 0 3px rgba(200, 245, 80, 0.18);
-}
-
-.booking-search input {
-  min-width: 0;
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--ink);
-  font-size: 11px;
-}
-
-.booking-search input::placeholder {
-  color: #9da59f;
-}
-
-.booking-search button {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  place-items: center;
-  border: 0;
-  border-radius: 7px;
-  background: #edf0e9;
-  color: var(--muted);
-  cursor: pointer;
 }
 
 .booking-controls select,
@@ -1251,27 +1138,6 @@
   gap: 4px;
   color: var(--muted);
   font-size: 8px;
-}
-
-.more-button {
-  display: grid;
-  width: 31px;
-  height: 31px;
-  flex: 0 0 31px;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: #ffffff;
-  color: var(--muted);
-  cursor: pointer;
-  transition:
-    background-color 0.25s ease,
-    color 0.25s ease;
-}
-
-.more-button:hover {
-  background: var(--surface-soft);
-  color: var(--forest);
 }
 
 .booking-date-panel {
@@ -2015,7 +1881,7 @@
   }
 
   .booking-controls {
-    grid-template-columns: minmax(240px, 1.3fr) repeat(2, minmax(135px, 0.6fr));
+    grid-template-columns: repeat(2, minmax(135px, 1fr)) auto;
   }
 
   .filter-button {
@@ -2097,7 +1963,6 @@
     align-self: flex-start;
   }
 
-  .hero-controls,
   .booking-controls {
     grid-template-columns: 1fr;
   }
@@ -2145,7 +2010,7 @@
   }
 
   .hero-content h1 {
-    font-size: 31px;
+    font-size: 24px;
   }
 
   .hero-content p {

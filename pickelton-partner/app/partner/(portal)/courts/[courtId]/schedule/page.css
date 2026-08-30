@@ -1,0 +1,537 @@
+.schedule-page {
+  min-height: 100vh;
+  padding: 34px;
+  background:
+    linear-gradient(
+      135deg,
+      #f4faf3 0%,
+      #eef7ee 45%,
+      #f8faf5 100%
+    );
+  color: #103d31;
+}
+
+/* TOP BAR */
+
+.schedule-topbar {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.back-button,
+.date-selector,
+.selected-day button,
+.save-button,
+.reset-button,
+.primary-action {
+  border: 1px solid #d8e4d7;
+  background: white;
+  border-radius: 12px;
+  min-height: 42px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #124b3a;
+}
+
+.back-button:hover,
+.selected-day button:hover,
+.reset-button:hover {
+  background: #f2f8ef;
+}
+
+.date-selector {
+  padding: 0 12px;
+}
+
+.date-selector input {
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #173f34;
+  font-weight: 600;
+}
+
+/* HERO */
+
+.schedule-hero {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  padding: 38px;
+  min-height: 190px;
+  border-radius: 26px;
+  background:
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(180, 255, 67, 0.14),
+      transparent 28%
+    ),
+    #074f3b;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  box-shadow: 0 18px 45px rgba(19, 75, 52, 0.13);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 9px;
+  color: #bfff36;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.schedule-hero h1 {
+  margin: 0;
+  font-size: 42px;
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+
+.schedule-hero p {
+  margin: 12px 0 0;
+  color: #c7ddd5;
+  font-size: 15px;
+}
+
+.court-info-card {
+  min-width: 230px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+}
+
+.court-info-card span,
+.court-info-card small {
+  display: block;
+  color: #a9cfc0;
+  font-size: 11px;
+}
+
+.court-info-card strong {
+  display: block;
+  margin: 5px 0;
+  font-size: 19px;
+}
+
+/* DAY */
+
+.selected-day {
+  max-width: 1180px;
+  margin: 0 auto 18px;
+  padding: 17px 20px;
+  background: white;
+  border: 1px solid #dce8db;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selected-day > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selected-day svg {
+  color: #087052;
+}
+
+.selected-day span,
+.selected-day strong {
+  display: block;
+}
+
+.selected-day span {
+  color: #80908a;
+  font-size: 11px;
+}
+
+.selected-day strong {
+  margin-top: 3px;
+  color: #163f34;
+}
+
+/* STATS */
+
+.schedule-stats {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.schedule-stats article {
+  padding: 18px;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid #dce8db;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  column-gap: 12px;
+}
+
+.schedule-stats article > div {
+  grid-row: span 3;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+
+.schedule-stats span {
+  font-size: 12px;
+  color: #6e8179;
+}
+
+.schedule-stats strong {
+  font-size: 24px;
+  color: #153e33;
+}
+
+.schedule-stats small {
+  color: #91a09a;
+  font-size: 10px;
+}
+
+.available-stat > div {
+  background: #e9f8e7;
+  color: #43804c;
+}
+
+.booked-stat > div {
+  background: #fff0e9;
+  color: #a75c39;
+}
+
+.maintenance-stat > div {
+  background: #fff8dc;
+  color: #9b7a19;
+}
+
+/* PANEL */
+
+.schedule-panel {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  padding: 26px;
+  background: white;
+  border: 1px solid #dce8db;
+  border-radius: 22px;
+  box-shadow: 0 12px 35px rgba(32, 73, 54, 0.06);
+}
+
+.schedule-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.schedule-panel-header .eyebrow {
+  color: #39775e;
+}
+
+.schedule-panel-header h2 {
+  margin: 0;
+  color: #123d31;
+  font-size: 25px;
+}
+
+.schedule-panel-header p {
+  margin: 6px 0 0;
+  color: #7c8c85;
+  font-size: 13px;
+}
+
+.save-button,
+.primary-action {
+  background: #baff36;
+  border-color: #baff36;
+  color: #0c3428;
+  box-shadow: 0 8px 18px rgba(137, 191, 38, 0.18);
+}
+
+.save-button:hover,
+.primary-action:hover {
+  background: #aef12d;
+}
+
+.save-button:disabled,
+.primary-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* MESSAGE */
+
+.schedule-message {
+  margin-bottom: 18px;
+  padding: 12px 15px;
+  border-radius: 10px;
+  background: #fff4e8;
+  color: #985d2f;
+  font-size: 13px;
+}
+
+.schedule-message.success {
+  background: #eaf8e7;
+  color: #36733f;
+}
+
+/* SLOTS */
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 13px;
+}
+
+.time-slot {
+  min-height: 126px;
+  padding: 17px;
+  text-align: left;
+  border-radius: 16px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.time-slot:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 18px rgba(40, 80, 54, 0.1);
+}
+
+.time-slot:disabled {
+  cursor: not-allowed;
+}
+
+.time-slot .slot-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.time-slot .slot-top span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.time-slot > strong {
+  display: block;
+  font-size: 18px;
+  color: #163d32;
+}
+
+.time-slot > small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #71827b;
+}
+
+/* AVAILABLE */
+
+.time-slot.available {
+  border: 1px solid #cce3c7;
+  background: #f5fbf3;
+  color: #47784e;
+}
+
+.time-slot.available .slot-top {
+  color: #4e8055;
+}
+
+/* BOOKED */
+
+.time-slot.booked {
+  border: 1px solid #ead8ce;
+  background: #fdf8f5;
+  color: #b0643e;
+}
+
+.time-slot.booked .slot-top {
+  color: #b0643e;
+}
+
+.time-slot.booked > strong {
+  color: #573a30;
+}
+
+/* MAINTENANCE */
+
+.time-slot.maintenance {
+  border: 1px solid #e8dba9;
+  background: #fffcef;
+  color: #92721a;
+}
+
+.time-slot.maintenance .slot-top {
+  color: #a27f1d;
+}
+
+/* LEGEND */
+
+.schedule-legend {
+  margin-top: 22px;
+  padding-top: 17px;
+  border-top: 1px solid #e9eee8;
+  display: flex;
+  gap: 24px;
+}
+
+.schedule-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #697a73;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot.available {
+  background: #65a65d;
+}
+
+.legend-dot.booked {
+  background: #bd8058;
+}
+
+.legend-dot.maintenance {
+  background: #c9a72d;
+}
+
+/* BOTTOM ACTIONS */
+
+.schedule-actions {
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  padding: 20px 24px;
+  background: white;
+  border: 1px solid #dce8db;
+  border-radius: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.schedule-actions h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+  color: #183f34;
+}
+
+.schedule-actions p {
+  margin: 0;
+  font-size: 12px;
+  color: #85938d;
+}
+
+.schedule-actions > div:last-child {
+  display: flex;
+  gap: 10px;
+}
+
+.reset-button {
+  color: #765d50;
+}
+
+.primary-action {
+  min-width: 140px;
+}
+
+/* LOADING */
+
+.schedule-loading {
+  min-height: 70vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  color: #17483a;
+}
+
+.schedule-loading h2 {
+  margin: 12px 0 5px;
+}
+
+.schedule-loading p {
+  margin: 0;
+  color: #80918a;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+  .schedule-page {
+    padding: 20px;
+  }
+
+  .schedule-hero {
+    padding: 28px;
+  }
+
+  .slot-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .schedule-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .schedule-topbar,
+  .schedule-hero,
+  .schedule-panel-header,
+  .schedule-actions,
+  .selected-day {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .court-info-card {
+    min-width: auto;
+  }
+
+  .schedule-hero h1 {
+    font-size: 32px;
+  }
+
+  .slot-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .schedule-actions > div:last-child {
+    flex-direction: column;
+  }
+
+  .schedule-legend {
+    flex-wrap: wrap;
+  }
+}

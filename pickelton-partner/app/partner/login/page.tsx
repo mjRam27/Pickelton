@@ -1,8 +1,11 @@
 "use client";
 
 import type { CSSProperties, FormEvent } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Mail, Zap } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 import "./page.css";
 
@@ -32,12 +35,145 @@ const heroBackground = {
 
 export default function PartnerLoginPage() {
   const router = useRouter();
+  const [oauthError, setOauthError] = useState("");
+  const [oauthLoading, setOauthLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [email, setEmail] = useState("");
+  const [verificationState, setVerificationState] = useState<"success" | "expired" | "unconfirmed" | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const state = params.get("verification");
+    if (state === "success" || state === "expired") setVerificationState(state);
+    const errorCode = params.get("error_code") || params.get("error");
+    const description = params.get("error_description") || "";
+    if (errorCode === "otp_expired" || errorCode === "access_denied" || /expired|invalid|already/i.test(description)) {
+      setVerificationState("expired");
+      window.history.replaceState(null, "", "/partner/login?verification=expired");
+    }
+  }, []);
+
+  const handleResendVerification = async () => {
+    const normalizedEmail = email.trim();
+    setResendMessage(null);
+    if (!normalizedEmail || !/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      setResendMessage({ type: "error", text: "Enter a valid email address above." });
+      return;
+    }
+    if (resendLoading) return;
+    setResendLoading(true);
+    try {
+      const { error } = await createClient().auth.resend({
+        type: "signup",
+        email: normalizedEmail,
+        options: { emailRedirectTo: `${window.location.origin}/partner/auth/confirm` },
+      });
+      if (error) throw error;
+      setResendMessage({ type: "success", text: "Verification email sent. Please check your inbox." });
+    } catch (error) {
+      setResendMessage({ type: "error", text: error instanceof Error ? error.message : "Unable to resend the verification email." });
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setOauthError("");
+    setOauthLoading(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/partner/auth/callback` },
+      });
+      if (error) throw error;
+    } catch (error) {
+      setOauthError(error instanceof Error ? error.message : "Unable to start Google sign-in.");
+      setOauthLoading(false);
+    }
+  };
+
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (loginLoading) return;
+    setLoginLoading(true);
+    setLoginError("");
+    setResendMessage(null);
 
-    // Temporary until backend integration
-    router.push("/partner/dashboard");
+    const formData = new FormData(event.currentTarget);
+
+    const password = formData.get("password") as string;
+
+    try {
+      const response = await fetch(
+        "http://localhost:8090/api/v1/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        },
+      );
+
+      const result = await response.json().catch(() => null);
+
+      console.info("Partner login response", {
+        status: response.status,
+        ok: response.ok,
+        hasData: Boolean(result?.data),
+        hasToken: typeof result?.data?.token === "string",
+        message: result?.error?.message || result?.message,
+      });
+
+      let token = result?.data?.token;
+
+      if (!response.ok || typeof token !== "string") {
+        const supabase = createClient();
+        const { data, error: supabaseError } = await supabase.auth.signInWithPassword({ email, password });
+        if (supabaseError || !data.session) {
+          throw new Error(supabaseError?.message || result?.error?.message || result?.message || "Invalid email or password.");
+        }
+        const exchangeResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_PARTNER_API_URL || "http://localhost:8090/api/v1"}/auth/supabase/exchange`,
+          { method: "POST", headers: { Authorization: `Bearer ${data.session.access_token}` } },
+        );
+        const exchange = await exchangeResponse.json().catch(() => null);
+        if (!exchangeResponse.ok || typeof exchange?.data?.token !== "string") {
+          throw new Error(exchange?.error?.message || exchange?.message || "Partner session could not be created.");
+        }
+        token = exchange.data.token;
+      }
+
+      if (!token || typeof token !== "string") {
+        throw new Error("Login response did not include a partner token.");
+      }
+
+      localStorage.setItem("partner_token", token);
+
+      console.info("Partner token stored", {
+        stored: localStorage.getItem("partner_token") !== null,
+      });
+
+      router.push("/partner/dashboard");
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "Unable to sign in. Please try again.";
+      if (/email not confirmed/i.test(text)) {
+        setVerificationState("unconfirmed");
+        setLoginError("Email not confirmed. Verify your email before signing in.");
+      } else {
+        console.error("Partner login failed", error);
+        setLoginError(text);
+      }
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
   return (
@@ -122,6 +258,8 @@ export default function PartnerLoginPage() {
                   type="email"
                   placeholder="Email address"
                   autoComplete="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                 />
               </div>
@@ -154,25 +292,34 @@ export default function PartnerLoginPage() {
                 <span>Remember me</span>
               </label>
 
-              <a href="#">Forgot Password?</a>
+              <Link href="/partner/forgot-password">Forgot Password?</Link>
             </div>
 
-            <button className="login-button" type="submit">
-              <span>SIGN IN</span>
+            <button className="login-button" type="submit" disabled={loginLoading}>
+              <span>{loginLoading ? "SIGNING IN…" : "SIGN IN"}</span>
               <Zap size={17} aria-hidden="true" />
             </button>
           </form>
+          {loginError && <p className="login-action-message" role="alert">{loginError}</p>}
+          {verificationState === "success" && <p className="auth-message success" role="status">Email verified successfully. You can now sign in.</p>}
+          {(verificationState === "expired" || verificationState === "unconfirmed") && <div className="verification-panel"><p className="auth-message error" role="status">{verificationState === "expired" ? "Your verification link has expired or has already been used. Please request a new verification email." : "Email not verified?"}</p><button className="resend-verification" type="button" onClick={handleResendVerification} disabled={resendLoading}>{resendLoading ? "Sending verification email…" : "Resend verification email"}</button></div>}
+          {resendMessage && <p className={`auth-message ${resendMessage.type}`} role={resendMessage.type === "error" ? "alert" : "status"}>{resendMessage.text}</p>}
+
+          <p className="login-footer create-account-link">
+            New to Pickelton? <Link href="/partner/register">Create Account</Link>
+          </p>
 
           <div className="login-divider">
             <span>OR CONNECT</span>
           </div>
 
-          <button className="google-button" type="button">
-            Continue with Google
+          <button className="google-button" type="button" onClick={handleGoogleLogin} disabled={oauthLoading}>
+            {oauthLoading ? "Connecting to Google…" : "Continue with Google"}
           </button>
+          {oauthError && <p className="login-action-message" role="alert">{oauthError}</p>}
 
           <p className="login-footer">
-            Need help? <a href="#">Contact Support</a>
+            Need help? <Link href="/partner/support">Contact Support</Link>
           </p>
         </div>
       </section>
