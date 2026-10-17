@@ -12,6 +12,9 @@ export type ApiResponse<T> = {
 
 export type ApiError = {
   message: string;
+  status?: number;
+  // partner-backend nests the message: { success: false, error: { message } }
+  error?: { message?: string };
   code?: string;
   fieldErrors?: Record<string, string>;
 };

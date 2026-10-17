@@ -1,16 +1,120 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { CardContainer } from "../../components/CardContainer";
-import { BackLink } from "../../components/BackLink";
-import { BrandMark } from "../../components/BrandMark";
-import { EmptyState } from "../../components/EmptyState";
-import { PrimaryButton } from "../../components/PrimaryButton";
-import { SectionHeader } from "../../components/SectionHeader";
-import { StatusPill } from "../../components/StatusPill";
+import { Text, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
+import { Badge, type BadgeTone } from "../../components/Badge";
+import { Button } from "../../components/Button";
+import { EmptyState, LoadingState } from "../../components/EmptyState";
+import { IconButton } from "../../components/IconButton";
+import { Notice } from "../../components/Notice";
+import { Screen } from "../../components/Screen";
+import { Display } from "../../components/Typography";
 import { apiErrorMessage, fetchHostStatus, type HostVerification } from "../../services/api";
-import type { ThemeColors } from "../../theme/colors";
-import { useThemeStyles } from "../../theme/ThemeProvider";
-export default function HostStatusScreen() { const styles = useThemeStyles(createStyles); const [status, setStatus] = useState<HostVerification | null>(null); const [loaded, setLoaded] = useState(false); const [error, setError] = useState(""); useEffect(() => { fetchHostStatus().then(setStatus).catch((cause) => setError(apiErrorMessage(cause))).finally(() => setLoaded(true)); }, []); return <View style={styles.wrapper}><SafeAreaView><ScrollView contentContainerStyle={styles.content}><BackLink /><BrandMark compact /><Text style={styles.title}>HOST{"\n"}<Text style={styles.primary}>STATUS</Text></Text><Text style={styles.copy}>Keep verification progress and tournament tools in one calm corner.</Text><SectionHeader title="APPLICATION" />{error ? <Text style={styles.error}>{error}</Text> : null}{!loaded ? <Text style={styles.copy}>Loading application...</Text> : status ? <CardContainer style={styles.card}><View style={styles.top}><Text style={styles.name}>{status.fullName}</Text><StatusPill label={status.status.replaceAll("_", " ")} tone={status.status === "APPROVED" ? "primary" : "gold"} /></View><Text style={styles.meta}>SUBMITTED {new Date(status.submittedAt).toLocaleDateString("en-IN")}</Text><Text style={styles.copy}>Your identity review controls access to host-only tournament creation.</Text>{status.rejectionReason ? <Text style={styles.error}>{status.rejectionReason}</Text> : null}</CardContainer> : <EmptyState title="NO HOST APPLICATION" copy="Complete identity verification before creating a tournament." />}{status?.status === "APPROVED" ? <PrimaryButton icon="add-circle-outline" label="CREATE TOURNAMENT" onPress={() => router.push("/tournaments/create")} style={styles.button} /> : <PrimaryButton icon="shield-checkmark-outline" label={status ? "UPDATE APPLICATION" : "APPLY TO HOST"} onPress={() => router.push("/host/apply")} style={styles.button} />}</ScrollView></SafeAreaView></View>; }
-const createStyles = (colors: ThemeColors) => ({ wrapper: { backgroundColor: colors.background, flex: 1 }, content: { padding: 18 }, title: { color: colors.text, fontSize: 35, fontStyle: "italic", fontWeight: "900", lineHeight: 35, marginTop: 19 }, primary: { color: colors.primary }, copy: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 8 }, card: { borderTopColor: colors.primary, borderTopWidth: 3, gap: 8 }, top: { alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between" }, name: { color: colors.text, flex: 1, fontSize: 15, fontWeight: "900" }, meta: { color: colors.gold, fontSize: 9, fontWeight: "900" }, error: { color: colors.danger, fontSize: 10, marginTop: 10 }, button: { marginTop: 14 } });
+import { fonts, type ThemeColors } from "../../theme/colors";
+import { useTheme, useThemeStyles } from "../../theme/ThemeProvider";
+
+const COPY: Record<string, { badge: string; tone: BadgeTone; title: string; body: string }> = {
+  APPROVED: { badge: "Approved", tone: "accent", title: "You're a verified host", body: "You can now create tournaments and collect entry fees in the app." },
+  REJECTED: { badge: "Not approved", tone: "hot", title: "We couldn't verify you", body: "Check the reason below, update your details and apply again." },
+  PENDING: { badge: "In review", tone: "blue", title: "We're checking your details", body: "Most applications are decided within 2 working days. We'll notify you when there's a decision." },
+};
+
+export default function HostStatusScreen() {
+  const styles = useThemeStyles(createStyles);
+  const { colors } = useTheme();
+  const [status, setStatus] = useState<HostVerification | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setError("");
+    try {
+      setStatus(await fetchHostStatus());
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const state = status?.status ?? "";
+  const copy = COPY[state] ?? COPY.PENDING;
+  const decided = state === "APPROVED" || state === "REJECTED";
+  const steps = [
+    { title: "Application submitted", detail: status ? new Date(status.submittedAt).toLocaleString("en-IN", { day: "numeric", hour: "2-digit", minute: "2-digit", month: "short" }) : "", done: true },
+    { title: "Identity review", detail: "Checking your document and selfie", done: decided },
+    { title: "Decision & blue badge", detail: status?.reviewedAt ? new Date(status.reviewedAt).toLocaleDateString("en-IN") : "We'll notify you by push and email", done: decided },
+  ];
+
+  return (
+    <Screen
+      footer={loaded && status ? (state === "APPROVED"
+        ? <Button icon="add" label="Create a tournament" onPress={() => router.push("/tournaments/create")} />
+        : <Button label={state === "REJECTED" ? "Update application" : "Edit application"} onPress={() => router.push("/host/apply")} variant={state === "REJECTED" ? "primary" : "outline"} />) : undefined}
+      onRefresh={load}
+    >
+      <View style={styles.header}>
+        <IconButton icon="chevron-back" label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace("/profile"))} />
+        <Text style={styles.headerTitle}>Host application</Text>
+      </View>
+      <Notice message={error} />
+      {!loaded ? <LoadingState label="Loading your application" /> : !status ? (
+        <EmptyState action="Apply to host" copy="Verify your identity to run tournaments and take entry fees in the app." icon="shield-checkmark-outline" onAction={() => router.push("/host/apply")} title="No application yet" />
+      ) : <>
+        <View style={styles.card}>
+          <Svg fill={colors.blu} height={160} opacity={0.12} style={styles.cardArt} viewBox="0 0 24 24" width={160}>
+            <Path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z" />
+          </Svg>
+          <Badge label={copy.badge} tone={copy.tone} />
+          <Display size={44}>{copy.title}</Display>
+          <Text style={styles.body}>{copy.body}</Text>
+          {status.rejectionReason ? <Notice message={status.rejectionReason} /> : null}
+          <Text style={styles.reference}>Reference {status.id.slice(0, 8).toUpperCase()} · {status.fullName}</Text>
+        </View>
+        <View>
+          {steps.map((step, index) => {
+            const current = !step.done && (index === 0 || steps[index - 1].done);
+            return (
+              <View key={step.title} style={styles.step}>
+                <View style={styles.rail}>
+                  <View style={[styles.dot, step.done && styles.dotDone, current && styles.dotCurrent]}>
+                    {step.done ? <Ionicons color={colors.onAcc} name="checkmark" size={18} /> : <Text style={[styles.dotText, current && { color: colors.bluInk }]}>{index + 1}</Text>}
+                  </View>
+                  {index < steps.length - 1 ? <View style={[styles.line, step.done && styles.lineDone]} /> : null}
+                </View>
+                <View style={styles.stepCopy}>
+                  <Text style={[styles.stepTitle, !step.done && !current && styles.mutedText]}>{step.title}</Text>
+                  {step.detail ? <Text style={styles.stepDetail}>{step.detail}</Text> : null}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </>}
+    </Screen>
+  );
+}
+
+const createStyles = (colors: ThemeColors) => ({
+  header: { alignItems: "center", flexDirection: "row", gap: 12 },
+  headerTitle: { color: colors.text, fontFamily: fonts.heavy, fontSize: 15 },
+  card: { backgroundColor: colors.s1, borderColor: colors.line, borderRadius: 24, borderWidth: 1, gap: 10, overflow: "hidden", padding: 20 },
+  cardArt: { position: "absolute", right: -30, top: -20 },
+  body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+  reference: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
+  step: { flexDirection: "row", gap: 12 },
+  rail: { alignItems: "center", width: 32 },
+  dot: { alignItems: "center", borderColor: colors.line, borderRadius: 16, borderWidth: 2, height: 32, justifyContent: "center", width: 32 },
+  dotDone: { backgroundColor: colors.acc, borderColor: colors.acc },
+  dotCurrent: { borderColor: colors.blu },
+  dotText: { color: colors.muted, fontFamily: fonts.heavy, fontSize: 13 },
+  line: { backgroundColor: colors.line, flex: 1, minHeight: 18, width: 2 },
+  lineDone: { backgroundColor: colors.acc },
+  stepCopy: { flex: 1, gap: 2, paddingBottom: 18 },
+  stepTitle: { color: colors.text, fontFamily: fonts.heavy, fontSize: 15 },
+  mutedText: { color: colors.muted },
+  stepDetail: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
+});

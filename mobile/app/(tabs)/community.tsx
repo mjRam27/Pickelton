@@ -1,25 +1,150 @@
-import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "../../components/AppHeader";
-import { CardContainer } from "../../components/CardContainer";
-import { EmptyState } from "../../components/EmptyState";
-import { InputField } from "../../components/InputField";
-import { PrimaryButton } from "../../components/PrimaryButton";
-import { ScreenIntro } from "../../components/ScreenIntro";
-import { SectionHeader } from "../../components/SectionHeader";
-import { StatusPill } from "../../components/StatusPill";
+import { useCallback, useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, Text, View } from "react-native";
+import { Avatar, toneFor } from "../../components/Avatar";
+import { Badge, type BadgeTone } from "../../components/Badge";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { EmptyState, LoadingState } from "../../components/EmptyState";
+import { IconButton } from "../../components/IconButton";
+import { Notice } from "../../components/Notice";
+import { Screen } from "../../components/Screen";
+import { Chips } from "../../components/Segmented";
+import { TextField } from "../../components/TextField";
+import { Display } from "../../components/Typography";
 import { apiErrorMessage, createCommunityPost, deleteCommunityPost, fetchCommunityPosts, getCurrentUser, type CommunityPost } from "../../services/api";
-import type { ThemeColors } from "../../theme/colors";
-import { useThemeStyles } from "../../theme/ThemeProvider";
+import { fonts, type ThemeColors } from "../../theme/colors";
+import { useTheme, useThemeStyles } from "../../theme/ThemeProvider";
+
+const TAGS = ["MATCHDAY", "PARTNER WANTED", "CLUB UPDATE", "QUESTION"] as const;
+const tagTone = (tag: string): BadgeTone => (tag === "PARTNER WANTED" ? "blue" : tag === "CLUB UPDATE" ? "hot" : "muted");
+
 export default function CommunityScreen() {
   const styles = useThemeStyles(createStyles);
-  const [posts, setPosts] = useState<CommunityPost[]>([]); const [page, setPage] = useState(0); const [last, setLast] = useState(true); const [liked, setLiked] = useState<string[]>([]); const [form, setForm] = useState({ tag: "MATCHDAY", content: "" }); const [error, setError] = useState(""); const currentId = getCurrentUser()?.userId ?? getCurrentUser()?.id;
-  useEffect(() => { load(0, true); }, []);
-  async function load(next: number, replace = false) { try { const result = await fetchCommunityPosts(next); setPosts((current) => replace ? result.content : [...current, ...result.content]); setPage(result.page); setLast(result.last); setError(""); } catch (cause) { setError(apiErrorMessage(cause)); if (replace) setPosts([]); } }
-  async function submit() { if (!form.content.trim()) return; try { const post = await createCommunityPost(form); setPosts((current) => [post, ...current]); setForm({ tag: "MATCHDAY", content: "" }); } catch (cause) { setError(apiErrorMessage(cause)); } }
-  async function remove(id: string) { try { await deleteCommunityPost(id); setPosts((current) => current.filter((post) => post.id !== id)); } catch (cause) { setError(apiErrorMessage(cause)); } }
-  return <View style={styles.wrapper}><SafeAreaView edges={["top", "bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content}><AppHeader eyebrow="COMMUNITY NETWORK" title="Player activity" /><ScreenIntro title="THE LOCAL" accent="RALLY FEED" copy="Sessions, wins, club notes, and the occasional post-match truth from players around Bengaluru." /><CardContainer style={styles.composer}><InputField label="POST TAG" value={form.tag} onChangeText={(tag) => setForm((current) => ({ ...current, tag }))} /><InputField label="SHARE WITH THE COMMUNITY" multiline placeholder="What is happening on court?" value={form.content} onChangeText={(content) => setForm((current) => ({ ...current, content }))} /><PrimaryButton icon="send-outline" label="PUBLISH POST" onPress={submit} /></CardContainer><SectionHeader title="LATEST POSTS" action={last ? "LIVE FEED" : `PAGE ${page + 1}`} />{error ? <Text style={styles.note}>{error}</Text> : null}{posts.length ? posts.map((post) => { const isLiked = liked.includes(post.id); return <CardContainer key={post.id} style={styles.post}><View style={styles.top}><View style={styles.avatar}><Text style={styles.avatarText}>{initials(post.authorName)}</Text></View><View style={styles.identity}><Text style={styles.name}>{post.authorName}</Text><Text style={styles.meta}>{time(post.createdAt)}</Text></View><StatusPill label={post.tag} tone="gold" /></View><Text style={styles.copy}>{post.content}</Text><View style={styles.actions}><Pressable onPress={() => setLiked((current) => isLiked ? current.filter((id) => id !== post.id) : [...current, post.id])}><Text style={isLiked ? styles.active : styles.action}>{isLiked ? "LIKED" : "LIKE"}</Text></Pressable>{post.authorId === currentId ? <Pressable onPress={() => remove(post.id)}><Text style={styles.delete}>DELETE</Text></Pressable> : null}</View></CardContainer>; }) : <EmptyState title="THE FEED IS QUIET" copy="Publish the first community note and start the conversation." />}{!last ? <PrimaryButton label="LOAD MORE POSTS" variant="outline" onPress={() => load(page + 1)} /> : null}</ScrollView></SafeAreaView></View>;
+  const { colors } = useTheme();
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [page, setPage] = useState(0);
+  const [last, setLast] = useState(true);
+  const [liked, setLiked] = useState<string[]>([]);
+  const [composing, setComposing] = useState(false);
+  const [form, setForm] = useState<{ tag: string; content: string }>({ tag: "MATCHDAY", content: "" });
+  const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
+  const [error, setError] = useState("");
+  const currentId = getCurrentUser()?.userId ?? getCurrentUser()?.id;
+
+  const load = useCallback(async (next: number, replace = false) => {
+    setLoading(true);
+    try {
+      const result = await fetchCommunityPosts(next);
+      const content = result.content ?? [];
+      setPosts((current) => (replace ? content : [...current, ...content]));
+      setPage(result.page);
+      setLast(result.last);
+      setError("");
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(0, true); }, [load]);
+
+  async function submit() {
+    if (!form.content.trim()) return;
+    setPosting(true);
+    try {
+      const post = await createCommunityPost({ tag: form.tag, content: form.content.trim() });
+      setPosts((current) => [post, ...current]);
+      setForm({ tag: "MATCHDAY", content: "" });
+      setComposing(false);
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function remove(id: string) {
+    try {
+      await deleteCommunityPost(id);
+      setPosts((current) => current.filter((post) => post.id !== id));
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    }
+  }
+
+  return (
+    <Screen onRefresh={() => load(0, true)} refreshing={loading && posts.length > 0}>
+      <View style={styles.header}>
+        <Display size={44}>Community</Display>
+        <IconButton icon={composing ? "close" : "create-outline"} label={composing ? "Close new post" : "New post"} onPress={() => setComposing((value) => !value)} tone="accent" />
+      </View>
+
+      {composing ? (
+        <Card style={styles.composer}>
+          <Chips onChange={(tag) => setForm((current) => ({ ...current, tag }))} options={TAGS.map((tag) => ({ label: tag.charAt(0) + tag.slice(1).toLowerCase(), value: tag }))} tone="ink" value={form.tag} />
+          <TextField accessibilityLabel="Post text" autoFocus multiline onChangeText={(content) => setForm((current) => ({ ...current, content }))} placeholder="What's happening on court?" value={form.content} />
+          <Button disabled={!form.content.trim()} icon="send" label="Post" loading={posting} onPress={submit} size="md" />
+        </Card>
+      ) : null}
+
+      <Notice message={error} />
+
+      {loading && !posts.length ? <LoadingState label="Loading the feed" /> : posts.length ? posts.map((post) => {
+        const isLiked = liked.includes(post.id);
+        return (
+          <Card key={post.id} style={styles.post}>
+            <View style={styles.postTop}>
+              <Avatar name={post.authorName} tone={toneFor(post.authorId)} />
+              <View style={styles.author}>
+                <Text numberOfLines={1} style={styles.authorName}>{post.authorName}</Text>
+                <Text style={styles.time}>{timeAgo(post.createdAt)}</Text>
+              </View>
+              {post.tag && post.tag !== "MATCHDAY" ? <Badge label={post.tag} tone={tagTone(post.tag)} /> : null}
+            </View>
+            <Text style={styles.content}>{post.content}</Text>
+            <View style={styles.postActions}>
+              <Pressable accessibilityLabel={isLiked ? "Unlike" : "Like"} accessibilityRole="button" accessibilityState={{ selected: isLiked }} onPress={() => setLiked((current) => (isLiked ? current.filter((id) => id !== post.id) : [...current, post.id]))} style={styles.actionButton}>
+                <Ionicons color={isLiked ? colors.hotInk : colors.muted} name={isLiked ? "heart" : "heart-outline"} size={20} />
+                <Text style={[styles.actionText, isLiked && { color: colors.hotInk }]}>{isLiked ? "Liked" : "Like"}</Text>
+              </Pressable>
+              {post.authorId === currentId ? (
+                <Pressable accessibilityLabel="Delete post" accessibilityRole="button" onPress={() => remove(post.id)} style={styles.actionButton}>
+                  <Ionicons color={colors.muted} name="trash-outline" size={19} />
+                  <Text style={styles.actionText}>Delete</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </Card>
+        );
+      }) : <EmptyState action="Write a post" copy="Share a result, find a partner or ask a question." icon="chatbubble-outline" onAction={() => setComposing(true)} title="The feed is quiet" />}
+
+      {!last ? <Button label="Load more" loading={loading} onPress={() => load(page + 1)} size="md" variant="outline" /> : null}
+    </Screen>
+  );
 }
-function initials(name: string) { return name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase(); } function time(value: string) { return new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }).toUpperCase(); }
-const createStyles = (colors: ThemeColors) => ({ wrapper: { backgroundColor: colors.background, flex: 1 }, safe: { flex: 1 }, content: { padding: 18, paddingBottom: 28 }, composer: { borderTopColor: colors.primary, borderTopWidth: 3, marginTop: 20, paddingBottom: 14 }, post: { borderTopColor: colors.primary, borderTopWidth: 2, gap: 13, marginBottom: 10 }, top: { alignItems: "center", flexDirection: "row", gap: 10 }, avatar: { alignItems: "center", backgroundColor: colors.primarySoft, borderRadius: 18, height: 36, justifyContent: "center", width: 36 }, avatarText: { color: colors.primary, fontSize: 9, fontWeight: "900" }, identity: { flex: 1 }, name: { color: colors.text, fontSize: 12, fontWeight: "900" }, meta: { color: colors.muted, fontSize: 8, fontWeight: "900", marginTop: 4 }, copy: { color: colors.text, fontSize: 12, lineHeight: 18 }, actions: { borderTopColor: colors.border, borderTopWidth: 1, flexDirection: "row", gap: 20, paddingTop: 11 }, action: { color: colors.muted, fontSize: 9, fontWeight: "900" }, active: { color: colors.primary, fontSize: 9, fontWeight: "900" }, delete: { color: colors.danger, fontSize: 9, fontWeight: "900" }, note: { color: colors.gold, fontSize: 10, lineHeight: 15, marginBottom: 10 } });
+
+function timeAgo(value: string) {
+  const minutes = Math.round((Date.now() - new Date(value).getTime()) / 60000);
+  if (!Number.isFinite(minutes)) return "";
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 60 * 24) return `${Math.round(minutes / 60)} h`;
+  return new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+const createStyles = (colors: ThemeColors) => ({
+  header: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingTop: 8 },
+  composer: { gap: 12 },
+  post: { gap: 10 },
+  postTop: { alignItems: "center", flexDirection: "row", gap: 10 },
+  author: { flex: 1 },
+  authorName: { color: colors.text, fontFamily: fonts.heavy, fontSize: 14 },
+  time: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
+  content: { color: colors.text, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+  postActions: { flexDirection: "row", gap: 18 },
+  actionButton: { alignItems: "center", flexDirection: "row", gap: 6, minHeight: 44 },
+  actionText: { color: colors.muted, fontFamily: fonts.bold, fontSize: 13 },
+});

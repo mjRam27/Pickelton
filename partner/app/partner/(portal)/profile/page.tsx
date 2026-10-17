@@ -1,695 +1,113 @@
-import React, { useMemo } from "react";
-import {
-  Bell,
-  BriefcaseBusiness,
-  Building2,
-  CalendarClock,
-  CheckCircle2,
-  CircleUserRound,
-  Clock3,
-  FileCheck2,
-  FileText,
-  Globe2,
-  IndianRupee,
-  Languages,
-  LockKeyhole,
-  LucideIcon,
-  Mail,
-  MapPin,
-  Phone,
-  ShieldCheck,
-  Users,
-  WalletCards,
-} from "lucide-react";
+// partner/app/partner/(portal)/profile/page.tsx
+"use client";
 
-import "./page.css";
+import { useEffect, useState, type FormEvent } from "react";
+import { BadgeCheck } from "lucide-react";
+import { usePartner } from "../../../../components/partner/PartnerShell";
+import { Avatar, LoadError, Loading, Notice, PageHeader } from "../../../../components/ui";
+import { errorMessage, partnerApi, useResource } from "../../../../lib/partner";
+import "./profile.css";
 
-type ProfileValue = string | number | null;
+const AMENITIES = ["Parking", "Changing rooms", "Showers", "Equipment rental", "Café", "Floodlights", "Wheelchair access"];
+type VenueExtras = { about?: string; amenities?: string[] };
 
-interface PartnerProfile {
-  businessName: string;
-  ownerName: string;
-  email: string;
-  phone: string;
-  city: string;
-  totalCourts: number;
-  operatingHours: string;
-  businessCategory: ProfileValue;
-  description: ProfileValue;
-  website: ProfileValue;
-  businessType: ProfileValue;
-  registrationNumber: ProfileValue;
-  taxId: ProfileValue;
-  address: ProfileValue;
-  state: ProfileValue;
-  country: ProfileValue;
-  postalCode: ProfileValue;
-  language: ProfileValue;
-  timeZone: ProfileValue;
-  currency: ProfileValue;
-}
+export default function VenueProfilePage() {
+  const { setPartner } = usePartner();
+  const { data, error: loadError, loading, reload } = useResource(async () => {
+    const [profile, settings] = await Promise.all([partnerApi.profile.get(), partnerApi.settings.get()]);
+    return { profile, settings };
+  });
+  const [form, setForm] = useState({ businessName: "", contactName: "", phone: "", address: "", city: "", state: "", postalCode: "", website: "" });
+  const [extras, setExtras] = useState<VenueExtras>({});
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-interface MetricTileData {
-  icon: LucideIcon;
-  label: string;
-  value: ProfileValue;
-  href?: string;
-}
+  useEffect(() => {
+    if (!data) return;
+    const p = data.profile;
+    setForm({ businessName: p.business_name, contactName: p.contact_name, phone: p.phone, address: p.address ?? "", city: p.city ?? "", state: p.state ?? "", postalCode: p.postal_code ?? "", website: p.website ?? "" });
+    setExtras((data.settings.venue as VenueExtras | undefined) ?? {});
+  }, [data]);
 
-interface StatusRowData {
-  icon: LucideIcon;
-  label: string;
-  caption: string;
-}
+  const set = (name: keyof typeof form) => (event: { target: { value: string } }) => setForm((current) => ({ ...current, [name]: event.target.value }));
+  const toggleAmenity = (amenity: string) => setExtras((current) => {
+    const list = current.amenities ?? [];
+    return { ...current, amenities: list.includes(amenity) ? list.filter((item) => item !== amenity) : [...list, amenity] };
+  });
 
-const partnerProfile: PartnerProfile = {
-  businessName: "Pickelton Arena",
-  ownerName: "Amrutha",
-  email: "partner@pickelton.com",
-  phone: "+91 9876543210",
-  city: "Bangalore",
-  totalCourts: 8,
-  operatingHours: "6:00 AM – 11:00 PM",
-  businessCategory: null,
-  description: null,
-  website: null,
-  businessType: null,
-  registrationNumber: null,
-  taxId: null,
-  address: null,
-  state: null,
-  country: null,
-  postalCode: null,
-  language: null,
-  timeZone: null,
-  currency: null,
-};
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (!data) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const [profile] = await Promise.all([
+        partnerApi.profile.update(form),
+        // About and amenities live in the settings document; keep the other settings intact.
+        partnerApi.settings.save({ ...data.settings, venue: extras }),
+      ]);
+      setPartner({ ...data.profile, ...profile });
+      setMessage("Venue profile saved.");
+    } catch (cause) {
+      setError(errorMessage(cause));
+    } finally {
+      setSaving(false);
+    }
+  }
 
-const OPERATING_DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-] as const;
+  if (loading && !data) return <><PageHeader title="Venue profile" /><Loading label="Loading your venue" /></>;
+  if (!data) return <><PageHeader title="Venue profile" /><LoadError message={loadError} onRetry={reload} /></>;
 
-function SectionCard({
-  title,
-  description,
-  icon: Icon,
-  className = "",
-  children,
-}: {
-  title: string;
-  description?: string;
-  icon: LucideIcon;
-  className?: string;
-  children: React.ReactNode;
-}) {
+  const address = [form.address, [form.postalCode, form.city].filter(Boolean).join(" "), form.state].filter(Boolean).join(", ");
   return (
-    <section className={`profile-card ${className}`.trim()}>
-      <header className="card-heading">
-        <span className="card-icon" aria-hidden="true">
-          <Icon size={18} />
-        </span>
-        <div>
-          <h2>{title}</h2>
-          {description && <p>{description}</p>}
+    <form className="profileForm" onSubmit={save}>
+      <PageHeader sub="What players see on your Pickelton page" title="Venue profile">
+        <button className="btn primary" disabled={saving} type="submit">{saving ? <span className="spinner" /> : null}Save changes</button>
+      </PageHeader>
+      <Notice message={error} />
+      <Notice message={message} tone="success" />
+      <section className="venueBanner">
+        <div className="venueCover">
+          <svg aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 150">
+            <g fill="none" opacity="0.5" stroke="#C8F03C" strokeWidth="3" transform="rotate(-4 600 75)"><rect height="130" width="1300" x="-50" y="10" /><path d="M-50 75h1300M600 10v130M300 10v130M900 10v130" /></g>
+          </svg>
         </div>
-      </header>
-      {children}
-    </section>
-  );
-}
-
-function DetailTile({
-  icon: Icon,
-  label,
-  value,
-  href,
-}: MetricTileData) {
-  const isMissing = value === null || value === "";
-
-  const content = (
-    <>
-      <span className="contact-icon">
-        <Icon size={16} aria-hidden="true" />
-      </span>
-      <span>
-        <small>{label}</small>
-        <strong className={isMissing ? "missing-value" : undefined}>
-          {isMissing ? "Not provided" : value}
-        </strong>
-      </span>
-    </>
-  );
-
-  return href && !isMissing ? (
-    <a
-      className="contact-item"
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {content}
-    </a>
-  ) : (
-    <div className="contact-item">{content}</div>
-  );
-}
-
-function StatusRow({ icon: Icon, label, caption }: StatusRowData) {
-  return (
-    <div className="status-row">
-      <div className="status-copy">
-        <span className="status-icon">
-          <Icon size={16} aria-hidden="true" />
-        </span>
-        <div>
-          <strong>{label}</strong>
-          <span>{caption}</span>
+        <div className="venueIdentity">
+          <span className="venueMark"><Avatar name={form.businessName} square tone="acc" /></span>
+          <div className="headStack" style={{ flex: 1, minWidth: 220 }}>
+            <span className="display" style={{ fontSize: 32 }}>{form.businessName || "Your venue"}</span>
+            <span className="muted">{address || "Add your address so players can find you"}</span>
+          </div>
+          {data.profile.status === "ACTIVE" ? <span className="badge blu"><BadgeCheck aria-hidden="true" size={16} />Active venue</span> : <span className="badge hot">{data.profile.status.toLowerCase()}</span>}
         </div>
-      </div>
-      <span className="status-chip status-neutral">Unavailable</span>
-    </div>
-  );
-}
-
-function InfoRow({
-  label,
-  value,
-  href,
-}: {
-  label: string;
-  value: ProfileValue;
-  href?: string;
-}) {
-  const isMissing = value === null || value === "";
-
-  return (
-    <div className="info-row">
-      <dt>{label}</dt>
-      <dd className={isMissing ? "missing-value" : undefined}>
-        {isMissing ? (
-          "Not provided"
-        ) : href ? (
-          <a href={href} target="_blank" rel="noopener noreferrer">
-            {value}
-          </a>
-        ) : (
-          value
-        )}
-      </dd>
-    </div>
-  );
-}
-
-export default function ProfilePage() {
-  const {
-    profileCompletion,
-    completedCount,
-    totalCount,
-    missingFields,
-  } = useMemo(() => {
-    const fields = [
-      { label: "Business name", value: partnerProfile.businessName },
-      { label: "Owner name", value: partnerProfile.ownerName },
-      { label: "Email address", value: partnerProfile.email },
-      { label: "Phone number", value: partnerProfile.phone },
-      {
-        label: "Business category",
-        value: partnerProfile.businessCategory,
-      },
-      {
-        label: "Business description",
-        value: partnerProfile.description,
-      },
-      { label: "Website", value: partnerProfile.website },
-      {
-        label: "Registration number",
-        value: partnerProfile.registrationNumber,
-      },
-      { label: "Tax ID", value: partnerProfile.taxId },
-      { label: "Street address", value: partnerProfile.address },
-      { label: "City", value: partnerProfile.city },
-      { label: "State", value: partnerProfile.state },
-      { label: "Country", value: partnerProfile.country },
-      { label: "Postal code", value: partnerProfile.postalCode },
-    ];
-
-    const completed = fields.filter(
-      ({ value }) => value !== null && value !== "",
-    ).length;
-
-    return {
-      completedCount: completed,
-      totalCount: fields.length,
-      profileCompletion: Math.round(
-        (completed / fields.length) * 100,
-      ),
-      missingFields: fields
-        .filter(({ value }) => value === null || value === "")
-        .map(({ label }) => label),
-    };
-  }, []);
-
-  const today = useMemo(
-    () =>
-      new Intl.DateTimeFormat("en-US", {
-        weekday: "long",
-        timeZone: "Asia/Kolkata",
-      }).format(new Date()),
-    [],
-  );
-
-  const businessInitials = useMemo(
-    () =>
-      partnerProfile.businessName
-        .split(" ")
-        .slice(0, 2)
-        .map((word) => word[0])
-        .join(""),
-    [],
-  );
-
-  const statisticsData: MetricTileData[] = [
-    {
-      icon: Building2,
-      value: partnerProfile.totalCourts,
-      label: "Total Courts",
-    },
-    {
-      icon: CalendarClock,
-      value: null,
-      label: "Total Bookings",
-    },
-    { icon: Users, value: null, label: "Customers" },
-    { icon: IndianRupee, value: null, label: "Revenue" },
-  ];
-
-  const contactData: MetricTileData[] = [
-    {
-      icon: Mail,
-      label: "Email Address",
-      value: partnerProfile.email,
-      href: `mailto:${partnerProfile.email}`,
-    },
-    {
-      icon: Phone,
-      label: "Phone Number",
-      value: partnerProfile.phone,
-      href: `tel:${partnerProfile.phone.replace(/\s/g, "")}`,
-    },
-    {
-      icon: Globe2,
-      label: "Website",
-      value: partnerProfile.website,
-    },
-    {
-      icon: MapPin,
-      label: "Primary City",
-      value: partnerProfile.city,
-    },
-  ];
-
-  const preferenceData: MetricTileData[] = [
-    {
-      icon: Languages,
-      label: "Language",
-      value: partnerProfile.language,
-    },
-    {
-      icon: Clock3,
-      label: "Time Zone",
-      value: partnerProfile.timeZone,
-    },
-    {
-      icon: WalletCards,
-      label: "Currency",
-      value: partnerProfile.currency,
-    },
-    {
-      icon: Bell,
-      label: "Notifications",
-      value: null,
-    },
-  ];
-
-  return (
-    <div className="profile-page">
-      <div className="profile-row profile-overview-row">
-        <section className="profile-card business-profile-card">
-          <div className="hero-top-bar">
-            <span className="business-label">BUSINESS PROFILE</span>
-            <button className="edit-profile-btn" type="button">
-              <CircleUserRound size={16} aria-hidden="true" />
-              <span>Edit Profile</span>
-            </button>
+      </section>
+      <div className="columns">
+        <section className="card padded wide">
+          <div className="field"><label htmlFor="vp-about">About the venue</label><textarea className="input" id="vp-about" maxLength={1000} onChange={(event) => setExtras((current) => ({ ...current, about: event.target.value }))} placeholder="Courts, how to get there, what to bring" rows={4} value={extras.about ?? ""} /></div>
+          <div className="formGrid">
+            <div className="field"><label htmlFor="vp-name">Venue name</label><input className="input" id="vp-name" minLength={2} onChange={set("businessName")} required value={form.businessName} /></div>
+            <div className="field"><label htmlFor="vp-contact">Contact person</label><input className="input" id="vp-contact" minLength={2} onChange={set("contactName")} required value={form.contactName} /></div>
+            <div className="field"><label htmlFor="vp-phone">Phone</label><input className="input" id="vp-phone" minLength={7} onChange={set("phone")} required type="tel" value={form.phone} /></div>
+            <div className="field"><label htmlFor="vp-web">Website</label><input className="input" id="vp-web" onChange={set("website")} placeholder="https://" type="url" value={form.website} /></div>
           </div>
-
-          <div className="business-identity-wrapper">
-            <div
-              className="business-logo"
-              aria-label={`${partnerProfile.businessName} initials`}
-            >
-              {businessInitials}
-            </div>
-
-            <div className="business-copy">
-              <h1 className="hero-heading">
-                {partnerProfile.businessName}
-              </h1>
-
-              <div className="business-badges">
-                <span className="role-chip">
-                  <BriefcaseBusiness size={13} aria-hidden="true" />
-                  Partner
-                </span>
-                <span
-                  className={`category-chip ${
-                    !partnerProfile.businessCategory
-                      ? "category-missing"
-                      : ""
-                  }`}
-                >
-                  {partnerProfile.businessCategory ??
-                    "Category not provided"}
-                </span>
-              </div>
-
-              <p className="hero-subtext">
-                {partnerProfile.description ??
-                  "Add a short description to help customers understand your venue and complete your business profile."}
-              </p>
-            </div>
-          </div>
-
-          <div className="business-summary">
-            <div className="summary-item">
-              <span className="summary-icon">
-                <MapPin size={16} aria-hidden="true" />
-              </span>
-              <div>
-                <small>Location</small>
-                <strong>{partnerProfile.city}</strong>
-              </div>
-            </div>
-
-            <div className="summary-item">
-              <span className="summary-icon">
-                <Clock3 size={16} aria-hidden="true" />
-              </span>
-              <div>
-                <small>Operating Hours</small>
-                <strong>{partnerProfile.operatingHours}</strong>
-              </div>
-            </div>
-
-            <div className="summary-item">
-              <span className="summary-icon">
-                <Building2 size={16} aria-hidden="true" />
-              </span>
-              <div>
-                <small>Venue Size</small>
-                <strong>{partnerProfile.totalCourts} Courts</strong>
-              </div>
-            </div>
+          <div className="field">
+            <span className="fieldLabel">Amenities</span>
+            <div className="row">{AMENITIES.map((amenity) => <button aria-pressed={(extras.amenities ?? []).includes(amenity)} className="chip" key={amenity} onClick={() => toggleAmenity(amenity)} type="button">{amenity}</button>)}</div>
           </div>
         </section>
-
-        <SectionCard
-          title="Profile Statistics"
-          description="Available business metrics and profile readiness."
-          icon={Building2}
-          className="profile-statistics-card"
-        >
-          <div className="statistics-grid">
-            {statisticsData.map((stat) => {
-              const Icon = stat.icon;
-
-              return (
-                <article className="stat-item" key={stat.label}>
-                  <span className="stat-icon">
-                    <Icon size={16} aria-hidden="true" />
-                  </span>
-                  <div>
-                    <strong>
-                      {stat.value === null || stat.value === ""
-                        ? "—"
-                        : stat.value}
-                    </strong>
-                    <span>{stat.label}</span>
-                  </div>
-                </article>
-              );
-            })}
+        <section className="card padded narrow">
+          <h2>Address</h2>
+          <div className="field"><label htmlFor="vp-address">Street</label><input className="input" id="vp-address" onChange={set("address")} value={form.address} /></div>
+          <div className="formGrid">
+            <div className="field"><label htmlFor="vp-city">City</label><input className="input" id="vp-city" onChange={set("city")} value={form.city} /></div>
+            <div className="field"><label htmlFor="vp-postal">Postal code</label><input className="input" id="vp-postal" onChange={set("postalCode")} value={form.postalCode} /></div>
           </div>
-
-          <div className="completion-block">
-            <div className="completion-heading">
-              <div>
-                <span>Profile Completion</span>
-                <small>
-                  {completedCount} of {totalCount} fields
-                </small>
-              </div>
-              <strong>{profileCompletion}%</strong>
-            </div>
-
-            <div
-              className="completion-track"
-              role="progressbar"
-              aria-label="Profile completion percentage"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={profileCompletion}
-            >
-              <span style={{ width: `${profileCompletion}%` }} />
-            </div>
-
-            {missingFields.length > 0 && (
-              <div className="completion-next">
-                <CheckCircle2 size={14} aria-hidden="true" />
-                Add {missingFields[0].toLowerCase()} next
-              </div>
-            )}
-          </div>
-        </SectionCard>
+          <div className="field"><label htmlFor="vp-state">State</label><input className="input" id="vp-state" onChange={set("state")} value={form.state} /></div>
+          <span className="muted" style={{ fontSize: 13 }}>Login email: {data.profile.email}</span>
+        </section>
       </div>
-
-      <div className="profile-row profile-contact-row">
-        <SectionCard
-          title="Contact Information"
-          description="Business contact details and online presence."
-          icon={Mail}
-        >
-          <div className="contact-grid">
-            {contactData.map((item) => (
-              <DetailTile key={item.label} {...item} />
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          title="Account Preferences"
-          description="Regional and communication preferences."
-          icon={Globe2}
-        >
-          <div className="preference-grid">
-            {preferenceData.map((item) => (
-              <DetailTile key={item.label} {...item} />
-            ))}
-          </div>
-        </SectionCard>
-      </div>
-
-      <div className="profile-row profile-business-row">
-        <SectionCard
-          title="Business Information"
-          description="Registered business and ownership details."
-          icon={BriefcaseBusiness}
-        >
-          <dl className="info-list information-columns">
-            <InfoRow
-              label="Business Name"
-              value={partnerProfile.businessName}
-            />
-            <InfoRow
-              label="Owner Name"
-              value={partnerProfile.ownerName}
-            />
-            <InfoRow
-              label="Business Type"
-              value={partnerProfile.businessType}
-            />
-            <InfoRow
-              label="Business Category"
-              value={partnerProfile.businessCategory}
-            />
-            <InfoRow
-              label="Registration Number"
-              value={partnerProfile.registrationNumber}
-            />
-            <InfoRow
-              label="GST / Tax ID"
-              value={partnerProfile.taxId}
-            />
-          </dl>
-        </SectionCard>
-
-        <SectionCard
-          title="Operating Hours"
-          description="Standard weekly venue availability."
-          icon={Clock3}
-        >
-          <div className="hours-list">
-            {OPERATING_DAYS.map((day) => {
-              const isToday = day === today;
-
-              return (
-                <div
-                  className={`hours-row ${
-                    isToday ? "is-today" : ""
-                  }`}
-                  key={day}
-                >
-                  <div className="hours-day">
-                    <strong>{day}</strong>
-                    {isToday && (
-                      <span className="today-chip">Today</span>
-                    )}
-                  </div>
-                  <span className="hours-time">
-                    {partnerProfile.operatingHours}
-                  </span>
-                  <span className="status-chip status-open">
-                    <span aria-hidden="true" />
-                    Open
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="special-hours">
-            <div>
-              <strong>Special Hours</strong>
-              <span>Holiday or event-specific hours</span>
-            </div>
-            <span className="missing-value">Not provided</span>
-          </div>
-        </SectionCard>
-      </div>
-
-      <div className="profile-row profile-account-row">
-        <SectionCard
-          title="Verification & Documents"
-          description="Business compliance and document status."
-          icon={FileCheck2}
-        >
-          <div className="status-list">
-            <StatusRow
-              icon={ShieldCheck}
-              label="Business Verification"
-              caption="Verification data unavailable"
-            />
-            <StatusRow
-              icon={FileText}
-              label="Business License"
-              caption="No document data provided"
-            />
-            <StatusRow
-              icon={IndianRupee}
-              label="Tax Verification"
-              caption="No tax status provided"
-            />
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          title="Security & Account Status"
-          description="Current account access and security information."
-          icon={ShieldCheck}
-        >
-          <div className="status-list">
-            <StatusRow
-              icon={Mail}
-              label="Email Verification"
-              caption={partnerProfile.email}
-            />
-            <StatusRow
-              icon={Phone}
-              label="Phone Verification"
-              caption={partnerProfile.phone}
-            />
-            <StatusRow
-              icon={LockKeyhole}
-              label="Two-Factor Authentication"
-              caption="Security status not provided"
-            />
-            <StatusRow
-              icon={Clock3}
-              label="Last Login"
-              caption="No login history available"
-            />
-          </div>
-        </SectionCard>
-      </div>
-
-      <div className="profile-row profile-final-row">
-        <SectionCard
-          title="Venue Information"
-          description="Primary location associated with your business."
-          icon={MapPin}
-        >
-          <dl className="info-list venue-columns">
-            <InfoRow
-              label="Address"
-              value={partnerProfile.address}
-            />
-            <InfoRow label="City" value={partnerProfile.city} />
-            <InfoRow label="State" value={partnerProfile.state} />
-            <InfoRow
-              label="Country"
-              value={partnerProfile.country}
-            />
-            <InfoRow
-              label="Postal Code"
-              value={partnerProfile.postalCode}
-            />
-          </dl>
-
-          {!partnerProfile.address && (
-            <div className="inline-notice">
-              <MapPin size={16} aria-hidden="true" />
-              Add a complete address to enable location and map
-              details.
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title="Recent Activity"
-          description="Updates related to this business profile."
-          icon={FileText}
-          className="activity-card"
-        >
-          <div className="profile-empty-state">
-            <span className="empty-state-icon" aria-hidden="true">
-              <LockKeyhole size={20} />
-            </span>
-            <div>
-              <h3>No recent activity</h3>
-              <p>
-                Profile and account activity will appear here when
-                activity data is available.
-              </p>
-            </div>
-          </div>
-        </SectionCard>
-      </div>
-    </div>
+    </form>
   );
 }

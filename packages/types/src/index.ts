@@ -9,3 +9,4 @@ export * from "./matches";
 export * from "./registrations";
 export * from "./leaderboard";
 export * from "./hostVerification";
+export * from "./partner";

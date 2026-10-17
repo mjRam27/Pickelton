@@ -1,0 +1,36 @@
+/* partner/app/partner/(portal)/dashboard/dashboard.css */
+.legend { gap: 14px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; }
+.legend .acc, .block.acc { background: var(--acc); color: var(--on-acc); }
+.legend .blu, .block.blu { background: var(--blu); color: var(--on-blu); }
+.legend .hot, .block.hot { background: var(--hot); color: var(--on-hot); }
+.timelineScroll { overflow-x: auto; }
+.timeline { display: flex; flex-direction: column; gap: 6px; min-width: 640px; }
+.timelineRow { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; align-items: center; }
+.timelineRow.head { color: var(--muted); font-size: 11px; font-weight: 700; }
+.hours { display: flex; justify-content: space-between; }
+.courtName { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.track { position: relative; height: 30px; border-radius: 8px; background: var(--s2); }
+.block { position: absolute; top: 3px; bottom: 3px; overflow: hidden; padding: 0 8px; border-radius: 6px; font-size: 11px; font-weight: 800; line-height: 24px; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.block:hover { filter: brightness(1.08); }
+.block.acc:hover { color: var(--on-acc); }
+.block.blu:hover { color: var(--on-blu); }
+.now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text); opacity: 0.6; }
+.checkin { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--text); text-decoration: none; }
+.checkin:hover { color: var(--acc-ink); }
+.checkinTime { font-family: var(--font-display); font-size: 22px; font-weight: 900; }
+.checkinWho { display: flex; flex-direction: column; min-width: 0; }
+.checkinWho strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.checkinWho small { color: var(--muted); font-size: 12px; }
+.checkinPrice { font-size: 14px; font-weight: 700; }
+.small { font-size: 13px; font-weight: 700; text-decoration: none; }
+.recent { display: flex; flex-direction: column; }
+.recentRow { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1.4fr) 100px 110px; gap: 12px; align-items: center; min-height: 52px; border-top: 1px solid var(--line); color: var(--text); font-size: 14px; text-decoration: none; }
+.recentRow:hover strong { color: var(--acc-ink); }
+.recentRow .amount { font-family: var(--font-display); font-size: 20px; font-weight: 800; text-align: right; }
+@media (max-width: 760px) {
+  .recentRow { grid-template-columns: minmax(0, 1fr) auto; padding: 8px 0; }
+  .recentRow > span:nth-child(3), .recentRow > span:nth-child(2) { display: none; }
+}
+.recentRow .badge { justify-self: start; }

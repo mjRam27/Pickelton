@@ -1,196 +1,105 @@
-// apps/web/app/partner/(portal)/bookings/[id]/page.tsx
+// partner/app/partner/(portal)/bookings/[id]/page.tsx
+"use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import "./page.css";
+import { useParams } from "next/navigation";
+import type { BookingStatus } from "@pickelton/types";
+import { Avatar, BookingBadge, LoadError, Loading, Notice, PageHeader } from "../../../../../components/ui";
+import { errorMessage, formatDate, formatTime, money, partnerApi, toNumber, useResource } from "../../../../../lib/partner";
 
-interface BookingDetailsPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-const booking = {
-  status: "Confirmed",
-  customer: {
-    name: "Aarav Sharma",
-    initials: "AS",
-    phone: "+91 98765 43210",
-    email: "aarav.sharma@example.com",
-  },
-  court: {
-    name: "Centre Court",
-    type: "Indoor",
-    surface: "Premium Acrylic",
-  },
-  schedule: {
-    date: "22 July 2026",
-    timeSlot: "9:00 AM – 10:00 AM",
-    duration: "1 hour",
-    price: "₹1,200",
-  },
-  payment: {
-    status: "Paid",
-    method: "UPI",
-  },
-  notes:
-    "Please keep two rental paddles ready. We may arrive approximately 10 minutes before the booking.",
+// Which status changes make sense from each state.
+const NEXT: Record<BookingStatus, Array<{ status: BookingStatus; label: string; tone: "primary" | "danger" | "" }>> = {
+  PENDING: [{ status: "REJECTED", label: "Reject", tone: "danger" }, { status: "CONFIRMED", label: "Confirm booking", tone: "primary" }],
+  CONFIRMED: [{ status: "CANCELLED", label: "Cancel booking", tone: "danger" }, { status: "COMPLETED", label: "Mark as played", tone: "primary" }],
+  COMPLETED: [],
+  CANCELLED: [],
+  REJECTED: [],
 };
 
-export default async function BookingDetailsPage({
-  params,
-}: BookingDetailsPageProps) {
-  const { id } = await params;
-  const bookingId = decodeURIComponent(id);
+export default function BookingDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [busy, setBusy] = useState<BookingStatus | "">("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const { data: booking, setData, error: loadError, loading, reload } = useResource(() => partnerApi.bookings.get(id), [id]);
+
+  async function changeStatus(status: BookingStatus) {
+    if ((status === "CANCELLED" || status === "REJECTED") && !window.confirm(`${status === "CANCELLED" ? "Cancel" : "Reject"} this booking? The player will no longer have the court.`)) return;
+    setBusy(status);
+    setError("");
+    setMessage("");
+    try {
+      const updated = await partnerApi.bookings.setStatus(id, status);
+      setData((current) => current && { ...current, ...updated });
+      setMessage("Booking updated.");
+    } catch (cause) {
+      setError(errorMessage(cause));
+    } finally {
+      setBusy("");
+    }
+  }
+
+  const crumbs = <><Link href="/partner/bookings">Bookings</Link><span aria-hidden="true">/</span><span>{booking?.reference ?? "Booking"}</span></>;
+  if (loading && !booking) return <><PageHeader crumbs={crumbs} title="Booking" /><Loading label="Loading booking" /></>;
+  if (!booking) return <><PageHeader crumbs={crumbs} title="Booking" /><LoadError message={loadError || "Booking not found."} onRetry={reload} /></>;
+
+  const hours = (new Date(booking.ends_at).getTime() - new Date(booking.starts_at).getTime()) / 3_600_000;
+  const rate = hours > 0 ? toNumber(booking.total_amount) / hours : 0;
 
   return (
-    <main className="booking-details-page">
-      <header className="booking-details-header">
-        <div className="booking-header-content">
-          <Link href="/partner/bookings" className="booking-back-btn">
-            <span aria-hidden="true">←</span>
-            Back
-          </Link>
-
-          <div>
-            <span className="booking-page-tag">BOOKING</span>
-            <h1>Booking Details</h1>
-            <p>
-              Booking ID: <strong>{bookingId}</strong>
-            </p>
-          </div>
+    <>
+      <PageHeader crumbs={crumbs} title={<>{booking.court_name} · {formatTime(booking.starts_at)} <BookingBadge status={booking.status} /></>}>
+        {NEXT[booking.status].map((action) => (
+          <button className={`btn ${action.tone}`} disabled={Boolean(busy)} key={action.status} onClick={() => changeStatus(action.status)} type="button">
+            {busy === action.status ? <span className="spinner" /> : null}{action.label}
+          </button>
+        ))}
+      </PageHeader>
+      <Notice message={error} />
+      <Notice message={message} tone="success" />
+      <div className="columns">
+        <div className="wide" style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+          <section className="card padded">
+            <div className="formGrid">
+              <Fact label="Date" value={formatDate(booking.starts_at, { day: "numeric", month: "short", weekday: "short", year: "numeric" })} />
+              <Fact label="Time" value={`${formatTime(booking.starts_at)} – ${formatTime(booking.ends_at)}`} />
+              <Fact label="Court" value={booking.court_name} />
+              <Fact label="Reference" value={booking.reference} />
+            </div>
+          </section>
+          <section className="card padded">
+            <div className="row between" style={{ alignItems: "baseline" }}>
+              <h2>Payment</h2>
+              <span className="display" style={{ fontSize: 36 }}>{money(booking.total_amount)}</span>
+            </div>
+            <span className="muted">{hours.toLocaleString("en-IN", { maximumFractionDigits: 1 })} h at {money(rate)} per hour</span>
+          </section>
+          <section className="card padded">
+            <h2>Notes</h2>
+            <p className={booking.notes ? undefined : "muted"} style={{ margin: 0, lineHeight: 1.5 }}>{booking.notes || "No notes on this booking."}</p>
+          </section>
         </div>
-
-        <span className="booking-status-badge confirmed">
-          {booking.status}
-        </span>
-      </header>
-
-      <div className="booking-details-grid">
-        <section className="booking-details-card">
-          <header className="booking-section-header">
-            <span className="booking-section-tag">CUSTOMER</span>
-            <h2>Customer Information</h2>
-          </header>
-
-          <div className="booking-customer-profile">
-            <div className="booking-avatar" aria-hidden="true">
-              {booking.customer.initials}
-            </div>
-
-            <div>
-              <h3>{booking.customer.name}</h3>
-              <p>Pickelton customer</p>
-            </div>
-          </div>
-
-          <dl className="booking-info-list">
-            <div className="booking-info-row">
-              <dt>Phone Number</dt>
-              <dd>{booking.customer.phone}</dd>
-            </div>
-
-            <div className="booking-info-row">
-              <dt>Email Address</dt>
-              <dd>{booking.customer.email}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="booking-details-card">
-          <header className="booking-section-header">
-            <span className="booking-section-tag">COURT</span>
-            <h2>Court Information</h2>
-          </header>
-
-          <dl className="booking-info-list">
-            <div className="booking-info-row">
-              <dt>Court Name</dt>
-              <dd>{booking.court.name}</dd>
-            </div>
-
-            <div className="booking-info-row">
-              <dt>Court Type</dt>
-              <dd>{booking.court.type}</dd>
-            </div>
-
-            <div className="booking-info-row">
-              <dt>Surface</dt>
-              <dd>{booking.court.surface}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="booking-details-card booking-schedule-card">
-          <header className="booking-section-header">
-            <span className="booking-section-tag">SCHEDULE</span>
-            <h2>Booking Information</h2>
-          </header>
-
-          <dl className="booking-summary-grid">
-            <div className="booking-summary-item">
-              <dt>Booking Date</dt>
-              <dd>{booking.schedule.date}</dd>
-            </div>
-
-            <div className="booking-summary-item">
-              <dt>Time Slot</dt>
-              <dd>{booking.schedule.timeSlot}</dd>
-            </div>
-
-            <div className="booking-summary-item">
-              <dt>Duration</dt>
-              <dd>{booking.schedule.duration}</dd>
-            </div>
-
-            <div className="booking-summary-item booking-price">
-              <dt>Price</dt>
-              <dd>{booking.schedule.price}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="booking-details-card">
-          <header className="booking-section-header">
-            <span className="booking-section-tag">PAYMENT</span>
-            <h2>Payment Information</h2>
-          </header>
-
-          <dl className="booking-info-list">
-            <div className="booking-info-row">
-              <dt>Payment Status</dt>
-              <dd>
-                <span className="booking-payment-status">
-                  {booking.payment.status}
-                </span>
-              </dd>
-            </div>
-
-            <div className="booking-info-row">
-              <dt>Payment Method</dt>
-              <dd>{booking.payment.method}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="booking-details-card booking-notes-card">
-          <header className="booking-section-header">
-            <span className="booking-section-tag">NOTES</span>
-            <h2>Customer Notes</h2>
-          </header>
-
-          <p className="booking-notes">{booking.notes}</p>
-        </section>
+        <div className="narrow" style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+          <section className="card">
+            <div className="who"><Avatar name={booking.customer_name} tone="blu" /><span><strong style={{ fontSize: 16 }}>{booking.customer_name}</strong><small>Customer</small></span></div>
+            <a href={`mailto:${booking.customer_email}`}>{booking.customer_email}</a>
+            <a href={`tel:${booking.customer_phone}`}>{booking.customer_phone}</a>
+            <Link href={`/partner/customers?search=${encodeURIComponent(booking.customer_email)}`} style={{ fontWeight: 800, textDecoration: "none" }}>Open in customers</Link>
+          </section>
+          <section className="card">
+            <h2 style={{ fontSize: 16 }}>Activity</h2>
+            <ol className="activity">
+              {booking.updated_at !== booking.created_at ? <li><i className="acc" /><span><strong>Status set to {booking.status.toLowerCase()}</strong><small>{formatDate(booking.updated_at)} · {formatTime(booking.updated_at)}</small></span></li> : null}
+              <li><i /><span><strong>Booking created</strong><small>{formatDate(booking.created_at)} · {formatTime(booking.created_at)}</small></span></li>
+            </ol>
+          </section>
+        </div>
       </div>
-
-      <footer className="booking-bottom-actions">
-        <button type="button" className="booking-cancel-btn">
-          Cancel Booking
-        </button>
-
-        <button type="button" className="booking-primary-btn">
-          Edit Booking
-        </button>
-      </footer>
-    </main>
+    </>
   );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return <div className="field"><span className="fieldLabel">{label}</span><strong style={{ fontSize: 17 }}>{value}</strong></div>;
 }

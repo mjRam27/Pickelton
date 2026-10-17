@@ -19,9 +19,10 @@ export class ApiClient {
 
     if (!response.ok) {
       const error = (await response.json().catch(() => ({ message: "Request failed" }))) as ApiError;
-      throw error;
+      throw { ...error, status: response.status };
     }
 
+    if (response.status === 204) return undefined as T;
     return response.json() as Promise<T>;
   }
 }

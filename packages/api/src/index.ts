@@ -1,6 +1,7 @@
 // pickelton-app/packages/api/src/index.ts
 export * from "./client";
 export * from "./pickeltonApi";
+export * from "./partnerApi";
 export type {
   AuthResponse,
   Club,

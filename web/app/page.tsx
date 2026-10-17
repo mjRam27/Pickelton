@@ -1,6 +1,6 @@
-// pickelton-app/apps/web/app/page.tsx
-import { PickeltonWebApp } from "../components/PickeltonWebApp";
+// web/app/page.tsx
+import { LandingPage } from "../components/LandingPage";
 
 export default function Page() {
-  return <PickeltonWebApp />;
+  return <LandingPage />;
 }

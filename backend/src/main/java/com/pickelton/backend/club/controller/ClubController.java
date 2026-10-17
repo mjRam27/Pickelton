@@ -39,10 +39,12 @@ public class ClubController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ClubResponse>>> getClubs(
         @RequestParam(required = false) String search,
+        @RequestParam(required = false) Double latitude,
+        @RequestParam(required = false) Double longitude,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.success("Clubs fetched", clubService.getClubs(search, page, size)));
+        return ResponseEntity.ok(ApiResponse.success("Clubs fetched", clubService.getClubs(search, latitude, longitude, page, size)));
     }
 
     @GetMapping("/me")

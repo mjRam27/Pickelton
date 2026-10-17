@@ -1,0 +1,7 @@
+/* partner/app/partner/(portal)/profile/profile.css */
+.profileForm { display: flex; flex-direction: column; gap: 20px; }
+.venueBanner { overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: var(--s1); }
+.venueCover { height: 150px; background: #2B5A12; }
+.venueCover svg { width: 100%; height: 100%; }
+.venueIdentity { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; margin-top: -32px; padding: 0 24px 24px; }
+.venueMark .avatar { width: 80px; height: 80px; border: 4px solid var(--s1); border-radius: 22px; font-size: 34px; }

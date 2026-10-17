@@ -9,8 +9,8 @@
     "packages/*"
   ],
   "scripts": {
-    "mobile": "npm run start --workspace @pickelton/mobile",
-    "mobile:tunnel": "npm run tunnel --workspace @pickelton/mobile",
+    "mobile": "npm --prefix mobile run start",
+    "mobile:tunnel": "npm --prefix mobile run tunnel",
     "web": "npm run dev --workspace @pickelton/web",
     "web:build": "npm run build --workspace @pickelton/web",
     "partner": "npm run dev --workspace @pickelton/partner",
