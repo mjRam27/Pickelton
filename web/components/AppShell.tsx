@@ -27,7 +27,7 @@ const MOBILE_NAV: Array<[string, string, LucideIcon]> = [
 ];
 
 // Pages a signed-out visitor may open, so a shared tournament link works before signing up.
-const PUBLIC_PATHS = /^\/tournaments(\/[0-9a-fA-F-]{36})?\/?$/;
+const PUBLIC_PATHS = /^\/tournaments(\/[0-9a-fA-F-]{36}(\/leaderboard)?)?\/?$/;
 
 // Signed-in layout. Sends signed-out visitors (or expired sessions) to /login.
 export function AppShell({ children }: { children: ReactNode }) {
