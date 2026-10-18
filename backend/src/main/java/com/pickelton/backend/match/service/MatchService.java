@@ -23,6 +23,7 @@ import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.enums.ScoreEventType;
 import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.enums.TournamentStatus;
+import com.pickelton.backend.community.service.TournamentFeedService;
 import com.pickelton.backend.mapper.MatchMapper;
 import com.pickelton.backend.match.dto.AcceptInviteRequest;
 import com.pickelton.backend.match.dto.AddPointRequest;
@@ -71,6 +72,7 @@ public class MatchService {
     private final TournamentMatchRepository tournamentMatchRepository;
     private final TournamentRepository tournamentRepository;
     private final TournamentCategoryRepository tournamentCategoryRepository;
+    private final TournamentFeedService tournamentFeedService;
     private final RegistrationRepository registrationRepository;
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
@@ -300,6 +302,7 @@ public class MatchService {
         match.setWinner(resolveWinner(match.getId(), request.score1(), request.score2()));
         appendEvent(match, state, ScoreEventType.POINT, payload);
         matchRepository.save(match);
+        postResult(match);
         publish(match, state);
         return toResponse(match, state);
     }
@@ -363,6 +366,7 @@ public class MatchService {
         match.setWinner(resolveWinner(match.getId(), scoreForTeam(state, "A"), scoreForTeam(state, "B")));
         appendEvent(match, state, ScoreEventType.END_MATCH, Map.of("finalScore", new LinkedHashMap<>(state.getCurrentScore())));
         matchRepository.save(match);
+        postResult(match);
         publish(match, state);
         return toResponse(match, state);
     }
@@ -436,6 +440,11 @@ public class MatchService {
         state.setLastEventAt(OffsetDateTime.now());
         state.getLiveState().put("status", match.getStatus().name());
         matchStateRepository.save(state);
+    }
+
+    // A finished tournament match shows up as a result post in that tournament's feed.
+    private void postResult(Match match) {
+        tournamentMatchRepository.findByMatchId(match.getId()).ifPresent(tournamentFeedService::recordResult);
     }
 
     private void publish(Match match, MatchState state) {

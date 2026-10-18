@@ -43,9 +43,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login",
                     "/api/v1/auth/google", "/api/v1/auth/refresh").permitAll()
-                // Tournament pages and standings are public so shared links work before signing in.
+                // Tournament pages, standings and feeds are public so shared links work before signing in.
                 .requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.GET,
-                    "^/api/tournaments(/[0-9a-fA-F-]{36}(/leaderboard)?)?(\\?.*)?$")).permitAll()
+                    "^/api/tournaments(/[0-9a-fA-F-]{36}(/leaderboard|/posts)?)?(\\?.*)?$")).permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**").permitAll()

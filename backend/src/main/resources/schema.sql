@@ -266,6 +266,8 @@ CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id),
     club_id UUID REFERENCES clubs(id) ON DELETE CASCADE,
+    tournament_id UUID REFERENCES tournaments(id) ON DELETE CASCADE,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE,
     content TEXT NOT NULL,
     metadata_json JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -301,6 +303,7 @@ CREATE INDEX IF NOT EXISTS idx_tournament_matches_category ON tournament_matches
 CREATE INDEX IF NOT EXISTS idx_tournament_categories_tournament ON tournament_categories(tournament_id, sort_order);
 CREATE INDEX IF NOT EXISTS idx_registration_categories_category ON registration_categories(category_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_tournament_id_created_at ON posts(tournament_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);

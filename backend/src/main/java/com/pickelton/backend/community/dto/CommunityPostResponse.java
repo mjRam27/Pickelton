@@ -9,6 +9,8 @@ public record CommunityPostResponse(
     String authorName,
     UUID clubId,
     String clubName,
+    UUID tournamentId,
+    boolean pinned,
     String tag,
     String content,
     OffsetDateTime createdAt
