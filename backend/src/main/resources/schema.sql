@@ -59,9 +59,19 @@ CREATE TABLE IF NOT EXISTS clubs (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     location VARCHAR(255) NOT NULL,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
     created_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_follows (
+    follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    followed_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (follower_id, followed_id),
+    CONSTRAINT chk_user_follow_not_self CHECK (follower_id <> followed_id)
 );
 
 CREATE TABLE IF NOT EXISTS club_members (
@@ -236,3 +246,5 @@ CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, create
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
+CREATE INDEX IF NOT EXISTS idx_user_follows_followed ON user_follows(followed_id);
+CREATE INDEX IF NOT EXISTS idx_clubs_coordinates ON clubs(latitude, longitude);

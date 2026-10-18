@@ -34,6 +34,10 @@ public class Club extends BaseEntity {
     @Column(nullable = false)
     private String location;
 
+    private Double latitude;
+
+    private Double longitude;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;

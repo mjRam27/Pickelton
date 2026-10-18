@@ -3,16 +3,21 @@ package com.pickelton.backend.user.service;
 import java.util.List;
 import java.util.UUID;
 
+import com.pickelton.backend.common.exception.BadRequestException;
 import com.pickelton.backend.common.exception.ResourceNotFoundException;
 import com.pickelton.backend.config.CacheConfig;
 import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.match.repository.MatchRepository;
+import com.pickelton.backend.user.dto.FollowResponse;
+import com.pickelton.backend.user.dto.PlayerSuggestionResponse;
 import com.pickelton.backend.user.dto.UpdateUserRequest;
 import com.pickelton.backend.user.dto.PublicUserResponse;
 import com.pickelton.backend.user.dto.UserDTO;
 import com.pickelton.backend.user.dto.UserSearchResponse;
 import com.pickelton.backend.user.dto.UserStatsDTO;
 import com.pickelton.backend.user.entity.User;
+import com.pickelton.backend.user.entity.UserFollow;
+import com.pickelton.backend.user.repository.UserFollowRepository;
 import com.pickelton.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -28,6 +33,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MatchRepository matchRepository;
+    private final UserFollowRepository userFollowRepository;
 
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
@@ -117,6 +123,35 @@ public class UserService {
         long losses = matchRepository.countLossesByUserId(userId, MatchStatus.COMPLETED);
         long total = matchRepository.countTotalMatchesByUserIdAndStatus(userId, MatchStatus.COMPLETED);
         return new UserStatsDTO(userId, wins, losses, total);
+    }
+
+    public List<PlayerSuggestionResponse> getSuggestions(UUID userId, int limit) {
+        int capped = Math.min(Math.max(limit, 1), 20);
+        return userFollowRepository.findSuggestions(userId, capped).stream()
+            .map(row -> new PlayerSuggestionResponse(row.getUserId(), row.getName(), row.getAvatarUrl(), row.getCity(),
+                row.getLastPlayedAt(), Boolean.TRUE.equals(row.getFollowing()), row.getReason()))
+            .toList();
+    }
+
+    @Transactional
+    public FollowResponse follow(UUID followerId, UUID followedId) {
+        if (followerId.equals(followedId)) {
+            throw new BadRequestException("You cannot follow yourself");
+        }
+        if (!userRepository.existsById(followedId)) {
+            throw new ResourceNotFoundException("User not found");
+        }
+        var id = new UserFollow.Id(followerId, followedId);
+        if (!userFollowRepository.existsById(id)) {
+            userFollowRepository.save(new UserFollow(followerId, followedId));
+        }
+        return new FollowResponse(true);
+    }
+
+    @Transactional
+    public FollowResponse unfollow(UUID followerId, UUID followedId) {
+        userFollowRepository.deleteById(new UserFollow.Id(followerId, followedId));
+        return new FollowResponse(false);
     }
 
     private UserDTO toDto(User user) {

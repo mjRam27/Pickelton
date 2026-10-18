@@ -21,6 +21,7 @@ import com.pickelton.backend.enums.ClubRole;
 import com.pickelton.backend.mapper.ClubMapper;
 import com.pickelton.backend.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,8 @@ public class ClubService {
             .name(request.name().trim())
             .description(request.description())
             .location(request.location().trim())
+            .latitude(request.latitude())
+            .longitude(request.longitude())
             .createdBy(currentUser)
             .build();
 
@@ -58,13 +61,21 @@ public class ClubService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<ClubResponse> getClubs(String search, int page, int size) {
+    public PageResponse<ClubResponse> getClubs(String search, Double latitude, Double longitude, int page, int size) {
         var pageable = PageRequest.of(page, size);
-        var clubPage = search == null || search.isBlank()
-            ? clubRepository.findAll(pageable)
-            : clubRepository.findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(search.trim(), search.trim(), pageable);
+        boolean nearby = latitude != null && longitude != null;
+        String term = search == null ? "" : search.trim();
+        Page<Club> clubPage;
+        if (nearby) {
+            clubPage = clubRepository.findNearest("%" + term + "%", latitude, longitude, pageable);
+        } else if (term.isEmpty()) {
+            clubPage = clubRepository.findAll(pageable);
+        } else {
+            clubPage = clubRepository.findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(term, term, pageable);
+        }
         var responses = clubPage.getContent().stream()
-            .map(club -> clubMapper.toResponse(club, clubMemberRepository.countByClubId(club.getId())))
+            .map(club -> clubMapper.toResponse(club, clubMemberRepository.countByClubId(club.getId()),
+                nearby ? distanceKm(latitude, longitude, club) : null))
             .toList();
         return new PageResponse<>(responses, clubPage.getNumber(), clubPage.getSize(), clubPage.getTotalElements(), clubPage.getTotalPages(), clubPage.isLast());
     }
@@ -113,6 +124,10 @@ public class ClubService {
         }
         if (request.location() != null && !request.location().isBlank()) {
             club.setLocation(request.location().trim());
+        }
+        if (request.latitude() != null && request.longitude() != null) {
+            club.setLatitude(request.latitude());
+            club.setLongitude(request.longitude());
         }
         return clubMapper.toResponse(clubRepository.save(club), clubMemberRepository.countByClubId(clubId));
     }
@@ -178,5 +193,19 @@ public class ClubService {
             member.getRole(),
             member.getCreatedAt()
         );
+    }
+
+    // Haversine distance in km, rounded to 0.1; null when the club has no coordinates.
+    private static Double distanceKm(double latitude, double longitude, Club club) {
+        if (club.getLatitude() == null || club.getLongitude() == null) {
+            return null;
+        }
+        double dLat = Math.toRadians(club.getLatitude() - latitude);
+        double dLon = Math.toRadians(club.getLongitude() - longitude);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(club.getLatitude()))
+            * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double km = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return Math.round(km * 10) / 10.0;
     }
 }

@@ -62,7 +62,7 @@ class ClubControllerTest {
 
     @Test
     void getClubsShouldReturnPaginatedResponse() throws Exception {
-        when(clubService.getClubs(any(), anyInt(), anyInt())).thenReturn(samplePageResponse());
+        when(clubService.getClubs(any(), any(), any(), anyInt(), anyInt())).thenReturn(samplePageResponse());
 
         mockMvc.perform(get("/api/clubs").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -77,6 +77,9 @@ class ClubControllerTest {
                 "Pickelton Club",
                 "Community club",
                 "Bangalore",
+                12.97,
+                77.59,
+                null,
                 new PublicUserSummary(
                     UUID.randomUUID(),
                     "Admin",

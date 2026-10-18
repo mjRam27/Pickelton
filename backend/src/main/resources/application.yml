@@ -28,6 +28,11 @@ spring:
           time_zone: UTC
     show-sql: false
 
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 9MB
+
   data:
     redis:
       url: ${REDIS_URL}
@@ -59,6 +64,10 @@ admin:
 
 google:
   client-id: ${GOOGLE_CLIENT_ID:}
+
+# Private directory for host identity documents. Never expose it as static content.
+kyc:
+  upload-dir: ${KYC_UPLOAD_DIR:uploads/kyc}
 
 logging:
   pattern:
