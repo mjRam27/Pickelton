@@ -5,12 +5,13 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { AuthLayout, nextPath } from "../../../components/AuthLayout";
+import { AuthLayout, nextPath, useNextQuery } from "../../../components/AuthLayout";
 import { Notice, Spinner } from "../../../components/ui";
 import { api, errorMessage, signIn } from "../../../lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
+  const nextQuery = useNextQuery();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -46,7 +47,7 @@ export default function LoginPage() {
         </div>
         <Notice message={error} />
         <button className="btn primary block" disabled={loading} type="submit">{loading ? <Spinner /> : null}Log in <ArrowRight aria-hidden="true" size={18} /></button>
-        <p className="muted" style={{ margin: 0, textAlign: "center" }}>New to Pickelton? <Link href="/signup" style={{ fontWeight: 700 }}>Create an account</Link></p>
+        <p className="muted" style={{ margin: 0, textAlign: "center" }}>New to Pickelton? <Link href={`/signup${nextQuery}`} style={{ fontWeight: 700 }}>Create an account</Link></p>
       </form>
     </AuthLayout>
   );
