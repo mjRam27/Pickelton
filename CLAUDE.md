@@ -87,6 +87,9 @@ Java schema changes: add a SQL file under `backend/src/main/resources/db/` AND u
   one registration and one payment cover all of them. Tournament matches in such an event belong to a category, and
   only players registered in that category can play in it. A category with players can't be removed or shrunk below
   its player count.
+- Each tournament has its own **feed**: public to read; only the host and registered players post. The host can pin
+  one post and delete any; others delete only their own. Completed tournament matches post their result automatically.
+  Feed posts never appear in the main community feed.
 - A **TeamUp** has exactly **two accepted members**. Invitations need acceptance, and a user can be in many TeamUps.
 - Match types are **Friendly, TeamUp, Club, Tournament** (there is no "practice" type). They share one scoring engine.
 - Results count toward **ratings only after both sides confirm** (or an admin resolves the dispute).
