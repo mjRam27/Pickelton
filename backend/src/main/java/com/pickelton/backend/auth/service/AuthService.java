@@ -59,7 +59,7 @@ public class AuthService {
             .build();
 
         User saved = userService.save(user);
-        verificationCodeService.issuePhone(saved.getId(), saved.getPhoneNumber());
+        verificationCodeService.issuePhoneQuietly(saved.getId(), saved.getPhoneNumber());
         return issueSession(saved);
     }
 
@@ -111,7 +111,7 @@ public class AuthService {
         }
         User saved = userService.save(user);
         if (newUser) {
-            verificationCodeService.issuePhone(saved.getId(), saved.getPhoneNumber());
+            verificationCodeService.issuePhoneQuietly(saved.getId(), saved.getPhoneNumber());
         }
         return issueSession(saved);
     }
@@ -155,9 +155,8 @@ public class AuthService {
 
     public void verifyPhoneCode(VerifyCodeRequest request) {
         User user = currentUserService.getCurrentUser();
-        verificationCodeService.verifyPhone(user.getId(), request.code());
-        user.setPhoneVerified(true);
-        userService.save(user);
+        verificationCodeService.verifyPhone(user.getId(), user.getPhoneNumber(), request.code());
+        userService.markPhoneVerified(user.getId());
     }
 
     private AuthResponse issueSession(User user) {

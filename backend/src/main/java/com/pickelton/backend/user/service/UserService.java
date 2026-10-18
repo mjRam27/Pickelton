@@ -77,6 +77,15 @@ public class UserService {
         );
     }
 
+    // Loads the user from the database, not the cache: the cached copy has no password, and saving it would wipe it.
+    @Transactional
+    @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
+    public void markPhoneVerified(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setPhoneVerified(true);
+    }
+
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
     public UserDTO updateMyProfile(UUID userId, UpdateUserRequest request) {
