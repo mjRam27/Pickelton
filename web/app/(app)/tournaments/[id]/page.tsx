@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { ClipboardList, Link2, MapPin, Swords, Trophy } from "lucide-react";
 import { formatCurrency, formatShortDate } from "@pickelton/utils";
 import { RegistrationPanel, categoryFull } from "../../../../components/RegistrationPanel";
+import { TournamentFeed } from "../../../../components/TournamentFeed";
 import { Avatar, LoadError, Loading, Notice } from "../../../../components/ui";
 import { formatTime, sportLabel, titleCase, toneFor } from "../../../../lib/format";
 import { api, useResource, useSession } from "../../../../lib/session";
@@ -99,6 +100,7 @@ export default function TournamentDetailPage() {
           {event.description ? (
             <section className="card"><h2>About this tournament</h2><p style={{ lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>{event.description}</p></section>
           ) : null}
+          <TournamentFeed isHost={isHost} isPlayer={registration?.status === "REGISTERED"} tournamentId={id} />
         </section>
         <aside className="narrow">
           <section className="card">

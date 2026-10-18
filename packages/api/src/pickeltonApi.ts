@@ -143,6 +143,11 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
       cancelRegistration: (id: string) => send<void>("DELETE", `/api/tournaments/${id}/register`),
       participants: (id: string) => get<TournamentParticipant[]>(`/api/tournaments/${id}/participants`),
       leaderboard: (id: string) => get<Leaderboard>(`/api/tournaments/${id}/leaderboard`),
+      // The tournament's own feed: public to read; the host and registered players post.
+      feed: (id: string, page = 0, size = 20) => get<PageResponse<CommunityPost>>(`/api/tournaments/${id}/posts${query({ page, size })}`),
+      post: (id: string, content: string) => send<CommunityPost>("POST", `/api/tournaments/${id}/posts`, { content }),
+      pinPost: (id: string, postId: string, pinned: boolean) => send<CommunityPost>("PATCH", `/api/tournaments/${id}/posts/${postId}/pin`, { pinned }),
+      removePost: (id: string, postId: string) => send<void>("DELETE", `/api/tournaments/${id}/posts/${postId}`),
     },
     matches: {
       create: (request: CreateMatchRequest) => send<Match>("POST", "/api/matches", request),
