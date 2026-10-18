@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Check, Download, Link2, UserMinus, X } from "lucide-react";
+import { Check, Download, Link2, Swords, UserMinus, X } from "lucide-react";
 import { formatCurrency } from "@pickelton/utils";
 import type { HostRegistration, PaymentStatus } from "@pickelton/types";
 import { ConfirmDialog, Empty, LoadError, Loading, Notice, PageHeader, Segmented, Spinner } from "../../../../../components/ui";
@@ -25,6 +25,7 @@ const when = (value: string | null) => (value ? `${new Date(value).toLocaleDateS
 export default function ManageRegistrationsPage() {
   const { id } = useParams<{ id: string }>();
   const [filter, setFilter] = useState<Filter>("ALL");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -53,7 +54,10 @@ export default function ManageRegistrationsPage() {
   if (!data) return <LoadError message={loadError} onRetry={reload} />;
   const { event } = data;
   const questions = event.registrationQuestions;
-  const rows = active.filter((row) => filter === "ALL" || row.paymentStatus === filter);
+  const categories = event.categories ?? [];
+  const rows = active
+    .filter((row) => filter === "ALL" || row.paymentStatus === filter)
+    .filter((row) => categoryFilter === "ALL" || row.categories?.some((category) => category.id === categoryFilter));
 
   function replace(updated: HostRegistration) {
     setData((current) => current && { ...current, registrations: current.registrations.map((row) => (row.id === updated.id ? updated : row)) });
@@ -87,8 +91,9 @@ export default function ManageRegistrationsPage() {
   }
 
   function exportCsv() {
-    const header = ["Name", "Phone", "Email", ...questions.map((question) => question.label), "Amount", "Payment", "UPI reference", "Registered"];
-    const lines = active.map((row) => [row.name, row.phoneNumber, row.email, ...questions.map((question) => row.answers[question.id] ?? ""),
+    const header = ["Name", "Phone", "Email", ...(categories.length ? ["Categories"] : []), ...questions.map((question) => question.label), "Amount", "Payment", "UPI reference", "Registered"];
+    const lines = active.map((row) => [row.name, row.phoneNumber, row.email,
+      ...(categories.length ? [(row.categories ?? []).map((category) => category.name).join(", ")] : []), ...questions.map((question) => row.answers[question.id] ?? ""),
       Number(row.amountDue ?? 0), STATUS[row.paymentStatus].label, row.paymentReference ?? "", when(row.createdAt)]);
     const csv = [header, ...lines].map((line) => line.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8" }));
@@ -104,6 +109,7 @@ export default function ManageRegistrationsPage() {
         title="Registrations"
       >
         <button className="btn" disabled={!active.length} onClick={exportCsv} type="button"><Download aria-hidden="true" size={18} />Export CSV</button>
+        <Link className="btn" href={`/tournaments/${id}/matches`}><Swords aria-hidden="true" size={18} />Matches</Link>
         <Link className="btn" href={`/tournaments/${id}`}>View public page</Link>
       </PageHeader>
       <Notice message={notice} tone="success" />
@@ -124,6 +130,27 @@ export default function ManageRegistrationsPage() {
         <div className="stat"><span className="value" style={{ fontSize: 36 }}>{formatCurrency(counts.collected)}</span><span className="label">Collected</span></div>
       </div>
 
+      {categories.length ? (
+        <section className="card">
+          <h2>By category</h2>
+          {categories.map((category) => (
+            <div className="row between" key={category.id} style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+              <strong>{category.name}</strong>
+              <span className="muted">{category.registeredCount}/{category.maxPlayers} players{category.format === "DOUBLES" ? ` · ${Math.floor(category.registeredCount / 2)} pairs` : ""}</span>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {categories.length ? (
+        <div className="field" style={{ maxWidth: 320 }}>
+          <label htmlFor="cat-filter">Category</label>
+          <select className="input" id="cat-filter" onChange={(event) => setCategoryFilter(event.target.value)} value={categoryFilter}>
+            <option value="ALL">All categories</option>
+            {categories.map((category) => <option key={category.id} value={category.id}>{category.name} ({category.registeredCount})</option>)}
+          </select>
+        </div>
+      ) : null}
       <Segmented label="Filter by payment" onChange={setFilter} options={[
         { label: `All (${active.length})`, value: "ALL" }, { label: `To check (${counts.submitted})`, value: "SUBMITTED" },
         { label: `Not paid (${counts.awaiting})`, value: "AWAITING_PAYMENT" }, { label: `Paid (${counts.confirmed})`, value: "CONFIRMED" }, { label: `Rejected (${counts.rejected})`, value: "REJECTED" },
@@ -144,6 +171,9 @@ export default function ManageRegistrationsPage() {
                   </div>
                   <span className={status.cls}>{status.label}</span>
                 </div>
+                {row.categories?.length ? (
+                  <div className="row" style={{ gap: 6 }}>{row.categories.map((category) => <span className="badge outline" key={category.id}>{category.name}</span>)}</div>
+                ) : null}
                 {questions.length ? (
                   <dl className="formGrid" style={{ margin: 0 }}>
                     {questions.map((question) => (

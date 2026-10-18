@@ -39,6 +39,7 @@ export default function MyTournamentsPage() {
                 <Link className="listRow" href={`/tournaments/${registration.tournamentId}`} key={registration.id}>
                   <span className="grow">
                     <strong>{registration.tournamentName}</strong>
+                    {registration.categories?.length ? <small>{registration.categories.map((category) => category.name).join(", ")}</small> : null}
                     <small>{Number(registration.amountDue ?? 0) ? `Entry ${formatCurrency(Number(registration.amountDue))}` : "Free entry"}{registration.paymentReference ? ` · UTR ${registration.paymentReference}` : ""}</small>
                   </span>
                   <span className={payment.cls}>{payment.label}</span>

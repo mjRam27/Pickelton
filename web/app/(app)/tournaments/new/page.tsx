@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Club, RegistrationQuestion, TournamentType } from "@pickelton/types";
+import { CategoryBuilder, toCategoryRequests, type CategoryDraft } from "../../../../components/CategoryBuilder";
 import { PhoneVerify } from "../../../../components/PhoneVerify";
 import { QuestionBuilder, cleanQuestions } from "../../../../components/QuestionBuilder";
 import { Notice, PageHeader, Segmented, Spinner } from "../../../../components/ui";
@@ -26,15 +27,20 @@ export default function NewTournamentPage() {
   const [type, setType] = useState<TournamentType>("DOUBLES");
   const [maxPlayers, setMaxPlayers] = useState(32);
   const [questions, setQuestions] = useState<RegistrationQuestion[]>([]);
+  const [categories, setCategories] = useState<CategoryDraft[]>([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const set = (name: keyof typeof form) => (event: { target: { value: string } }) => setForm((current) => ({ ...current, [name]: event.target.value }));
-  const fee = Number(form.entryFee || 0);
+  const hasCategories = categories.length > 0;
+  // With categories, each has its own fee; UPI details are needed if any of them is paid.
+  const fee = hasCategories ? Math.max(0, ...categories.map((category) => Number(category.entryFee || 0))) : Number(form.entryFee || 0);
   const today = new Date().toISOString().slice(0, 10);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    const categoryRequests = toCategoryRequests(categories);
+    if (typeof categoryRequests === "string") return setError(categoryRequests);
     if (!Number.isFinite(fee) || fee < 0) return setError("Entry fee must be zero or more.");
     if (fee > 0 && !UPI_ID.test(form.upiId.trim())) return setError("Add your UPI ID (like name@okhdfcbank) so players can pay you.");
     const startDate = `${form.date}T${form.time}:00`;
@@ -47,7 +53,11 @@ export default function NewTournamentPage() {
     try {
       const created = await api.tournaments.create({
         name: form.name.trim(), description: form.description.trim() || undefined, clubId: form.clubId || undefined,
-        sportType: sport, tournamentType: type, maxPlayers, entryFee: fee, startDate, registrationDeadline,
+        sportType: sport,
+        tournamentType: hasCategories ? (categoryRequests.some((category) => category.format === "DOUBLES") ? "DOUBLES" : "SINGLES") : type,
+        maxPlayers: hasCategories ? categoryRequests.reduce((sum, category) => sum + category.maxPlayers, 0) : maxPlayers,
+        entryFee: hasCategories ? Math.min(...categoryRequests.map((category) => category.entryFee)) : fee,
+        startDate, registrationDeadline, categories: categoryRequests,
         venue: form.venue.trim() || undefined,
         upiId: fee > 0 ? form.upiId.trim() : undefined,
         payeeName: fee > 0 ? form.payeeName.trim() || undefined : undefined,
@@ -82,12 +92,12 @@ export default function NewTournamentPage() {
         <div className="field"><label htmlFor="ct-name">Tournament name</label><input className="input" id="ct-name" maxLength={255} onChange={set("name")} placeholder="Bengaluru Autumn Doubles" required value={form.name} /></div>
         <div className="formGrid">
           <div className="field"><span className="fieldLabel">Sport</span><Segmented full label="Sport" onChange={setSport} options={[{ label: "Pickleball", value: "PICKLEBALL" }, { label: "Badminton", value: "BADMINTON" }]} value={sport} /></div>
-          <div className="field"><span className="fieldLabel">Format</span><Segmented full label="Format" onChange={setType} options={[{ label: "Singles", value: "SINGLES" }, { label: "Doubles", value: "DOUBLES" }]} value={type} /></div>
+          {!hasCategories ? <div className="field"><span className="fieldLabel">Format</span><Segmented full label="Format" onChange={setType} options={[{ label: "Singles", value: "SINGLES" }, { label: "Doubles", value: "DOUBLES" }]} value={type} /></div> : null}
         </div>
         <div className="formGrid">
           <div className="field"><label htmlFor="ct-date">Date</label><input className="input" id="ct-date" min={today} onChange={set("date")} required type="date" value={form.date} /></div>
           <div className="field"><label htmlFor="ct-time">Start time</label><input className="input" id="ct-time" onChange={set("time")} required type="time" value={form.time} /></div>
-          <div className="field"><label htmlFor="ct-max">Player limit</label><input className="input" id="ct-max" max={512} min={2} onChange={(event) => setMaxPlayers(Number(event.target.value))} required type="number" value={maxPlayers} /><span className="hint">Registration stops when it's full.</span></div>
+          {!hasCategories ? <div className="field"><label htmlFor="ct-max">Player limit</label><input className="input" id="ct-max" max={512} min={2} onChange={(event) => setMaxPlayers(Number(event.target.value))} required type="number" value={maxPlayers} /><span className="hint">Registration stops when it's full.</span></div> : null}
         </div>
         <div className="field"><label htmlFor="ct-venue">Venue</label><input className="input" id="ct-venue" maxLength={255} onChange={set("venue")} placeholder="Smash Arena, 12 CMH Road, Indiranagar" value={form.venue} /></div>
         <div className="formGrid">
@@ -107,11 +117,21 @@ export default function NewTournamentPage() {
       </section>
 
       <section className="card">
-        <h2>Entry fee</h2>
-        <div className="field" style={{ maxWidth: 260 }}><label htmlFor="ct-fee">Per player (₹), 0 for free</label><input className="input" id="ct-fee" inputMode="decimal" min={0} onChange={set("entryFee")} required type="number" value={form.entryFee} /></div>
+        <h2>Categories</h2>
+        <p className="muted" style={{ lineHeight: 1.5, margin: 0 }}>
+          Running several competitions in one event, like men's, women's and mixed doubles? Add a category for each, with its own player limit and fee.
+          Players pick the categories they enter, and each category gets its own matches and leaderboard. Leave this empty for a single competition.
+        </p>
+        <CategoryBuilder defaultFee={form.entryFee} onChange={setCategories} value={categories} />
+      </section>
+
+      <section className="card">
+        <h2>{hasCategories ? "Payment" : "Entry fee"}</h2>
+        {!hasCategories ? <div className="field" style={{ maxWidth: 260 }}><label htmlFor="ct-fee">Per player (₹), 0 for free</label><input className="input" id="ct-fee" inputMode="decimal" min={0} onChange={set("entryFee")} required type="number" value={form.entryFee} /></div> : null}
+        {hasCategories && fee <= 0 ? <p className="muted" style={{ margin: 0 }}>All categories are free, so there's nothing to collect.</p> : null}
         {fee > 0 ? (
           <>
-            <p className="muted" style={{ lineHeight: 1.5, margin: 0 }}>Players pay you directly by UPI. They see a QR code and a pay button, then enter their UTR, and you confirm each payment from your registrations page. Pickelton never holds the money.</p>
+            <p className="muted" style={{ lineHeight: 1.5, margin: 0 }}>{hasCategories ? "A player entering several categories pays their total in one UPI payment. " : ""}Players pay you directly by UPI. They see a QR code and a pay button, then enter their UTR, and you confirm each payment from your registrations page. Pickelton never holds the money.</p>
             <div className="formGrid">
               <div className="field"><label htmlFor="ct-upi">Your UPI ID</label><input autoComplete="off" className="input" id="ct-upi" maxLength={100} onChange={set("upiId")} placeholder="name@okhdfcbank" required value={form.upiId} /><span className="hint">From GPay, PhonePe or your bank app (linked to the account that should receive the money).</span></div>
               <div className="field"><label htmlFor="ct-payee">Name shown to payers</label><input className="input" id="ct-payee" maxLength={120} onChange={set("payeeName")} placeholder="As on the bank account" value={form.payeeName} /></div>

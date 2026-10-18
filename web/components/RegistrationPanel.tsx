@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { CheckCircle2, Clock } from "lucide-react";
 import { formatCurrency } from "@pickelton/utils";
-import type { Registration, RegistrationQuestion, Tournament } from "@pickelton/types";
+import type { Registration, RegistrationQuestion, Tournament, TournamentCategory } from "@pickelton/types";
 import { api, errorMessage, useSession } from "../lib/session";
 import { PhoneVerify } from "./PhoneVerify";
 import { ConfirmDialog, Notice, Spinner } from "./ui";
@@ -15,9 +15,14 @@ export function registrationClosedReason(tournament: Tournament) {
   if (tournament.status !== "UPCOMING") return "Registration is closed for this tournament.";
   if (tournament.registrationDeadline && new Date(tournament.registrationDeadline).getTime() < Date.now()) return "Registration has closed.";
   if (new Date(tournament.startDate).getTime() < Date.now()) return "This tournament has already started.";
-  if (tournament.registeredCount >= tournament.maxPlayers) return "This tournament is full.";
+  const full = tournament.categories.length
+    ? tournament.categories.every(categoryFull)
+    : tournament.registeredCount >= tournament.maxPlayers;
+  if (full) return "This tournament is full.";
   return "";
 }
+
+export const categoryFull = (category: TournamentCategory) => category.registeredCount >= category.maxPlayers;
 
 // Everything a player does on a tournament page: register (answering the host's questions), pay, track status.
 export function RegistrationPanel({ tournament, registration, onChanged }: {
@@ -27,20 +32,26 @@ export function RegistrationPanel({ tournament, registration, onChanged }: {
 }) {
   const session = useSession();
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [error, setError] = useState("");
   const [current, setCurrent] = useState<Registration | null>(registration);
   const active = current?.status === "REGISTERED" ? current : null;
   const closed = registrationClosedReason(tournament);
-  const fee = Number(tournament.entryFee ?? 0);
+  const hasCategories = tournament.categories.length > 0;
+  // With categories, the fee is the total of the categories picked; the lowest fee is shown before signing in.
+  const fee = hasCategories
+    ? tournament.categories.filter((category) => picked.includes(category.id)).reduce((sum, category) => sum + Number(category.entryFee ?? 0), 0)
+    : Number(tournament.entryFee ?? 0);
+  const fromFee = Number(tournament.entryFee ?? 0);
   const path = `/tournaments/${tournament.id}`;
 
   if (!session) {
     return (
       <section className="card">
         <h2>Register</h2>
-        <p className="muted" style={{ margin: 0 }}>{closed || `Create a free Pickelton account to register${fee ? ` and pay the ${formatCurrency(fee)} entry fee by UPI` : ""}.`}</p>
+        <p className="muted" style={{ margin: 0 }}>{closed || `Create a free Pickelton account to register${fromFee ? ` and pay the ${hasCategories ? "entry fee (from " + formatCurrency(fromFee) + ")" : formatCurrency(fromFee) + " entry fee"} by UPI` : ""}.`}</p>
         {!closed ? (
           <div className="row">
             <Link className="btn primary" href={`/signup?next=${encodeURIComponent(path)}`}>Sign up to register</Link>
@@ -53,10 +64,11 @@ export function RegistrationPanel({ tournament, registration, onChanged }: {
 
   async function register(event: FormEvent) {
     event.preventDefault();
+    if (hasCategories && !picked.length) return setError("Choose at least one category to enter.");
     setBusy(true);
     setError("");
     try {
-      setCurrent(await api.tournaments.register(tournament.id, answers));
+      setCurrent(await api.tournaments.register(tournament.id, answers, hasCategories ? picked : undefined));
       onChanged();
     } catch (cause) {
       setError(errorMessage(cause));
@@ -100,7 +112,8 @@ export function RegistrationPanel({ tournament, registration, onChanged }: {
         ) : (
           <UpiPayment onUpdated={setCurrent} registration={active} tournament={tournament} />
         )}
-        {Object.keys(active.answers ?? {}).length ? <Answers answers={active.answers} questions={tournament.registrationQuestions} /> : null}
+        {active.categories?.length || Object.keys(active.answers ?? {}).length
+          ? <Answers answers={active.answers ?? {}} categories={active.categories ?? []} questions={tournament.registrationQuestions} /> : null}
         {tournament.status === "UPCOMING" ? <button className="btn ghost" disabled={busy} onClick={() => setConfirmCancel(true)} style={{ alignSelf: "flex-start", color: "var(--muted)" }} type="button">Cancel my registration</button> : null}
         <Notice message={error} />
         <ConfirmDialog
@@ -123,8 +136,28 @@ export function RegistrationPanel({ tournament, registration, onChanged }: {
     <form className="card" onSubmit={register}>
       <div className="row between">
         <h2>Register</h2>
-        <span className="muted" style={{ fontWeight: 700 }}>{fee ? `${formatCurrency(fee)} entry · paid by UPI` : "Free entry"}</span>
+        <span className="muted" style={{ fontWeight: 700 }}>{fee ? `${formatCurrency(fee)} entry · paid by UPI` : hasCategories && !picked.length ? "Pick your categories" : "Free entry"}</span>
       </div>
+      {hasCategories ? (
+        <fieldset className="vstack" style={{ border: 0, gap: 8, margin: 0, padding: 0 }}>
+          <legend className="fieldLabel" style={{ marginBottom: 8 }}>Categories you're entering <span aria-hidden="true" style={{ color: "var(--hot-ink)" }}>*</span></legend>
+          {tournament.categories.map((category) => {
+            const full = categoryFull(category);
+            const checked = picked.includes(category.id);
+            return (
+              <label className="listRow" key={category.id} style={{ cursor: full ? "not-allowed" : "pointer", opacity: full ? 0.55 : 1, ...(checked ? { borderColor: "var(--acc)" } : {}) }}>
+                <input checked={checked} disabled={full} onChange={(event) => setPicked((current) => event.target.checked ? [...current, category.id] : current.filter((id) => id !== category.id))} type="checkbox" />
+                <span className="grow">
+                  <strong>{category.name}</strong>
+                  <small>{category.format === "DOUBLES" ? "Doubles" : "Singles"} · {full ? "Full" : `${category.maxPlayers - category.registeredCount} of ${category.maxPlayers} spots left`}</small>
+                </span>
+                <strong>{Number(category.entryFee ?? 0) ? formatCurrency(Number(category.entryFee)) : "Free"}</strong>
+              </label>
+            );
+          })}
+          {tournament.categories.some((category) => category.format === "DOUBLES") ? <span className="hint">For doubles, your partner registers too, with their own account.</span> : null}
+        </fieldset>
+      ) : null}
       {tournament.registrationQuestions.map((question) => (
         <QuestionField key={question.id} onChange={(value) => setAnswers((existing) => ({ ...existing, [question.id]: value }))} question={question} value={answers[question.id] ?? ""} />
       ))}
@@ -157,10 +190,20 @@ function QuestionField({ question, value, onChange }: { question: RegistrationQu
   );
 }
 
-function Answers({ answers, questions }: { answers: Record<string, string>; questions: RegistrationQuestion[] }) {
+function Answers({ answers, categories, questions }: {
+  answers: Record<string, string>;
+  categories: Array<{ id: string; name: string }>;
+  questions: RegistrationQuestion[];
+}) {
   return (
     <section className="card">
-      <h2>Your answers</h2>
+      <h2>Your entry</h2>
+      {categories.length ? (
+        <div className="row between" style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+          <span className="muted">{categories.length === 1 ? "Category" : "Categories"}</span>
+          <strong style={{ textAlign: "right" }}>{categories.map((category) => category.name).join(", ")}</strong>
+        </div>
+      ) : null}
       {questions.filter((question) => answers[question.id]).map((question) => (
         <div className="row between" key={question.id} style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
           <span className="muted">{question.label}</span><strong>{question.type === "CHECKBOX" ? "Yes" : answers[question.id]}</strong>
