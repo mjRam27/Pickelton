@@ -129,7 +129,8 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
       get: (id: string) => get<Tournament>(`/api/tournaments/${id}`),
       create: (request: CreateTournamentRequest) => send<Tournament>("POST", "/api/tournaments", request),
       update: (id: string, request: UpdateTournamentRequest) => send<Tournament>("PATCH", `/api/tournaments/${id}`, request),
-      register: (id: string, answers: Record<string, string> = {}) => send<Registration>("POST", `/api/tournaments/${id}/register`, { answers } satisfies TournamentRegisterRequest),
+      register: (id: string, answers: Record<string, string> = {}, categoryIds?: string[]) =>
+        send<Registration>("POST", `/api/tournaments/${id}/register`, { answers, categoryIds } satisfies TournamentRegisterRequest),
       // The signed-in player's registration for this tournament; null when not registered.
       myRegistration: async (id: string) => (await get<Registration | null | undefined>(`/api/tournaments/${id}/registration`)) ?? null,
       myRegistrations: () => get<Registration[]>("/api/tournaments/registrations/me"),
@@ -149,6 +150,11 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
       addPoint: (id: string, teamCode: TeamCode) => send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/point`, { teamCode }),
       undo: (id: string) => send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/undo`),
       complete: (id: string) => send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/complete`),
+      forTournament: (tournamentId: string) => get<Match[]>(`/api/matches/tournament/${tournamentId}`),
+      // Host enters a final score without live scoring; this completes the match.
+      enterResult: (id: string, scoreA: number, scoreB: number, reason = "Result entered by host") =>
+        send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/correction`, { scoreA, scoreB, reason }),
+      cancel: (id: string) => send<Match>("PATCH", `/api/matches/${id}/cancel`),
     },
     host: {
       mine: () => get<HostVerification | null>("/api/v1/host-verifications/me"),
