@@ -232,10 +232,31 @@ CREATE TABLE IF NOT EXISTS score_events (
     CONSTRAINT uk_score_event_sequence UNIQUE (match_id, sequence_number)
 );
 
+CREATE TABLE IF NOT EXISTS tournament_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    name VARCHAR(80) NOT NULL,
+    format VARCHAR(20) NOT NULL,
+    max_players INT NOT NULL,
+    entry_fee NUMERIC(12, 2),
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_tournament_category_format CHECK (format IN ('SINGLES', 'DOUBLES')),
+    CONSTRAINT chk_tournament_category_max_players CHECK (max_players >= 2)
+);
+
+CREATE TABLE IF NOT EXISTS registration_categories (
+    registration_id UUID NOT NULL REFERENCES registrations(id) ON DELETE CASCADE,
+    category_id UUID NOT NULL REFERENCES tournament_categories(id) ON DELETE CASCADE,
+    PRIMARY KEY (registration_id, category_id)
+);
+
 CREATE TABLE IF NOT EXISTS tournament_matches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     match_id UUID NOT NULL UNIQUE REFERENCES matches(id) ON DELETE CASCADE,
+    category_id UUID REFERENCES tournament_categories(id) ON DELETE SET NULL,
     round VARCHAR(50),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -276,6 +297,9 @@ CREATE INDEX IF NOT EXISTS idx_match_participants_user_id ON match_participants(
 CREATE INDEX IF NOT EXISTS idx_match_state_match_id ON match_state(match_id);
 CREATE INDEX IF NOT EXISTS idx_score_events_match_id_seq ON score_events(match_id, sequence_number);
 CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id ON tournament_matches(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_tournament_matches_category ON tournament_matches(category_id);
+CREATE INDEX IF NOT EXISTS idx_tournament_categories_tournament ON tournament_categories(tournament_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_registration_categories_category ON registration_categories(category_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);

@@ -2,6 +2,8 @@ package com.pickelton.backend.registration.entity;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -9,6 +11,7 @@ import com.pickelton.backend.common.entity.BaseEntity;
 import com.pickelton.backend.enums.PaymentStatus;
 import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.tournament.entity.Tournament;
+import com.pickelton.backend.tournament.entity.TournamentCategory;
 import com.pickelton.backend.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +19,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -74,4 +79,13 @@ public class Registration extends BaseEntity {
 
     // Shown to the player when the host rejects a payment.
     private String hostNote;
+
+    // Categories entered, for events that have categories. One registration and one payment cover them all.
+    @Builder.Default
+    @EqualsAndHashCode.Exclude
+    @ManyToMany
+    @JoinTable(name = "registration_categories",
+        joinColumns = @JoinColumn(name = "registration_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private List<TournamentCategory> categories = new ArrayList<>();
 }

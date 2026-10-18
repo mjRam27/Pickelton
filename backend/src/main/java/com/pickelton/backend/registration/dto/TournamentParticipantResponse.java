@@ -1,9 +1,10 @@
 package com.pickelton.backend.registration.dto;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.pickelton.backend.enums.RegistrationStatus;
 
 public record TournamentParticipantResponse(UUID registrationId, UUID userId, String name,
-                                            RegistrationStatus status) {
+                                            RegistrationStatus status, List<UUID> categoryIds) {
 }

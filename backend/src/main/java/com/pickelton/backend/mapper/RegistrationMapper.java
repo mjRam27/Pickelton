@@ -1,10 +1,14 @@
 package com.pickelton.backend.mapper;
 
+import java.util.Comparator;
+import java.util.List;
+
 import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.registration.dto.HostRegistrationResponse;
 import com.pickelton.backend.registration.dto.RegistrationResponse;
 import com.pickelton.backend.registration.dto.TournamentParticipantResponse;
 import com.pickelton.backend.registration.entity.Registration;
+import com.pickelton.backend.tournament.dto.CategorySummary;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,6 +26,7 @@ public class RegistrationMapper {
             registration.getAmountDue(),
             registration.getPaymentReference(),
             registration.getHostNote(),
+            categories(registration),
             registration.getCreatedAt(),
             registration.getUpdatedAt()
         );
@@ -43,6 +48,7 @@ public class RegistrationMapper {
             registration.getPaymentSubmittedAt(),
             registration.getPaymentReviewedAt(),
             registration.getHostNote(),
+            categories(registration),
             registration.getCreatedAt()
         );
     }
@@ -52,7 +58,15 @@ public class RegistrationMapper {
             registration.getId(),
             registration.getUser().getId(),
             registration.getUser().getName(),
-            RegistrationStatus.REGISTERED
+            RegistrationStatus.REGISTERED,
+            registration.getCategories().stream().map(category -> category.getId()).toList()
         );
+    }
+
+    private static List<CategorySummary> categories(Registration registration) {
+        return registration.getCategories().stream()
+            .sorted(Comparator.comparing(category -> category.getSortOrder()))
+            .map(category -> new CategorySummary(category.getId(), category.getName()))
+            .toList();
     }
 }

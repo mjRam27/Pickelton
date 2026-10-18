@@ -2,6 +2,7 @@ package com.pickelton.backend.match.entity;
 
 import com.pickelton.backend.common.entity.BaseEntity;
 import com.pickelton.backend.tournament.entity.Tournament;
+import com.pickelton.backend.tournament.entity.TournamentCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,6 +34,11 @@ public class TournamentMatch extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id", nullable = false, unique = true)
     private Match match;
+
+    // The category this match is played in, for events with categories.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private TournamentCategory category;
 
     @Column(length = 50)
     private String round;

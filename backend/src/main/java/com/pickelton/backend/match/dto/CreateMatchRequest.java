@@ -16,6 +16,7 @@ import jakarta.validation.constraints.Size;
 public record CreateMatchRequest(
     MatchMode mode,
     UUID tournamentId,
+    UUID categoryId,
     UUID player1Id,
     UUID player2Id,
     List<ParticipantRequest> participants,

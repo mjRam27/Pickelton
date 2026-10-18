@@ -30,7 +30,8 @@ public record CreateTournamentRequest(
     @Size(max = 100) @Pattern(regexp = UPI_ID, message = "Enter a valid UPI ID, like name@okhdfcbank") String upiId,
     @Size(max = 120) String payeeName,
     @Size(max = 1000) String paymentInstructions,
-    @Valid @Size(max = 15, message = "At most 15 registration questions") List<RegistrationQuestion> registrationQuestions
+    @Valid @Size(max = 15, message = "At most 15 registration questions") List<RegistrationQuestion> registrationQuestions,
+    @Valid @Size(max = 12, message = "At most 12 categories") List<CategoryRequest> categories
 ) {
     public static final String UPI_ID = "^[a-zA-Z0-9._-]{2,256}@[a-zA-Z]{2,64}$";
 }

@@ -12,11 +12,13 @@ import com.pickelton.backend.enums.TournamentType;
 import com.pickelton.backend.user.dto.PublicUserSummary;
 
 // registeredCount counts active registrations, so clients can show "12 of 32 spots taken".
+// categories is empty for a single-competition event.
 public record TournamentResponse(UUID id, String name, String description, SportType sportType,
                                  TournamentType tournamentType, TournamentStatus status, PublicUserSummary createdBy,
                                  UUID clubId, String clubName, BigDecimal entryFee, Integer maxPlayers,
                                  LocalDateTime startDate, String venue, LocalDateTime registrationDeadline,
                                  String upiId, String payeeName, String paymentInstructions,
-                                 List<RegistrationQuestion> registrationQuestions, long registeredCount,
+                                 List<RegistrationQuestion> registrationQuestions, List<CategoryResponse> categories,
+                                 long registeredCount,
                                  OffsetDateTime createdAt, OffsetDateTime updatedAt) {
 }

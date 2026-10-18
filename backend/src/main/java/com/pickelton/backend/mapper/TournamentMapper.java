@@ -1,10 +1,14 @@
 package com.pickelton.backend.mapper;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import com.pickelton.backend.club.entity.Club;
 import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.registration.repository.RegistrationRepository;
+import com.pickelton.backend.tournament.dto.CategoryResponse;
 import com.pickelton.backend.tournament.dto.TournamentResponse;
 import com.pickelton.backend.tournament.entity.Tournament;
 import org.springframework.stereotype.Component;
@@ -24,6 +28,15 @@ public class TournamentMapper {
         Club club = tournament.getClub();
         long registered = tournament.getId() == null ? 0
             : registrationRepository.countByTournamentIdAndStatus(tournament.getId(), RegistrationStatus.REGISTERED);
+        Map<UUID, Long> perCategory = new HashMap<>();
+        if (tournament.getId() != null && !tournament.getCategories().isEmpty()) {
+            registrationRepository.countByCategory(tournament.getId(), RegistrationStatus.REGISTERED)
+                .forEach(row -> perCategory.put((UUID) row[0], (Long) row[1]));
+        }
+        List<CategoryResponse> categories = tournament.getCategories().stream()
+            .map(category -> new CategoryResponse(category.getId(), category.getName(), category.getFormat(),
+                category.getMaxPlayers(), category.getEntryFee(), perCategory.getOrDefault(category.getId(), 0L)))
+            .toList();
         return new TournamentResponse(
             tournament.getId(),
             tournament.getName(),
@@ -43,6 +56,7 @@ public class TournamentMapper {
             tournament.getPayeeName(),
             tournament.getPaymentInstructions(),
             tournament.getRegistrationQuestions() == null ? List.of() : tournament.getRegistrationQuestions(),
+            categories,
             registered,
             tournament.getCreatedAt(),
             tournament.getUpdatedAt()

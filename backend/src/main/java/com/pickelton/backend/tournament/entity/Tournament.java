@@ -19,6 +19,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -91,4 +94,12 @@ public class Tournament extends BaseEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private List<RegistrationQuestion> registrationQuestions = new ArrayList<>();
+
+    // Optional categories (Men's doubles, Mixed...). With none, the event is a single competition using
+    // entryFee and maxPlayers above.
+    @Builder.Default
+    @EqualsAndHashCode.Exclude
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<TournamentCategory> categories = new ArrayList<>();
 }

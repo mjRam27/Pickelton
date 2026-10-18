@@ -3,10 +3,15 @@ package com.pickelton.backend.registration.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.pickelton.backend.common.exception.BadRequestException;
@@ -27,6 +32,7 @@ import com.pickelton.backend.registration.entity.Registration;
 import com.pickelton.backend.registration.repository.RegistrationRepository;
 import com.pickelton.backend.tournament.dto.RegistrationQuestion;
 import com.pickelton.backend.tournament.entity.Tournament;
+import com.pickelton.backend.tournament.entity.TournamentCategory;
 import com.pickelton.backend.tournament.repository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -56,22 +62,28 @@ public class RegistrationService {
         if (tournament.getRegistrationDeadline() != null && now.isAfter(tournament.getRegistrationDeadline())) {
             throw new BadRequestException("Registration for this tournament has closed");
         }
-        long activeRegistrations = registrationRepository.countByTournamentIdAndStatus(tournamentId, RegistrationStatus.REGISTERED);
-        if (activeRegistrations >= tournament.getMaxPlayers()) {
-            throw new BadRequestException("Tournament is full");
-        }
-        Map<String, String> answers = validateAnswers(tournament.getRegistrationQuestions(),
-            request == null ? null : request.answers());
-
         Registration registration = registrationRepository.findByTournamentIdAndUserId(tournamentId, currentUser.getId())
             .orElseGet(() -> Registration.builder().user(currentUser).tournament(tournament).build());
         if (registration.getStatus() == RegistrationStatus.REGISTERED) {
             throw new BadRequestException("You're already registered for this tournament");
         }
-        BigDecimal fee = tournament.getEntryFee();
+        List<TournamentCategory> categories = chooseCategories(tournament, request == null ? null : request.categoryIds());
+        if (categories.isEmpty()) {
+            long activeRegistrations = registrationRepository.countByTournamentIdAndStatus(tournamentId, RegistrationStatus.REGISTERED);
+            if (activeRegistrations >= tournament.getMaxPlayers()) {
+                throw new BadRequestException("Tournament is full");
+            }
+        }
+        Map<String, String> answers = validateAnswers(tournament.getRegistrationQuestions(),
+            request == null ? null : request.answers());
+
+        BigDecimal fee = categories.isEmpty() ? tournament.getEntryFee() : categories.stream()
+            .map(TournamentCategory::getEntryFee).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
         boolean paid = fee != null && fee.signum() > 0;
         registration.setStatus(RegistrationStatus.REGISTERED);
         registration.setAnswers(answers);
+        registration.getCategories().clear();
+        registration.getCategories().addAll(categories);
         registration.setAmountDue(paid ? fee : BigDecimal.ZERO);
         registration.setPaymentStatus(paid ? PaymentStatus.AWAITING_PAYMENT : PaymentStatus.NOT_REQUIRED);
         registration.setPaymentReference(null);
@@ -172,6 +184,35 @@ public class RegistrationService {
         requireTournament(tournamentId);
         return registrationRepository.findByTournamentIdAndStatus(tournamentId, RegistrationStatus.REGISTERED)
             .stream().map(registrationMapper::toParticipantResponse).toList();
+    }
+
+    // For events with categories, the player must pick at least one, each from this event and not full.
+    // The tournament row is locked for the whole registration, so two players can't take the last spot together.
+    private List<TournamentCategory> chooseCategories(Tournament tournament, List<UUID> categoryIds) {
+        if (tournament.getCategories().isEmpty()) {
+            return List.of();
+        }
+        Set<UUID> wanted = categoryIds == null ? Set.of() : new LinkedHashSet<>(categoryIds);
+        if (wanted.isEmpty()) {
+            throw new BadRequestException("Choose at least one category to enter");
+        }
+        Map<UUID, Long> taken = new HashMap<>();
+        registrationRepository.countByCategory(tournament.getId(), RegistrationStatus.REGISTERED)
+            .forEach(row -> taken.put((UUID) row[0], (Long) row[1]));
+        List<TournamentCategory> chosen = new ArrayList<>();
+        for (TournamentCategory category : tournament.getCategories()) {
+            if (!wanted.contains(category.getId())) {
+                continue;
+            }
+            if (taken.getOrDefault(category.getId(), 0L) >= category.getMaxPlayers()) {
+                throw new BadRequestException(category.getName() + " is full");
+            }
+            chosen.add(category);
+        }
+        if (chosen.size() != wanted.size()) {
+            throw new BadRequestException("That category isn't part of this event");
+        }
+        return chosen;
     }
 
     // Keeps only answers to the tournament's questions and checks required, number and dropdown answers.
