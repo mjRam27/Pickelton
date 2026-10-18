@@ -1,19 +1,20 @@
-// pickelton-app/packages/types/src/common.ts
+// packages/types/src/common.ts
 export type ISODate = string;
 export type ISODateTime = string;
 export type UUID = string;
 
 export type ApiResponse<T> = {
-  success?: boolean;
+  success: boolean;
   data: T;
-  message?: string;
+  message?: string | null;
   timestamp?: ISODateTime;
 };
 
+// Thrown by the shared ApiClient. status is the HTTP status, or 0 when the server could not be reached.
 export type ApiError = {
   message: string;
-  code?: string;
-  fieldErrors?: Record<string, string>;
+  status?: number;
+  errors?: Array<{ field: string; message: string }> | null;
 };
 
 export type PageResponse<T> = {
@@ -22,5 +23,5 @@ export type PageResponse<T> = {
   size: number;
   totalElements: number;
   totalPages: number;
-  last?: boolean;
+  last: boolean;
 };

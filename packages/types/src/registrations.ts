@@ -1,4 +1,4 @@
-// pickelton-app/packages/types/src/registrations.ts
+// packages/types/src/registrations.ts
 import type { ISODateTime, UUID } from "./common";
 import type { RegistrationStatus } from "./enums";
 
