@@ -83,6 +83,10 @@ Java schema changes: add a SQL file under `backend/src/main/resources/db/` AND u
 - Entry fees are paid **directly to the host by UPI**. The player submits the UTR and the host confirms or rejects it;
   Pickelton never holds the money. A paid tournament must have a UPI ID.
 - Players need a verified phone to register. Registration stops at the player limit or the closing time.
+- An event may have **categories** (each with its own format, player limit and fee). Players must pick at least one;
+  one registration and one payment cover all of them. Tournament matches in such an event belong to a category, and
+  only players registered in that category can play in it. A category with players can't be removed or shrunk below
+  its player count.
 - A **TeamUp** has exactly **two accepted members**. Invitations need acceptance, and a user can be in many TeamUps.
 - Match types are **Friendly, TeamUp, Club, Tournament** (there is no "practice" type). They share one scoring engine.
 - Results count toward **ratings only after both sides confirm** (or an admin resolves the dispute).

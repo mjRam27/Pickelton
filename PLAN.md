@@ -93,6 +93,8 @@ Not being built. See *Product focus* above.
 - [x] Leaderboard · [x] Create tournament · [x] Create match · [x] Live scorer · [x] Profile + settings · [x] Host desk + apply
 - [x] Tournament registration (custom questions, UPI payment, UTR) · [x] Review registrations · [x] My tournaments
 - [x] Phone verification (SMS) · [x] Public (no-login) tournament page
+- [x] Event categories (own limit and fee each) · [x] Tournament matches (create, score live, enter result)
+- [x] Per-category leaderboard (public)
 - [ ] Tournament bracket · [ ] Organizer console · [ ] Public club and player pages · [ ] Player profile (public)
 
 ### Batch 9: Partner (parked)

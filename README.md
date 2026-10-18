@@ -66,8 +66,8 @@ Set up the database:
 
 - **New database:** run `backend/src/main/resources/schema.sql`.
 - **Existing database:** run any files in `backend/src/main/resources/db/` you haven't applied yet, for example
-  `002_discovery_and_follows.sql` (club coordinates and player follows) and `003_tournament_registrations.sql`
-  (registration forms and UPI payments).
+  `002_discovery_and_follows.sql` (club coordinates and player follows), `003_tournament_registrations.sql`
+  (registration forms and UPI payments) and `004_tournament_categories.sql` (categories inside an event).
 
 The backend uses `ddl-auto: validate`, so it refuses to start until the schema matches the code. Every schema change
 needs a new SQL file in `db/` **and** an update to `schema.sql`.
@@ -110,6 +110,12 @@ the host **directly by UPI** (QR code or a `upi://` button), then enter their UT
 their bank app and confirms or rejects it on `/tournaments/{id}/manage`, which also exports a CSV. Pickelton never
 holds the money. A payment gateway (e.g. Razorpay) can replace this later.
 
+An event can have **categories** (Men's doubles, Mixed doubles, Under-18 singles...), each with its own player limit and
+fee. Players tick the categories they enter and pay the total in one UPI payment. On `/tournaments/{id}/matches` the
+host sets up matches between players registered in a category and scores them live or enters the final score. The
+public `/tournaments/{id}/leaderboard` shows one table per category, ranked by wins, then fewest losses, then point
+difference; doubles pairs are ranked as teams.
+
 ## Deployment
 
 Deploy three things:
@@ -138,6 +144,7 @@ mvn test
 - `MatchServiceTest` and `MatchControllerTest` in `backend/` no longer compile against the current match code, so
   `mvn test` and `mvn spring-boot:run` fail at test compilation. Until they're fixed, add `-Dmaven.test.skip=true`.
 - Applying `db/supabase_production_refactor.sql` fails at line 78 (`match_status` cast).
-- Tournament registration and UPI payments are on the website only; the mobile app doesn't have them yet.
+- Tournament registration, UPI payments, categories and the matches page are on the website only; the mobile app
+  doesn't have them yet (its leaderboard still works and shows the overall table).
 - The mobile contract test for the private Supabase KYC bucket fails because that bucket is no longer in
   `db/supabase_schema.sql`.
