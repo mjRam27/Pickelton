@@ -37,7 +37,8 @@ spring:
     redis:
       url: ${REDIS_URL}
       ssl:
-        enabled: true
+        # Upstash needs TLS; set SPRING_DATA_REDIS_SSL_ENABLED=false for a local redis-server.
+        enabled: ${SPRING_DATA_REDIS_SSL_ENABLED:true}
 
 server:
   port: ${SERVER_PORT:8080}
