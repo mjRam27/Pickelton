@@ -1,0 +1,86 @@
+/* web/app/globals.css */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+a { color: var(--acc-ink); }
+a:hover { color: var(--text); }
+:focus-visible { outline: 3px solid var(--blu); outline-offset: 3px; }
+
+@keyframes pk-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.page { min-height: 100vh; overflow-x: hidden; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+.stack { display: flex; flex-direction: column; gap: 36px; }
+.stack.tight { gap: 14px; }
+.display { font-family: var(--font-display); font-weight: 900; text-transform: uppercase; }
+.accent { color: var(--acc-ink); }
+.eyebrow { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.button { display: inline-flex; align-items: center; height: 56px; padding: 0 24px; border-radius: 16px; font-size: 16px; font-weight: 800; text-decoration: none; }
+.button.small { height: 44px; padding: 0 18px; border-radius: 12px; font-size: 15px; }
+.button.primary { background: var(--acc); color: var(--on-acc); }
+.button.outline { border: 1.5px solid var(--text); color: var(--text); }
+.button.navy { background: var(--on-blu); color: #FFFFFF; }
+.button:hover { opacity: 0.9; }
+.pill { align-self: flex-start; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 20px; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.pill.soon { align-self: center; letter-spacing: 0.04em; color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.actions.end { justify-content: flex-end; }
+
+.siteHeader { border-bottom: 1px solid var(--line); }
+.headerRow { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px; padding-top: 18px; padding-bottom: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-family: var(--font-display); font-size: 26px; font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase; }
+.mainNav { display: flex; flex: 1; flex-wrap: wrap; gap: 4px 24px; font-size: 15px; font-weight: 600; }
+.mainNav a { padding: 10px 0; color: var(--text); text-decoration: none; }
+.mainNav a:hover { color: var(--acc-ink); }
+
+.hero { position: relative; overflow: hidden; }
+.heroArt { position: absolute; inset: 0; width: 100%; height: 100%; }
+.heroGrid { position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 48px; align-items: center; padding-top: 72px; padding-bottom: 64px; }
+.heroCopy { display: flex; flex-direction: column; gap: 24px; }
+.heroTitle { margin: 0; font-size: clamp(64px, 9vw, 128px); line-height: 0.84; }
+.lead { margin: 0; max-width: 520px; color: var(--muted); font-size: 19px; line-height: 1.5; text-wrap: pretty; }
+.heroCards { display: flex; flex-direction: column; gap: 16px; justify-self: center; width: 100%; max-width: 520px; }
+.scoreCard { display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 28px; background: var(--acc); color: var(--on-acc); transform: rotate(-2deg); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25); }
+.scoreTop { display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.live { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #D93A0B; animation: pk-pulse 1.2s infinite; }
+.scoreGrid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 20px; align-items: center; }
+.team { font-size: 18px; font-weight: 800; }
+.score { font-size: 72px; line-height: 0.85; }
+.faded { opacity: 0.65; }
+.scoreFlag { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.rankCard { display: flex; align-items: center; gap: 16px; margin-left: 32px; padding: 20px 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--s1); transform: rotate(1.5deg); }
+.rank { color: var(--blu-ink); font-size: 48px; line-height: 1; }
+.rankCard strong { display: block; font-size: 16px; }
+.rankCard small { color: var(--muted); font-size: 14px; }
+
+.band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--s1); }
+.band .wrap { padding-top: 72px; padding-bottom: 72px; }
+.sectionHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.sectionHead p { max-width: 400px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
+.sectionTitle { max-width: 640px; margin: 0; font-size: clamp(40px, 5vw, 64px); line-height: 0.9; }
+.featureGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 16px; }
+.feature { display: flex; flex-direction: column; gap: 12px; padding: 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--bg); }
+.feature h3 { margin: 0; font-size: 20px; font-weight: 800; }
+.feature p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.featureNumber { color: var(--acc-ink); font-size: 56px; line-height: 1; }
+
+.communitySection { padding-top: 72px; padding-bottom: 72px; }
+.community { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 32px; align-items: center; padding: 48px; border-radius: 32px; background: var(--blu); color: var(--on-blu); }
+.community p { max-width: 480px; margin: 0; font-size: 17px; line-height: 1.5; }
+
+.siteFooter { border-top: 1px solid var(--line); }
+.footerRow { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; padding-top: 40px; padding-bottom: 48px; color: var(--muted); font-size: 14px; }
+.footerBrand { color: var(--text); font-size: 22px; }
+
+@media (max-width: 640px) {
+  .community { padding: 28px; }
+  .rankCard { margin-left: 0; }
+  .actions.end { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .dot { animation: none; }
+}

@@ -3,6 +3,9 @@ target/
 .vscode/
 *.iml
 *.log
+*.pem
 .env
 .env.*
+!.env.example
 .DS_Store
+uploads/

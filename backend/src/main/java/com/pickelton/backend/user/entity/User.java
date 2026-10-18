@@ -1,15 +1,11 @@
 package com.pickelton.backend.user.entity;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pickelton.backend.common.entity.BaseEntity;
-import com.pickelton.backend.enums.SportType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,8 +13,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 @Getter
 @Setter
@@ -28,49 +22,42 @@ import org.springframework.security.core.userdetails.UserDetails;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity implements UserDetails {
+public class User extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255, updatable = false)
     private String email;
 
     @JsonIgnore
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SportType sportType;
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
-    }
+    @Column(name = "phone_number", nullable = false, unique = true, length = 32)
+    private String phoneNumber;
 
-    @Override
-    public String getUsername() {
-        return email;
-    }
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    @Column(name = "phone_verified", nullable = false)
+    private boolean phoneVerified;
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    @Column(name = "auth_provider", nullable = false, length = 30)
+    private String authProvider;
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    @Column(name = "google_subject", unique = true, length = 255)
+    private String googleSubject;
 
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    @Column(length = 280)
+    private String bio;
+
+    @Column(name = "avatar_url", length = 1000)
+    private String avatarUrl;
+
+    @Column(length = 100)
+    private String city;
 }

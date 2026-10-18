@@ -1,0 +1,14 @@
+/* web/app/(app)/matches/[id]/scoring.css */
+.scorer { display: flex; flex-direction: column; gap: 16px; }
+.panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; min-height: 420px; }
+.panel { position: relative; display: flex; align-items: center; justify-content: center; min-height: 360px; padding: 20px; border: 1.5px solid var(--line); border-radius: 28px; background: var(--s1); color: var(--text); cursor: pointer; }
+.panel.primary { border-color: var(--acc); background: var(--acc); color: var(--on-acc); }
+.panel:not(:disabled):hover { transform: scale(0.995); }
+.panel:disabled { cursor: default; }
+.panelName { position: absolute; top: 18px; left: 20px; font-size: 16px; font-weight: 800; }
+.panelScore { font-family: var(--font-display); font-size: clamp(120px, 16vw, 220px); font-weight: 900; line-height: 0.8; }
+.panelFlag { position: absolute; bottom: 18px; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+@media (max-width: 700px) {
+  .panels { grid-template-columns: 1fr; min-height: 0; }
+  .panel { min-height: 220px; }
+}

@@ -1,8 +1,13 @@
 package com.pickelton.backend.match.entity;
 
+import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.pickelton.backend.common.entity.BaseEntity;
+import com.pickelton.backend.enums.MatchType;
 import com.pickelton.backend.enums.MatchStatus;
-import com.pickelton.backend.tournament.entity.Tournament;
+import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +23,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
@@ -30,31 +39,39 @@ import lombok.Setter;
 public class Match extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tournament_id", nullable = false)
-    private Tournament tournament;
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player1_id", nullable = false)
-    private User player1;
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(nullable = false, columnDefinition = "sport_type")
+    private SportType sport;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player2_id", nullable = false)
-    private User player2;
-
-    @Column(nullable = false)
-    private Integer score1;
-
-    @Column(nullable = false)
-    private Integer score2;
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "match_type", nullable = false, columnDefinition = "match_type")
+    private MatchType matchType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "winner_id")
     private User winner;
 
-    @Column(nullable = false)
+    @Column(length = 50)
     private String round;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(nullable = false, columnDefinition = "match_status")
     private MatchStatus status;
+
+    @Column(name = "scheduled_at")
+    private OffsetDateTime scheduledAt;
+
+    @Column(length = 255)
+    private String location;
+
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false, columnDefinition = "jsonb")
+    private Map<String, Object> rules = new LinkedHashMap<>();
 }

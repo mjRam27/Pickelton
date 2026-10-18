@@ -1,0 +1,16 @@
+{
+  "name": "@pickelton/api",
+  "private": true,
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pickelton/types": "*"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2"
+  }
+}
