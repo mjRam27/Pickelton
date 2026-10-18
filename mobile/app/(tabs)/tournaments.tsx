@@ -1,41 +1,112 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { formatCurrency, formatShortDate } from "@pickelton/utils";
 import { router } from "expo-router";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "../../components/AppHeader";
-import { CardContainer } from "../../components/CardContainer";
-import { EmptyState } from "../../components/EmptyState";
-import { ScreenIntro } from "../../components/ScreenIntro";
-import { SectionHeader } from "../../components/SectionHeader";
-import { StatusPill } from "../../components/StatusPill";
+import { Pressable, Text, View } from "react-native";
+import { PulseDot } from "../../components/Brand";
+import { Card } from "../../components/Card";
+import { DateBlock } from "../../components/DateBlock";
+import { EmptyState, LoadingState } from "../../components/EmptyState";
+import { Notice } from "../../components/Notice";
+import { Screen } from "../../components/Screen";
+import { Chips } from "../../components/Segmented";
+import { Display } from "../../components/Typography";
 import { apiErrorMessage, fetchTournaments, type Tournament } from "../../services/api";
-import type { ThemeColors } from "../../theme/colors";
-import { useThemeStyles } from "../../theme/ThemeProvider";
+import { fonts, type ThemeColors } from "../../theme/colors";
+import { useTheme, useThemeStyles } from "../../theme/ThemeProvider";
 
-const showcase: Tournament[] = [{ id: "preview-summer-smash", name: "Bengaluru Summer Smash", description: "A city-side singles ladder with a crisp Saturday finish.", sportType: "PICKLEBALL", tournamentType: "SINGLES", status: "UPCOMING", clubName: "Indiranagar Arena", entryFee: 499, maxPlayers: 32, startDate: "2026-06-20T09:00:00" }];
+type SportFilter = "ALL" | "PICKLEBALL" | "BADMINTON";
+const LIVE_STATUSES = ["LIVE", "ONGOING", "IN_PROGRESS"];
 
 export default function TournamentsScreen() {
   const styles = useThemeStyles(createStyles);
+  const { colors } = useTheme();
   const [items, setItems] = useState<Tournament[]>([]);
+  const [filter, setFilter] = useState<SportFilter>("ALL");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  useEffect(() => { fetchTournaments().then((data) => setItems(data.length ? data : showcase)).catch((cause) => { setError(apiErrorMessage(cause)); setItems(showcase); }); }, []);
-  return <View style={styles.wrapper}><SafeAreaView edges={["top", "bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content}>
-    <AppHeader eyebrow="COMPETITION DESK" title="Tournament calendar" />
-    <ScreenIntro title="ENTER THE" accent="BRACKET" copy="Browse upcoming events, check the field, and track the leaderboard when the rallies get serious." />
-    <View style={styles.heroActions}><Pressable onPress={() => router.push("/host/status")}><Text style={styles.link}>HOST STATUS</Text></Pressable><Pressable onPress={() => router.push("/tournaments/create")}><Text style={styles.link}>CREATE EVENT</Text></Pressable></View>
-    <SectionHeader title="UPCOMING EVENTS" action={`${items.length} LISTED`} />
-    {error ? <Text style={styles.note}>Showing preview events while the live list reconnects.</Text> : null}
-    {items.length ? items.map((item) => <Pressable key={item.id} onPress={() => router.push({ pathname: "/tournaments/[id]", params: { id: item.id } })} style={({ pressed }) => pressed && styles.pressed}><CardContainer style={styles.card}>
-      <View style={styles.top}><StatusPill label={item.status} /><Text style={styles.date}>{formatDate(item.startDate)}</Text></View>
-      <Text style={styles.name}>{item.name}</Text><Text style={styles.meta}>{item.clubName || "INDEPENDENT EVENT"}  /  {item.tournamentType}</Text><Text style={styles.copy}>{item.description || "Competitive Pickelton play with a clean bracket and a live leaderboard."}</Text>
-      <View style={styles.bottom}><Text style={styles.fee}>RS {item.entryFee ?? 0}</Text><Text style={styles.open}>VIEW EVENT</Text></View>
-    </CardContainer></Pressable>) : <EmptyState title="NO EVENTS YET" copy="The tournament calendar is clear. Approved hosts can create the first event." />}
-  </ScrollView></SafeAreaView></View>;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setItems(await fetchTournaments());
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const live = items.find((item) => LIVE_STATUSES.includes(item.status));
+  const visible = useMemo(() => items
+    .filter((item) => item !== live)
+    .filter((item) => filter === "ALL" || item.sportType === filter || item.sportType === "BOTH")
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()), [items, live, filter]);
+
+  return (
+    <Screen onRefresh={load} refreshing={loading && items.length > 0}>
+      <View style={styles.header}>
+        <Display size={44}>Events</Display>
+        <Pressable accessibilityLabel="Host a tournament" accessibilityRole="button" onPress={() => router.push("/tournaments/create")} style={({ pressed }) => [styles.host, pressed && styles.pressed]}>
+          <Ionicons color={colors.text} name="add" size={18} />
+          <Text style={styles.hostText}>Host</Text>
+        </Pressable>
+      </View>
+
+      {live ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: "/tournaments/[id]/leaderboard", params: { id: live.id } })} style={({ pressed }) => [styles.live, pressed && styles.pressed]}>
+          <View style={styles.liveTop}>
+            <View style={styles.liveTag}><PulseDot color={colors.hot} /><Text style={styles.liveLabel}>LIVE NOW</Text></View>
+            <Text style={styles.liveMeta}>Standings</Text>
+          </View>
+          <Display size={28}>{live.name}</Display>
+          <Text style={styles.liveMeta}>{[live.clubName, `${live.maxPlayers} players max`].filter(Boolean).join(" · ")}</Text>
+        </Pressable>
+      ) : null}
+
+      <Chips<SportFilter> onChange={setFilter} options={[{ label: "All sports", value: "ALL" }, { label: "Pickleball", value: "PICKLEBALL" }, { label: "Badminton", value: "BADMINTON" }]} value={filter} />
+      <Notice message={error} />
+
+      {loading && !items.length ? <LoadingState label="Loading events" /> : visible.length ? visible.map((item) => {
+        const badminton = item.sportType === "BADMINTON";
+        const ink = badminton ? colors.bluInk : colors.accInk;
+        return (
+          <Card accessibilityLabel={`${item.name}, ${formatShortDate(item.startDate)}`} key={item.id} onPress={() => router.push({ pathname: "/tournaments/[id]", params: { id: item.id } })} style={styles.event}>
+            <DateBlock color={ink} date={item.startDate} height={66} width={58} />
+            <View style={styles.eventCopy}>
+              <Text numberOfLines={2} style={styles.eventName}>{item.name}</Text>
+              <Text numberOfLines={1} style={styles.eventMeta}>{[formatShortDate(item.startDate), item.clubName].filter(Boolean).join(" · ")}</Text>
+              <View style={styles.eventFacts}>
+                <Text style={[styles.fact, { color: ink }]}>{item.sportType === "BOTH" ? "Both" : badminton ? "Badminton" : "Pickleball"}</Text>
+                <Text style={styles.fact}>{item.entryFee ? formatCurrency(item.entryFee) : "Free"}</Text>
+                <Text style={[styles.fact, styles.mutedFact]}>{item.tournamentType === "DOUBLES" ? "Doubles" : "Singles"} · {item.maxPlayers} max</Text>
+              </View>
+            </View>
+          </Card>
+        );
+      }) : <EmptyState action={error ? "Try again" : undefined} copy={error ? "We couldn't reach the events list." : "No events for this sport yet. Club owners and admins can host one."} icon="trophy-outline" onAction={error ? load : undefined} title="No events yet" />}
+    </Screen>
+  );
 }
-function formatDate(value: string) { return new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }).toUpperCase(); }
+
 const createStyles = (colors: ThemeColors) => ({
-  wrapper: { backgroundColor: colors.background, flex: 1 }, safe: { flex: 1 }, content: { padding: 18, paddingBottom: 28 }, heroActions: { flexDirection: "row", gap: 18, marginTop: 18 }, link: { color: colors.primary, fontSize: 9, fontWeight: "900", letterSpacing: 0.6 },
-  card: { borderTopColor: colors.primary, borderTopWidth: 3, gap: 8, marginBottom: 10 }, top: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" }, date: { color: colors.gold, fontSize: 10, fontWeight: "900" }, name: { color: colors.text, fontSize: 16, fontWeight: "900", marginTop: 3 },
-  meta: { color: colors.muted, fontSize: 9, fontWeight: "900", letterSpacing: 0.6 }, copy: { color: colors.text, fontSize: 11, lineHeight: 16 }, bottom: { alignItems: "center", borderTopColor: colors.border, borderTopWidth: 1, flexDirection: "row", justifyContent: "space-between", marginTop: 4, paddingTop: 11 },
-  fee: { color: colors.gold, fontSize: 13, fontWeight: "900" }, open: { color: colors.primary, fontSize: 9, fontWeight: "900" }, note: { color: colors.gold, fontSize: 10, marginBottom: 10 }, pressed: { opacity: 0.8 },
+  header: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingTop: 8 },
+  host: { alignItems: "center", backgroundColor: colors.s1, borderColor: colors.line, borderRadius: 14, borderWidth: 1, flexDirection: "row", gap: 6, height: 44, paddingHorizontal: 14 },
+  hostText: { color: colors.text, fontFamily: fonts.bold, fontSize: 14 },
+  pressed: { opacity: 0.85 },
+  live: { backgroundColor: colors.s1, borderColor: colors.hot, borderRadius: 22, borderWidth: 1.5, gap: 10, padding: 16 },
+  liveTop: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
+  liveTag: { alignItems: "center", flexDirection: "row", gap: 6 },
+  liveLabel: { color: colors.hotInk, fontFamily: fonts.heavy, fontSize: 12, letterSpacing: 1 },
+  liveMeta: { color: colors.muted, fontFamily: fonts.bold, fontSize: 13 },
+  event: { flexDirection: "row", gap: 14 },
+  eventCopy: { flex: 1, gap: 5 },
+  eventName: { color: colors.text, fontFamily: fonts.heavy, fontSize: 15 },
+  eventMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
+  eventFacts: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  fact: { color: colors.text, fontFamily: fonts.bold, fontSize: 12 },
+  mutedFact: { color: colors.muted },
 });

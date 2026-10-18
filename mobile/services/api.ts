@@ -1,5 +1,8 @@
 // pickelton-mobile/services/api.ts
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://YOUR_LOCAL_IP:8080";
 
@@ -10,10 +13,26 @@ const api = axios.create({
 
 let accessToken: string | null = null;
 let currentUser: AuthUser | null = null;
+const SESSION_KEY = "pickelton.auth.session.v1";
+let refreshInFlight: Promise<AuthUser & { token: string }> | null = null;
+const sessionStorage = {
+  get: () => Platform.OS === "web" ? AsyncStorage.getItem(SESSION_KEY) : SecureStore.getItemAsync(SESSION_KEY),
+  set: (value: string) => Platform.OS === "web" ? AsyncStorage.setItem(SESSION_KEY,value) : SecureStore.setItemAsync(SESSION_KEY,value,{keychainAccessible:SecureStore.AFTER_FIRST_UNLOCK}),
+  remove: () => Platform.OS === "web" ? AsyncStorage.removeItem(SESSION_KEY) : SecureStore.deleteItemAsync(SESSION_KEY),
+};
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
+});
+
+api.interceptors.response.use(undefined, async (error) => {
+  const original = error.config as (typeof error.config & { _retried?: boolean }) | undefined;
+  if (error.response?.status !== 401 || !original || original._retried || /\/auth\/(login|register|refresh)$/.test(original.url ?? "")) throw error;
+  original._retried = true;
+  const session = await refreshSession();
+  original.headers.Authorization = `Bearer ${session.token}`;
+  return api.request(original);
 });
 
 function unwrap<T>(response: { data: { data: T } }) {
@@ -33,9 +52,10 @@ export type AuthUser = {
   dateOfBirth: string;
   emailVerified: boolean;
   phoneVerified: boolean;
+  city?: string | null;
   createdAt?: string;
 };
-export type MatchPayload = { tournamentId: string; player1Id: string; player2Id: string; round: string };
+export type MatchPayload = { tournamentId?: string | null; player1Id: string; player2Id: string; round: string; [key: string]: unknown };
 export type TeamCode = "A" | "B";
 export type MatchParticipant = {
   id: string;
@@ -80,7 +100,7 @@ export type HostPayload = {
   selfieWithDocumentUrl: string; termsAccepted: true; dataProcessingConsent: true;
 };
 export type ClubPayload = { name: string; location: string; description?: string };
-export type Club = { id: string; name: string; location: string; description?: string; memberCount?: number; createdBy?: { id: string; name: string; email: string } };
+export type Club = { id: string; name: string; location: string; description?: string; memberCount?: number; latitude?: number; longitude?: number; distanceKm?: number | null; createdBy?: { id: string; name: string; email: string } };
 export type ClubMember = { id: string; userId: string; name: string; email: string; role: "ADMIN" | "MEMBER" };
 export type CommunityPost = { id: string; authorId: string; authorName: string; tag: string; content: string; createdAt: string };
 export type CommunityPage = { content: CommunityPost[]; page: number; totalPages: number; last: boolean };
@@ -90,7 +110,7 @@ export type Tournament = {
   createdBy?: { id: string; name: string; email: string };
 };
 export type TournamentPayload = {
-  name: string; description?: string; sportType: "PICKLEBALL"; tournamentType: "SINGLES" | "DOUBLES";
+  name: string; description?: string; sportType: "PICKLEBALL" | "BADMINTON"; tournamentType: "SINGLES" | "DOUBLES";
   clubId?: string; entryFee: number; maxPlayers: number; startDate: string;
 };
 export type TournamentParticipant = { registrationId: string; userId: string; name: string; email: string; status: string };
@@ -104,13 +124,13 @@ export type HostVerification = {
 
 export async function login(payload: LoginPayload) {
   const session = unwrap<AuthUser & { token: string }>(await api.post("/api/v1/auth/login", payload));
-  setSession(session);
+  await setSession(session);
   return session;
 }
 
 export async function signup(payload: SignupPayload) {
   const session = unwrap<AuthUser & { token: string }>(await api.post("/api/v1/auth/register", payload));
-  setSession(session);
+  await setSession(session);
   return session;
 }
 
@@ -118,11 +138,32 @@ export function getCurrentUser() {
   return currentUser;
 }
 
+export async function initializeSession() {
+  const stored = await sessionStorage.get();
+  if (!stored) return false;
+  try {
+    const saved = JSON.parse(stored) as AuthUser & { token: string };
+    accessToken = saved.token;
+    currentUser = saved;
+    await refreshSession();
+    return true;
+  } catch {
+    await clearSession();
+    return false;
+  }
+}
+
 export type UserSearchResult = { userId: string; name: string; email: string; phoneNumber: string };
 
 export async function searchUsers(query: string) {
   return unwrap<UserSearchResult[]>(await api.get("/api/v1/users/search", { params: { query, limit: 10 } }));
 }
+
+export type PlayerSuggestion = { userId: string; name: string; avatarUrl?: string | null; city?: string | null; lastPlayedAt?: string | null; following: boolean; reason: "RECENT_PLAYER" | "NEARBY" | "COMMUNITY" };
+export async function fetchPlayerSuggestions() { return unwrap<PlayerSuggestion[]>(await api.get("/api/v1/users/suggestions")); }
+export async function setPlayerFollow(userId: string, following: boolean) { return unwrap<{ following: boolean }>(following ? await api.post(`/api/v1/users/${userId}/follow`) : await api.delete(`/api/v1/users/${userId}/follow`)); }
+export type UserStats = { userId: string; wins: number; losses: number; totalMatches: number };
+export async function fetchUserStats(userId: string) { return unwrap<UserStats>(await api.get(`/api/v1/users/${userId}/stats`)); }
 
 export async function fetchMyProfile() {
   const profile = unwrap<AuthUser>(await api.get("/api/v1/auth/me"));
@@ -132,18 +173,36 @@ export async function fetchMyProfile() {
 
 export async function logout() {
   try {
-    if (accessToken) await api.post("/api/v1/auth/logout");
+    if (accessToken) await api.post("/api/v1/auth/logout", { refreshToken: currentUser?.refreshToken });
   } catch {
     // Logging out locally must still work when the API is briefly unreachable.
   } finally {
-    accessToken = null;
-    currentUser = null;
+    await clearSession();
   }
 }
+export async function updateMyCity(city: string) { const profile=unwrap<AuthUser>(await api.put("/api/v1/users/me",{city}));currentUser={...currentUser,...profile};if(currentUser?.token)await sessionStorage.set(JSON.stringify(currentUser));return currentUser; }
 
-function setSession(session: AuthUser & { token: string }) {
+async function setSession(session: AuthUser & { token: string }) {
   accessToken = session.token;
   currentUser = session;
+  await sessionStorage.set(JSON.stringify(session));
+}
+
+async function clearSession() {
+  accessToken = null;
+  currentUser = null;
+  await sessionStorage.remove();
+}
+
+async function refreshSession() {
+  if (!currentUser?.refreshToken) throw new Error("No refresh token available");
+  if (!refreshInFlight) {
+    refreshInFlight = axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, { refreshToken: currentUser.refreshToken }, { timeout: 10000 })
+      .then((response) => unwrap<AuthUser & { token: string }>(response))
+      .then(async (session) => { await setSession(session); return session; })
+      .finally(() => { refreshInFlight = null; });
+  }
+  return refreshInFlight;
 }
 
 export async function createMatch(payload: MatchPayload) {
@@ -178,8 +237,8 @@ export async function createClub(payload: ClubPayload) {
   return unwrap<Club>(await api.post("/api/clubs", payload));
 }
 
-export async function fetchCommunity() {
-  const page = unwrap<{ content: Club[] }>(await api.get("/api/clubs"));
+export async function fetchCommunity(location?: { latitude: number; longitude: number }) {
+  const page = unwrap<{ content: Club[] }>(await api.get("/api/clubs", { params: location }));
   return page.content;
 }
 
@@ -204,7 +263,8 @@ export async function leaveClub(id: string) {
 }
 
 export async function fetchClubMembers(id: string) {
-  return unwrap<ClubMember[]>(await api.get(`/api/clubs/${id}/members`));
+  const members = unwrap<Array<{ id: string; user?: { id: string; name?: string; email?: string }; userId?: string; name?: string; email?: string; role: "ADMIN" | "MEMBER" }>>(await api.get(`/api/clubs/${id}/members`));
+  return members.map<ClubMember>((member) => ({ id: member.id, userId: member.user?.id ?? member.userId ?? "", name: member.user?.name ?? member.name ?? "Pickelton Player", email: member.user?.email ?? member.email ?? "", role: member.role }));
 }
 
 export async function updateClubMemberRole(id: string, userId: string, role: ClubMember["role"]) {
@@ -227,6 +287,7 @@ export async function fetchTournaments() {
   const page = unwrap<{ content: Tournament[] }>(await api.get("/api/tournaments"));
   return page.content;
 }
+export async function fetchHostedTournaments() { return unwrap<Tournament[]>(await api.get("/api/tournaments/me/hosted")); }
 
 export async function fetchTournament(id: string) {
   return unwrap<Tournament>(await api.get(`/api/tournaments/${id}`));
@@ -257,6 +318,6 @@ export async function createTournament(payload: TournamentPayload) {
 }
 
 export function apiErrorMessage(error: unknown) {
-  if (axios.isAxiosError(error)) return error.response?.data?.message ?? error.message;
+  if (axios.isAxiosError(error)) return error.response?.data?.error?.message ?? error.response?.data?.message ?? error.message;
   return "Something went wrong. Please try again.";
 }

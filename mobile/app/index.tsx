@@ -1,32 +1,60 @@
+import { useEffect, useRef } from "react";
 import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { CardContainer } from "../components/CardContainer";
-import { PrimaryButton } from "../components/PrimaryButton";
-import type { ThemeColors } from "../theme/colors";
+import { Animated, Easing, Text, View } from "react-native";
+import Svg, { Circle, G, Path, Rect } from "react-native-svg";
+import { Logo } from "../components/Brand";
+import { initializeSession } from "../services/api";
+import { fonts, type ThemeColors } from "../theme/colors";
 import { useTheme, useThemeStyles } from "../theme/ThemeProvider";
 
-export default function WelcomeScreen() {
-  const { colors } = useTheme();
+// Splash: restores the saved session, then hands off to Home or Log in.
+export default function SplashScreen() {
   const styles = useThemeStyles(createStyles);
-  return <View style={styles.wrapper}><SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
-    <View style={styles.texture}>
-      {Array.from({ length: 70 }, (_, index) => <View key={index} style={styles.dot} />)}
+  const { colors } = useTheme();
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(Animated.timing(progress, { duration: 1800, easing: Easing.out(Easing.quad), toValue: 1, useNativeDriver: false }));
+    loop.start();
+    initializeSession()
+      .then((authenticated) => router.replace(authenticated ? "/(tabs)" : "/(auth)/login"))
+      .catch(() => router.replace("/(auth)/login"));
+    return () => loop.stop();
+  }, [progress]);
+
+  return (
+    <View style={styles.wrapper}>
+      <Svg height="100%" preserveAspectRatio="xMidYMid slice" style={styles.art} viewBox="0 0 390 844" width="100%">
+        <G fill="none" opacity={0.16} stroke={colors.acc} strokeWidth={2}>
+          <Rect height={664} width={310} x={40} y={90} />
+          <Path d="M40 422h310M195 90v230M195 524v230M40 320h310M40 524h310" />
+        </G>
+        <Circle cx={330} cy={150} fill={colors.acc} opacity={0.07} r={140} />
+        <Circle cx={40} cy={720} fill={colors.blu} opacity={0.06} r={180} />
+      </Svg>
+      <View accessibilityLabel="Pickelton" style={styles.brand}>
+        <Logo size={112} />
+        <Text style={styles.wordmark}>PICKELTON</Text>
+        <Text style={styles.tagline}>Pickleball & badminton. Every rally counts.</Text>
+      </View>
+      <View style={styles.loader}>
+        <View style={styles.track}>
+          <Animated.View style={[styles.bar, { width: progress.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }]} />
+        </View>
+        <Text style={styles.loading}>WARMING UP THE COURTS</Text>
+      </View>
     </View>
-    <View style={styles.brand}><Ionicons color={colors.primary} name="tennisball-outline" size={68} /><Text style={styles.logo}>Pickelton</Text></View>
-    <CardContainer style={styles.hero}><Text style={styles.title}>Elite Performance.</Text><Text style={styles.copy}>Experience the adrenaline of the stadium with the refinement of a VIP suite. Your gateway to elite pickleball matches and premium court culture.</Text><PrimaryButton label="GET STARTED  ->" onPress={() => router.push("/(auth)/login")} style={styles.button} /><PrimaryButton label="EXPLORE MEMBERSHIP" variant="outline" onPress={() => router.push("/(auth)/signup")} style={styles.button} /></CardContainer>
-    <View style={styles.metrics}><View style={styles.metric}><Text style={styles.metricLabel}>ACTIVE PROS</Text><Text style={styles.metricValue}>1,200+</Text></View><View style={styles.metric}><Text style={styles.metricLabel}>ELITE COURTS</Text><Text style={styles.metricValue}>850</Text></View></View>
-  </SafeAreaView></View>;
+  );
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  wrapper: { backgroundColor: colors.background, flex: 1 }, safe: { flex: 1, justifyContent: "space-between", overflow: "hidden", padding: 18 },
-  texture: { bottom: 0, flexDirection: "row", flexWrap: "wrap", gap: 23, left: 0, opacity: 0.18, padding: 8, position: "absolute", right: 0, top: 0 },
-  dot: { backgroundColor: colors.primary, borderRadius: 2, height: 2, width: 2 },
-  brand: { alignItems: "center", marginTop: 50 }, logo: { color: colors.text, fontSize: 46, fontWeight: "900", marginTop: 12 },
-  hero: { backgroundColor: colors.raised, borderColor: colors.border, gap: 16, padding: 24 }, title: { color: colors.text, fontSize: 27, fontWeight: "900", textAlign: "center" },
-  copy: { color: colors.muted, fontSize: 15, lineHeight: 25, marginBottom: 10, textAlign: "center" }, button: { minHeight: 56 },
-  metrics: { flexDirection: "row", gap: 14, marginBottom: 8 }, metric: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 8, borderWidth: 1, flex: 1, padding: 16 },
-  metricLabel: { color: colors.muted, fontSize: 10, fontWeight: "900" }, metricValue: { color: colors.text, fontSize: 24, fontWeight: "900", marginTop: 8 },
+  wrapper: { alignItems: "center", backgroundColor: colors.bg, flex: 1, justifyContent: "center" },
+  art: { bottom: 0, left: 0, position: "absolute", right: 0, top: 0 },
+  brand: { alignItems: "center", gap: 18 },
+  wordmark: { color: colors.text, fontFamily: fonts.display, fontSize: 64, letterSpacing: 1.2, lineHeight: 64 },
+  tagline: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },
+  loader: { alignItems: "center", bottom: 64, gap: 14, left: 0, position: "absolute", right: 0 },
+  track: { backgroundColor: colors.s2, borderRadius: 4, height: 4, overflow: "hidden", width: 140 },
+  bar: { backgroundColor: colors.acc, borderRadius: 4, height: 4 },
+  loading: { color: colors.muted, fontFamily: fonts.medium, fontSize: 12, letterSpacing: 1 },
 });

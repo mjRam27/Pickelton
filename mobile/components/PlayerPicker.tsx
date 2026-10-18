@@ -1,9 +1,11 @@
 // pickelton-mobile/components/PlayerPicker.tsx
 import { useEffect, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { apiErrorMessage, searchUsers, type UserSearchResult } from "../services/api";
-import { radius, type ThemeColors } from "../theme/colors";
+import { fonts, type ThemeColors } from "../theme/colors";
 import { useTheme, useThemeStyles } from "../theme/ThemeProvider";
+import { Avatar, toneFor } from "./Avatar";
 
 type Props = {
   label: string;
@@ -16,6 +18,7 @@ type Props = {
 export function PlayerPicker({ label, value, onSelect, excludeUserIds = [] }: Props) {
   const { colors } = useTheme();
   const styles = useThemeStyles(createStyles);
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,7 @@ export function PlayerPicker({ label, value, onSelect, excludeUserIds = [] }: Pr
 
   function choose(user: UserSearchResult) {
     onSelect(user);
+    setOpen(false);
     setQuery("");
     setResults([]);
     setError("");
@@ -51,70 +55,72 @@ export function PlayerPicker({ label, value, onSelect, excludeUserIds = [] }: Pr
 
   if (value) {
     return (
-      <View style={styles.group}>
-        <Text style={styles.label}>{label}</Text>
-        <View style={styles.selected}>
-          <View style={styles.selectedInfo}>
-            <Text style={styles.selectedName}>{value.name}</Text>
-            <Text style={styles.selectedMeta}>{value.email}</Text>
-          </View>
-          <Pressable accessibilityLabel={`Change ${label}`} onPress={() => onSelect(null)} style={styles.change}>
-            <Text style={styles.changeText}>CHANGE</Text>
-          </Pressable>
-        </View>
-      </View>
+      <Pressable accessibilityHint="Removes this player" accessibilityLabel={`${label}: ${value.name}`} onPress={() => onSelect(null)} style={styles.slot}>
+        <Avatar name={value.name} size={26} tone={toneFor(value.userId)} />
+        <Text numberOfLines={1} style={styles.slotName}>{value.name}</Text>
+        <Ionicons color={colors.muted} name="close" size={16} />
+      </Pressable>
+    );
+  }
+
+  if (!open) {
+    return (
+      <Pressable accessibilityLabel={`Add ${label}`} accessibilityRole="button" onPress={() => setOpen(true)} style={styles.add}>
+        <Ionicons color={colors.muted} name="add" size={18} />
+        <Text style={styles.addText}>{label}</Text>
+      </Pressable>
     );
   }
 
   const visible = results.filter((user) => !excludeUserIds.includes(user.userId));
-
   return (
-    <View style={styles.group}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Search by name, email, or phone"
-        placeholderTextColor={colors.muted}
-        autoCapitalize="none"
-        style={styles.input}
-      />
+    <View style={styles.search}>
+      <View style={styles.inputRow}>
+        <TextInput
+          accessibilityLabel={`Search for ${label}`}
+          autoCapitalize="none"
+          autoFocus
+          onChangeText={setQuery}
+          placeholder="Name, email or phone"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={query}
+        />
+        <Pressable accessibilityLabel="Cancel search" onPress={() => { setOpen(false); setQuery(""); }} style={styles.cancel}>
+          <Ionicons color={colors.muted} name="close" size={18} />
+        </Pressable>
+      </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {query.trim().length >= 2 ? (
-        <View style={styles.list}>
-          {loading ? (
-            <Text style={styles.hint}>Searching…</Text>
-          ) : visible.length ? (
-            visible.map((user) => (
-              <Pressable key={user.userId} onPress={() => choose(user)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-                <Text style={styles.rowName}>{user.name}</Text>
-                <Text style={styles.rowMeta}>{user.email} · {user.phoneNumber}</Text>
-              </Pressable>
-            ))
-          ) : (
-            <Text style={styles.hint}>No players found.</Text>
-          )}
-        </View>
-      ) : null}
+        loading ? <ActivityIndicator color={colors.accInk} style={styles.spinner} /> : visible.length ? visible.map((user) => (
+          <Pressable key={user.userId} onPress={() => choose(user)} style={({ pressed }) => [styles.result, pressed && styles.pressed]}>
+            <Avatar name={user.name} size={32} tone={toneFor(user.userId)} />
+            <View style={styles.resultCopy}>
+              <Text numberOfLines={1} style={styles.resultName}>{user.name}</Text>
+              <Text numberOfLines={1} style={styles.resultMeta}>{user.email}</Text>
+            </View>
+          </Pressable>
+        )) : <Text style={styles.hint}>No players found.</Text>
+      ) : <Text style={styles.hint}>Type at least 2 characters.</Text>}
     </View>
   );
 }
 
 const createStyles = (colors: ThemeColors) => ({
-  group: { gap: 8, marginBottom: 15 },
-  label: { color: colors.muted, fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
-  input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 13, minHeight: 52, paddingHorizontal: 14 },
-  error: { color: colors.danger, fontSize: 10 },
-  hint: { color: colors.muted, fontSize: 11, paddingHorizontal: 14, paddingVertical: 12 },
-  list: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, overflow: "hidden" },
-  row: { borderBottomColor: colors.border, borderBottomWidth: 1, gap: 3, paddingHorizontal: 14, paddingVertical: 11 },
-  pressed: { backgroundColor: colors.raised },
-  rowName: { color: colors.text, fontSize: 13, fontWeight: "800" },
-  rowMeta: { color: colors.muted, fontSize: 10 },
-  selected: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.primary, borderRadius: radius.md, borderWidth: 1, flexDirection: "row", gap: 8, minHeight: 52, paddingHorizontal: 14, paddingVertical: 8 },
-  selectedInfo: { flex: 1, gap: 3 },
-  selectedName: { color: colors.text, fontSize: 13, fontWeight: "800" },
-  selectedMeta: { color: colors.muted, fontSize: 10 },
-  change: { paddingHorizontal: 6, paddingVertical: 4 },
-  changeText: { color: colors.primary, fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
+  slot: { alignItems: "center", backgroundColor: colors.s1, borderColor: colors.line, borderRadius: 12, borderWidth: 1, flexDirection: "row", gap: 8, minHeight: 44, paddingHorizontal: 10 },
+  slotName: { color: colors.text, flex: 1, fontFamily: fonts.bold, fontSize: 13 },
+  add: { alignItems: "center", borderColor: colors.line, borderRadius: 12, borderStyle: "dashed", borderWidth: 1.5, flexDirection: "row", gap: 6, justifyContent: "center", minHeight: 44, paddingHorizontal: 8 },
+  addText: { color: colors.muted, fontFamily: fonts.bold, fontSize: 13 },
+  search: { backgroundColor: colors.s1, borderColor: colors.acc, borderRadius: 12, borderWidth: 1.5, gap: 4, padding: 6 },
+  inputRow: { alignItems: "center", flexDirection: "row" },
+  input: { color: colors.text, flex: 1, fontFamily: fonts.regular, fontSize: 14, minHeight: 36, paddingHorizontal: 6 },
+  cancel: { alignItems: "center", height: 36, justifyContent: "center", width: 32 },
+  error: { color: colors.hotInk, fontFamily: fonts.semibold, fontSize: 12, paddingHorizontal: 6 },
+  spinner: { paddingVertical: 8 },
+  hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, paddingHorizontal: 6, paddingVertical: 6 },
+  result: { alignItems: "center", borderRadius: 8, flexDirection: "row", gap: 8, padding: 6 },
+  pressed: { backgroundColor: colors.s2 },
+  resultCopy: { flex: 1 },
+  resultName: { color: colors.text, fontFamily: fonts.bold, fontSize: 13 },
+  resultMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11 },
 });
