@@ -96,6 +96,12 @@ CREATE TABLE IF NOT EXISTS tournaments (
     entry_fee NUMERIC(12, 2),
     max_players INT NOT NULL DEFAULT 32,
     start_date TIMESTAMP NOT NULL,
+    venue VARCHAR(255),
+    registration_deadline TIMESTAMP,
+    upi_id VARCHAR(100),
+    payee_name VARCHAR(120),
+    payment_instructions TEXT,
+    registration_questions JSONB NOT NULL DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -135,6 +141,13 @@ CREATE TABLE IF NOT EXISTS registrations (
     user_id UUID NOT NULL REFERENCES users(id),
     tournament_id UUID NOT NULL REFERENCES tournaments(id),
     status VARCHAR(20) NOT NULL DEFAULT 'REGISTERED',
+    answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'NOT_REQUIRED',
+    amount_due NUMERIC(12, 2),
+    payment_reference VARCHAR(40),
+    payment_submitted_at TIMESTAMPTZ,
+    payment_reviewed_at TIMESTAMPTZ,
+    host_note VARCHAR(300),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT uk_registration UNIQUE (user_id, tournament_id)
@@ -269,3 +282,4 @@ CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_user_follows_followed ON user_follows(followed_id);
 CREATE INDEX IF NOT EXISTS idx_clubs_coordinates ON clubs(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_registrations_tournament_payment ON registrations(tournament_id, payment_status);

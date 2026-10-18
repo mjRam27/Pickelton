@@ -28,6 +28,7 @@ public class VerificationCodeService {
 
     private final StringRedisTemplate redisTemplate;
     private final Environment environment;
+    private final TwilioVerifyClient twilioVerifyClient;
 
     @Value("${otp.expiration-minutes:10}")
     private long expirationMinutes;
@@ -45,6 +46,10 @@ public class VerificationCodeService {
             if (!Boolean.TRUE.equals(accepted)) {
                 throw new BadRequestException("Wait before requesting another verification code");
             }
+            if (twilioVerifyClient.isConfigured()) {
+                twilioVerifyClient.sendCode(phoneNumber);
+                return;
+            }
             String code = String.format("%06d", RANDOM.nextInt(1_000_000));
             redisTemplate.opsForValue().set(
                 OTP_PREFIX + userId, hash(userId, code), Duration.ofMinutes(expirationMinutes));
@@ -52,8 +57,10 @@ public class VerificationCodeService {
 
             if (java.util.Arrays.asList(environment.getActiveProfiles()).contains("dev")) {
                 log.info("Development phone verification code phoneNumber={} code={}", phoneNumber, code);
+            } else {
+                log.warn("No SMS provider configured (TWILIO_*); verification code for user {} was not delivered", userId);
             }
-        } catch (BadRequestException ex) {
+        } catch (BadRequestException | ServiceUnavailableException ex) {
             throw ex;
         } catch (Exception ex) {
             log.warn("Failed to create phone OTP in Redis: {}", ex.getMessage());
@@ -61,7 +68,23 @@ public class VerificationCodeService {
         }
     }
 
-    public void verifyPhone(UUID userId, String submittedCode) {
+    // Signup sends a code too, but a failed SMS must not block creating the account; the user can resend later.
+    public void issuePhoneQuietly(UUID userId, String phoneNumber) {
+        try {
+            issuePhone(userId, phoneNumber);
+        } catch (RuntimeException ex) {
+            log.warn("Could not send signup verification code to user {}: {}", userId, ex.getMessage());
+        }
+    }
+
+    public void verifyPhone(UUID userId, String phoneNumber, String submittedCode) {
+        if (twilioVerifyClient.isConfigured()) {
+            if (!twilioVerifyClient.checkCode(phoneNumber, submittedCode)) {
+                throw new BadRequestException("Invalid or expired verification code");
+            }
+            redisTemplate.delete(COOLDOWN_PREFIX + userId);
+            return;
+        }
         try {
             String expectedHash = redisTemplate.opsForValue().get(OTP_PREFIX + userId);
             if (expectedHash == null) {

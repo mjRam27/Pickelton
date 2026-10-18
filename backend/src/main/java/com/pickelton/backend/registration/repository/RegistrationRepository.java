@@ -24,4 +24,9 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     List<Registration> findByTournamentIdAndStatus(UUID tournamentId, RegistrationStatus status);
 
     List<Registration> findByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    List<Registration> findByTournamentIdOrderByCreatedAtAsc(UUID tournamentId);
+
+    // Stops one UPI reference being reused for two registrations in the same tournament.
+    boolean existsByTournamentIdAndPaymentReferenceIgnoreCaseAndIdNot(UUID tournamentId, String paymentReference, UUID id);
 }
