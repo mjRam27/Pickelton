@@ -1,12 +1,50 @@
-/* pickelton-app/apps/web/theme/tokens.css */
+/* web/theme/tokens.css. Mirrors packages/constants/src/theme.ts; change both together. */
 :root {
-   --bg:#f3f9ed;
-  --surface: #101313;
-  --raised: #171a1a;
-  --border: #252b2a;
-  --text: #f6f8f6;
-  --muted: #87908d;
-  --lime: #b8f527;
-  --info: #7d93ff;
-  --danger: #ff5168;
+  --bg: #0C100E;
+  --s1: #151B18;
+  --s2: #1E2622;
+  --line: #2A3430;
+  --text: #F2F5EF;
+  --muted: #9AA69F;
+  --acc: #C8F03C;
+  --on-acc: #0C100E;
+  --acc-ink: #C8F03C;
+  --blu: #5CC8FF;
+  --on-blu: #06263A;
+  --blu-ink: #5CC8FF;
+  --hot: #FF7A45;
+  --on-hot: #2A0E02;
+  --hot-ink: #FF8F5E;
+  --font-body: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-big-shoulders), "Arial Narrow", sans-serif;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #F4F6F0;
+    --s1: #FFFFFF;
+    --s2: #EBEFE6;
+    --line: #DCE2D6;
+    --text: #0E1411;
+    --muted: #56625B;
+    --acc-ink: #3E5C00;
+    --blu-ink: #0A6A9E;
+    --hot-ink: #B8461A;
+    color-scheme: light;
+  }
+}
+
+/* Explicit choice from the in-app theme switch overrides the system setting. */
+:root[data-theme="light"] {
+  --bg: #F4F6F0;
+  --s1: #FFFFFF;
+  --s2: #EBEFE6;
+  --line: #DCE2D6;
+  --text: #0E1411;
+  --muted: #56625B;
+  --acc-ink: #3E5C00;
+  --blu-ink: #0A6A9E;
+  --hot-ink: #B8461A;
+  color-scheme: light;
 }

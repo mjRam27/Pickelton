@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@pickelton/api": "*",
+    "@pickelton/constants": "*",
+    "@pickelton/types": "*",
+    "@pickelton/utils": "*",
     "lucide-react": "0.546.0",
     "next": "16.2.6",
     "react": "19.2.3",
