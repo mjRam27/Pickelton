@@ -66,7 +66,8 @@ Set up the database:
 
 - **New database:** run `backend/src/main/resources/schema.sql`.
 - **Existing database:** run any files in `backend/src/main/resources/db/` you haven't applied yet, for example
-  `002_discovery_and_follows.sql` (club coordinates and player follows).
+  `002_discovery_and_follows.sql` (club coordinates and player follows) and `003_tournament_registrations.sql`
+  (registration forms and UPI payments).
 
 The backend uses `ddl-auto: validate`, so it refuses to start until the schema matches the code. Every schema change
 needs a new SQL file in `db/` **and** an update to `schema.sql`.
@@ -79,6 +80,11 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-21'
 $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
 mvn spring-boot:run
 ```
+
+**SMS codes (phone verification).** Players verify their phone before they register for or host a tournament. Codes
+are sent with [Twilio Verify](https://www.twilio.com/docs/verify): set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and
+`TWILIO_VERIFY_SERVICE_SID`. Without them, codes are only written to the backend log, which is fine locally. In
+production, set `SPRING_PROFILE=prod`.
 
 Host identity documents (KYC uploads) are stored in a private folder set by `KYC_UPLOAD_DIR`
 (default `uploads/kyc`). Never serve that folder publicly.
@@ -93,7 +99,16 @@ More detail: [`backend/README.md`](backend/README.md).
 | Website | `npm run web` (port 3000) | `web/.env` (copy `web/.env.example`): `NEXT_PUBLIC_API_URL` pointing at the Java backend. Optional `NEXT_PUBLIC_APP_STORE_URL`, `NEXT_PUBLIC_PLAY_STORE_URL` |
 
 The website's signed-in pages live under `web/app/(app)/` (`/home`, `/clubs`, `/tournaments`, `/community`,
-`/matches/new`, `/matches/[id]`, `/profile`, `/host`); sign-in pages are under `web/app/(auth)/`.
+`/matches/new`, `/matches/[id]`, `/profile`, `/host`, `/my-tournaments`); sign-in pages are under `web/app/(auth)/`.
+
+### Tournament registration
+
+Any player with a verified phone can host a tournament (`/tournaments/new`). The host sets the player limit, entry fee,
+an optional closing time and their own registration questions, then shares the public link
+(`/tournaments/{id}`, viewable without logging in). Players sign up, verify their phone, answer the questions and pay
+the host **directly by UPI** (QR code or a `upi://` button), then enter their UTR. The host matches each UTR against
+their bank app and confirms or rejects it on `/tournaments/{id}/manage`, which also exports a CSV. Pickelton never
+holds the money. A payment gateway (e.g. Razorpay) can replace this later.
 
 ## Deployment
 
@@ -101,7 +116,7 @@ Deploy three things:
 
 | Piece | What | Notes |
 |---|---|---|
-| Backend | `backend/` as a Spring Boot service | Set `DATABASE_*`, `REDIS_URL`, `JWT_PRIVATE_KEY`/`JWT_PUBLIC_KEY`, `KYC_UPLOAD_DIR` (private, persistent disk) and `ALLOWED_ORIGINS` = the website's URL |
+| Backend | `backend/` as a Spring Boot service | Set `DATABASE_*`, `REDIS_URL`, `JWT_PRIVATE_KEY`/`JWT_PUBLIC_KEY`, `KYC_UPLOAD_DIR` (private, persistent disk), `TWILIO_*`, `SPRING_PROFILE=prod` and `ALLOWED_ORIGINS` = the website's URL |
 | Website | `web/` as a Next.js app (`npm run web:build`, then `next start`) | Set `NEXT_PUBLIC_API_URL` to the backend's public URL **at build time** |
 | Mobile | `mobile/` built with EAS for the App Store and Play Store | Set `EXPO_PUBLIC_API_URL` to the backend's public URL |
 
@@ -122,7 +137,7 @@ mvn test
 
 - `MatchServiceTest` and `MatchControllerTest` in `backend/` no longer compile against the current match code, so
   `mvn test` and `mvn spring-boot:run` fail at test compilation. Until they're fixed, add `-Dmaven.test.skip=true`.
-- `schema.sql` is missing the `match_team_players` table that the match code needs, so a brand-new database can't
-  start the backend yet. Applying `db/supabase_production_refactor.sql` also fails at line 78 (`match_status` cast).
+- Applying `db/supabase_production_refactor.sql` fails at line 78 (`match_status` cast).
+- Tournament registration and UPI payments are on the website only; the mobile app doesn't have them yet.
 - The mobile contract test for the private Supabase KYC bucket fails because that bucket is no longer in
   `db/supabase_schema.sql`.

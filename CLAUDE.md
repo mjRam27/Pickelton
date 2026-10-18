@@ -78,7 +78,11 @@ Java schema changes: add a SQL file under `backend/src/main/resources/db/` AND u
 ## Business rules the code must enforce (UI and backend)
 
 - A user can own **at most 4 active clubs**. The creator becomes the owner and can promote admins.
-- Only club **owners/admins** can create tournaments. Every tournament belongs to exactly one club.
+- Any user with a **verified phone** can host a tournament. Linking a club is optional, and only that club's
+  owners/admins can do it.
+- Entry fees are paid **directly to the host by UPI**. The player submits the UTR and the host confirms or rejects it;
+  Pickelton never holds the money. A paid tournament must have a UPI ID.
+- Players need a verified phone to register. Registration stops at the player limit or the closing time.
 - A **TeamUp** has exactly **two accepted members**. Invitations need acceptance, and a user can be in many TeamUps.
 - Match types are **Friendly, TeamUp, Club, Tournament** (there is no "practice" type). They share one scoring engine.
 - Results count toward **ratings only after both sides confirm** (or an admin resolves the dispute).
