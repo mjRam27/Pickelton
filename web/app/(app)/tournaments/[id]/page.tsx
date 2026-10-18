@@ -4,48 +4,39 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CheckCircle2, Share2 } from "lucide-react";
+import { ClipboardList, Link2, MapPin } from "lucide-react";
 import { formatCurrency, formatShortDate } from "@pickelton/utils";
-import { Avatar, ConfirmDialog, Empty, LoadError, Loading, Notice, Spinner, shareOrCopy } from "../../../../components/ui";
+import { RegistrationPanel } from "../../../../components/RegistrationPanel";
+import { Avatar, LoadError, Loading, Notice } from "../../../../components/ui";
 import { formatTime, sportLabel, titleCase, toneFor } from "../../../../lib/format";
-import { api, errorMessage, useResource, useSession } from "../../../../lib/session";
+import { api, useResource, useSession } from "../../../../lib/session";
 
+// Public tournament page: anyone can view it from a shared link; signed-in players register and pay here.
 export default function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const session = useSession();
-  const [busy, setBusy] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const { data, error: loadError, loading, reload } = useResource(async () => {
-    const [event, participants] = await Promise.all([api.tournaments.get(id), api.tournaments.participants(id).catch(() => [])]);
-    return { event, participants };
-  }, [id]);
+  const signedIn = Boolean(session);
+  const [copied, setCopied] = useState("");
+  const { data, error, loading, reload } = useResource(async () => {
+    const [event, participants, registration] = await Promise.all([
+      api.tournaments.get(id),
+      signedIn ? api.tournaments.participants(id).catch(() => []) : Promise.resolve([]),
+      signedIn ? api.tournaments.myRegistration(id).catch(() => null) : Promise.resolve(null),
+    ]);
+    return { event, participants, registration };
+  }, [id, signedIn]);
 
-  const participants = data?.participants ?? [];
-  const entered = participants.some((person) => person.userId === session?.userId && person.status !== "CANCELLED");
+  if (loading && !data) return <Loading label="Loading tournament" />;
+  if (!data) return <LoadError message={error} onRetry={reload} />;
+  const { event, participants, registration } = data;
+  const isHost = session?.userId === event.createdBy.id;
+  const spotsLeft = Math.max(event.maxPlayers - event.registeredCount, 0);
+  const fee = Number(event.entryFee ?? 0);
 
-  async function run(action: () => Promise<unknown>, success: string) {
-    setBusy(true);
-    setConfirming(false);
-    setMessage("");
-    setError("");
-    try {
-      await action();
-      setMessage(success);
-      await reload();
-    } catch (cause) {
-      setError(errorMessage(cause));
-    } finally {
-      setBusy(false);
-    }
+  async function copyLink() {
+    await navigator.clipboard.writeText(window.location.href).catch(() => undefined);
+    setCopied("Registration link copied. Share it with players.");
   }
-
-  if (loading && !data) return <Loading label="Loading event" />;
-  if (!data) return <LoadError message={loadError} onRetry={reload} />;
-  const { event } = data;
-  const spotsLeft = Math.max(event.maxPlayers - participants.length, 0);
-  const startTime = formatTime(event.startDate);
 
   return (
     <>
@@ -58,48 +49,46 @@ export default function TournamentDetailPage() {
         <nav aria-label="Breadcrumb" className="crumbs" style={{ position: "relative" }}><Link href="/tournaments" style={{ color: "#B5C0B9" }}>Events</Link><span aria-hidden="true">/</span><span style={{ color: "#F2F5EF" }}>{event.name}</span></nav>
         <span className="badge acc" style={{ alignSelf: "flex-start", position: "relative" }}>{sportLabel(event.sportType)} · {event.tournamentType === "DOUBLES" ? "Doubles" : "Singles"}</span>
         <h1 className="display" style={{ fontSize: "clamp(40px, 5vw, 56px)", position: "relative" }}>{event.name}</h1>
-        <span style={{ color: "#B5C0B9", position: "relative" }}>{event.clubName ? `Hosted by ${event.clubName}` : `Hosted by ${event.createdBy.name}`}</span>
+        <span style={{ color: "#B5C0B9", position: "relative" }}>Hosted by {event.clubName ?? event.createdBy.name}</span>
+        {event.venue ? <span className="row" style={{ color: "#F2F5EF", gap: 6, position: "relative" }}><MapPin aria-hidden="true" size={16} />{event.venue}</span> : null}
       </div>
+
+      {isHost ? (
+        <div className="row">
+          <Link className="btn primary" href={`/tournaments/${id}/manage`}><ClipboardList aria-hidden="true" size={18} />Manage registrations</Link>
+          <button className="btn" onClick={copyLink} type="button"><Link2 aria-hidden="true" size={18} />Copy registration link</button>
+          <Link className="btn ghost" href={`/tournaments/${id}/leaderboard`}>Leaderboard</Link>
+        </div>
+      ) : null}
+      <Notice message={copied} tone="success" />
 
       <div className="statGrid">
-        <div className="stat"><span className="label">When</span><span style={{ fontSize: 17, fontWeight: 800 }}>{formatShortDate(event.startDate)}</span><span className="hint">{startTime ? `Starts ${startTime}` : ""}</span></div>
-        <div className="stat"><span className="label">Status</span><span style={{ fontSize: 17, fontWeight: 800 }}>{titleCase(event.status)}</span><span className="hint">{event.clubName ?? ""}</span></div>
-        <div className="stat"><span className="label">Entry</span><span className="value" style={{ fontSize: 36 }}>{event.entryFee ? formatCurrency(event.entryFee) : "Free"}</span><span className="hint">per player</span></div>
-        <div className="stat"><span className="label">Field</span><span className="value" style={{ fontSize: 36 }}>{participants.length}/{event.maxPlayers}</span><span className="hint">{spotsLeft ? `${spotsLeft} spots left` : "Full"}</span></div>
+        <div className="stat"><span className="label">When</span><span style={{ fontSize: 17, fontWeight: 800 }}>{formatShortDate(event.startDate)}</span><span className="hint">Starts {formatTime(event.startDate)}</span></div>
+        <div className="stat"><span className="label">Entry</span><span className="value" style={{ fontSize: 36 }}>{fee ? formatCurrency(fee) : "Free"}</span><span className="hint">{fee ? "per player, by UPI" : "no entry fee"}</span></div>
+        <div className="stat"><span className="label">Spots</span><span className="value" style={{ fontSize: 36 }}>{event.registeredCount}/{event.maxPlayers}</span><span className="hint">{spotsLeft ? `${spotsLeft} left` : "Full"}</span></div>
+        <div className="stat"><span className="label">Registration</span><span style={{ fontSize: 17, fontWeight: 800 }}>{event.status === "UPCOMING" ? "Open" : titleCase(event.status)}</span><span className="hint">{event.registrationDeadline ? `Closes ${formatShortDate(event.registrationDeadline)}, ${formatTime(event.registrationDeadline)}` : "Until the start"}</span></div>
       </div>
 
-      <div className="row">
-        {entered ? <span className="row" style={{ color: "var(--acc-ink)", fontWeight: 700, gap: 6 }}><CheckCircle2 aria-hidden="true" size={18} />You're entered</span> : null}
-        <span style={{ flex: 1 }} />
-        <button className="btn" onClick={async () => setMessage(await shareOrCopy(`${event.name} on Pickelton`))} type="button"><Share2 aria-hidden="true" size={18} />Share</button>
-        <Link className="btn dark" href={`/tournaments/${id}/leaderboard`}>Leaderboard</Link>
-        {entered ? (
-          <button className="btn" disabled={busy} onClick={() => setConfirming(true)} type="button">Cancel entry</button>
-        ) : (
-          <button className="btn primary" disabled={busy || spotsLeft === 0} onClick={() => run(() => api.tournaments.register(id), "You're entered. See you on court.")} type="button">
-            {busy ? <Spinner /> : null}{spotsLeft === 0 ? "Full" : "Register"}
-          </button>
-        )}
+      <div className="columns">
+        <section className="wide">
+          <RegistrationPanel key={`${registration?.id ?? "none"}-${registration?.status ?? ""}`} onChanged={reload} registration={registration} tournament={event} />
+          {event.description ? (
+            <section className="card"><h2>About this tournament</h2><p style={{ lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>{event.description}</p></section>
+          ) : null}
+        </section>
+        <aside className="narrow">
+          <section className="card">
+            <h2>Players ({event.registeredCount})</h2>
+            {!signedIn ? <p className="muted" style={{ margin: 0 }}>Log in to see who's playing.</p>
+              : participants.length ? participants.slice(0, 40).map((person) => (
+                <div className="row" key={person.registrationId} style={{ flexWrap: "nowrap" }}>
+                  <Avatar name={person.name} size={32} tone={toneFor(person.userId)} />
+                  <span style={{ fontWeight: 700 }}>{person.userId === session?.userId ? "You" : person.name}</span>
+                </div>
+              )) : <p className="muted" style={{ margin: 0 }}>Be the first to register.</p>}
+          </section>
+        </aside>
       </div>
-      <Notice message={message} tone="success" />
-      <Notice message={error} />
-
-      {event.description ? <p className="muted" style={{ lineHeight: 1.6, margin: 0, maxWidth: 760 }}>{event.description}</p> : null}
-
-      <h2 style={{ fontSize: 18, margin: 0 }}>Players ({participants.length})</h2>
-      {participants.length ? (
-        <div className="grid">
-          {participants.map((person) => (
-            <div className="listRow" key={person.registrationId}>
-              <Avatar name={person.name} tone={toneFor(person.userId)} />
-              <span className="grow"><strong>{person.userId === session?.userId ? "You" : person.name}</strong></span>
-              <span className={person.status === "REGISTERED" ? "badge acc" : "badge plain"}>{titleCase(person.status)}</span>
-            </div>
-          ))}
-        </div>
-      ) : <Empty copy="Players will appear here as registrations arrive." title="The field is open" />}
-
-      <ConfirmDialog body="Your spot goes back to the field. You can register again while places are left." confirmLabel="Cancel entry" onCancel={() => setConfirming(false)} onConfirm={() => run(() => api.tournaments.cancelRegistration(id), "Registration cancelled.")} open={confirming} title="Cancel entry?" />
     </>
   );
 }

@@ -4,7 +4,7 @@
 import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, LogOut, MessageCircle, Plus, ShieldCheck, Trophy, UserRound, Users, type LucideIcon } from "lucide-react";
+import { House, LogOut, MessageCircle, Plus, ShieldCheck, Ticket, Trophy, UserRound, Users, type LucideIcon } from "lucide-react";
 import { signOut, useSession } from "../lib/session";
 import { Logo } from "./Logo";
 import { Avatar, Loading } from "./ui";
@@ -14,7 +14,20 @@ const NAV: Array<[string, string, LucideIcon]> = [
   ["/clubs", "Clubs", Users],
   ["/tournaments", "Events", Trophy],
   ["/community", "Community", MessageCircle],
+  ["/my-tournaments", "My tournaments", Ticket],
 ];
+
+// Bottom bar on small screens has room for five; tournaments come first for registration season.
+const MOBILE_NAV: Array<[string, string, LucideIcon]> = [
+  ["/home", "Home", House],
+  ["/tournaments", "Events", Trophy],
+  ["/my-tournaments", "Mine", Ticket],
+  ["/community", "Community", MessageCircle],
+  ["/profile", "Profile", UserRound],
+];
+
+// Pages a signed-out visitor may open, so a shared tournament link works before signing up.
+const PUBLIC_PATHS = /^\/tournaments(\/[0-9a-fA-F-]{36})?\/?$/;
 
 // Signed-in layout. Sends signed-out visitors (or expired sessions) to /login.
 export function AppShell({ children }: { children: ReactNode }) {
@@ -22,9 +35,27 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const isPublic = PUBLIC_PATHS.test(pathname);
+
   useEffect(() => {
-    if (session === null) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
-  }, [session, router, pathname]);
+    if (session === null && !isPublic) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+  }, [session, router, pathname, isPublic]);
+
+  if (session === null && isPublic) {
+    const next = `?next=${encodeURIComponent(pathname)}`;
+    return (
+      <div className="shell" style={{ flexDirection: "column" }}>
+        <header className="row between" style={{ borderBottom: "1px solid var(--line)", padding: "14px clamp(16px, 3vw, 40px)" }}>
+          <Link className="shellBrand" href="/" style={{ fontSize: 22, padding: 0 }}><Logo size={28} />Pickelton</Link>
+          <div className="row">
+            <Link className="btn ghost" href={`/login${next}`}>Log in</Link>
+            <Link className="btn primary" href={`/signup${next}`}>Sign up free</Link>
+          </div>
+        </header>
+        <main className="main" id="main" style={{ margin: "0 auto", width: "100%" }}>{children}</main>
+      </div>
+    );
+  }
 
   if (!session) return <div className="centerPage"><Loading label="Opening Pickelton" /></div>;
 
@@ -68,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="main" id="main">{children}</main>
 
       <nav aria-label="Main" className="mobileNav">
-        {[...NAV, ["/profile", "Profile", UserRound] as [string, string, LucideIcon]].map(([href, label, Icon]) => (
+        {MOBILE_NAV.map(([href, label, Icon]) => (
           <Link aria-current={active(href) ? "page" : undefined} href={href} key={href}><Icon aria-hidden="true" size={22} />{label}</Link>
         ))}
       </nav>
