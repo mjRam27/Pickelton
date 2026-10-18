@@ -161,6 +161,27 @@ CREATE TABLE IF NOT EXISTS matches (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS match_teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+    team_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_match_team UNIQUE (match_id, team_no),
+    CONSTRAINT chk_match_team_no_allowed CHECK (team_no IN (1, 2))
+);
+
+CREATE TABLE IF NOT EXISTS match_team_players (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES match_teams(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    slot_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_match_team_player UNIQUE (team_id, user_id),
+    CONSTRAINT uk_match_team_slot UNIQUE (team_id, slot_no)
+);
+
 CREATE TABLE IF NOT EXISTS match_participants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
