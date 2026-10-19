@@ -29,6 +29,16 @@ function emit() {
   for (const listener of listeners) listener();
 }
 
+// Keep every open tab on the same session: when one tab refreshes tokens, signs in or signs out,
+// the others pick it up instead of using a refresh token that was just replaced.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (event) => {
+    if (event.key !== SESSION_KEY && event.key !== null) return;
+    cached = read();
+    emit();
+  });
+}
+
 export function getSession(): Session | null {
   if (typeof window === "undefined") return null;
   if (cached === undefined) cached = read();
@@ -71,6 +81,12 @@ export async function signIn(auth: AuthResponse) {
 export async function signOut() {
   const refreshToken = getSession()?.refreshToken;
   await api.auth.logout(refreshToken).catch(() => undefined);
+  saveSession(null);
+}
+
+// Ends every session of this account: other browsers and phones sign out within minutes.
+export async function signOutEverywhere() {
+  await api.auth.logoutEverywhere();
   saveSession(null);
 }
 

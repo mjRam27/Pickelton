@@ -8,7 +8,7 @@ import { ChevronRight, LogOut, ShieldCheck } from "lucide-react";
 import { PhoneVerify } from "../../../components/PhoneVerify";
 import { Avatar, Notice, PageHeader, Segmented, Spinner } from "../../../components/ui";
 import { getThemeMode, setThemeMode, type ThemeMode } from "../../../lib/theme";
-import { api, errorMessage, signOut, updateSession, useResource, useSession } from "../../../lib/session";
+import { api, errorMessage, signOut, signOutEverywhere, updateSession, useResource, useSession } from "../../../lib/session";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -46,6 +46,16 @@ export default function ProfilePage() {
   async function logout() {
     await signOut();
     router.replace("/login");
+  }
+
+  async function logoutEverywhere() {
+    setSaveError("");
+    try {
+      await signOutEverywhere();
+      router.replace("/login");
+    } catch (cause) {
+      setSaveError(errorMessage(cause));
+    }
   }
 
   const user = data?.user;
@@ -100,7 +110,10 @@ export default function ProfilePage() {
             <span className="grow"><strong>Become a verified host</strong><small>Run paid tournaments with the blue badge</small></span>
             <ChevronRight aria-hidden="true" className="muted" size={20} />
           </Link>
-          <button className="btn" onClick={logout} type="button"><LogOut aria-hidden="true" size={18} />Log out</button>
+          <div className="row">
+            <button className="btn" onClick={logout} type="button"><LogOut aria-hidden="true" size={18} />Log out</button>
+            <button className="btn ghost" onClick={logoutEverywhere} style={{ color: "var(--muted)" }} type="button">Sign out on all devices</button>
+          </div>
         </section>
       </div>
     </>

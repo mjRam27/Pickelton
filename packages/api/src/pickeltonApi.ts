@@ -61,9 +61,13 @@ function query(params: Record<string, string | number | undefined | null>) {
 export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
   let refreshing: Promise<boolean> | null = null;
 
-  // Single-flight refresh so parallel 401s trigger only one /refresh call.
-  async function refreshAccessToken() {
+  // Single-flight refresh so parallel 401s trigger only one /refresh call. The user is signed out only when the
+  // server rejects the refresh token (401/400); a network error or server hiccup keeps the session for a retry.
+  async function refreshAccessToken(rejectedToken: string | null) {
     if (!session) return false;
+    // Another tab (or an earlier refresh) already replaced the token that was rejected: just retry with it.
+    const latest = await session.getAccessToken();
+    if (latest && latest !== rejectedToken) return true;
     refreshing ??= (async () => {
       const refreshToken = await session.getRefreshToken();
       if (!refreshToken) {
@@ -74,8 +78,9 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
         const auth = (await new ApiClient(baseUrl).request<ApiResponse<AuthResponse>>("/api/v1/auth/refresh", { method: "POST", body: JSON.stringify({ refreshToken }) })).data;
         await session.onTokensRefreshed(auth);
         return true;
-      } catch {
-        await session.onSessionExpired();
+      } catch (cause) {
+        const status = (cause as { status?: number } | undefined)?.status;
+        if (status === 401 || status === 400) await session.onSessionExpired();
         return false;
       } finally {
         refreshing = null;
@@ -94,6 +99,8 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
       login: (request: LoginRequest) => send<AuthResponse>("POST", "/api/v1/auth/login", request),
       register: (request: RegisterRequest) => send<AuthResponse>("POST", "/api/v1/auth/register", request),
       logout: (refreshToken?: string) => send<void>("POST", "/api/v1/auth/logout", { refreshToken }),
+      // Ends every session of this account (other devices sign out within minutes).
+      logoutEverywhere: () => send<void>("POST", "/api/v1/auth/logout-all"),
       me: () => get<MeResponse>("/api/v1/auth/me"),
       // Sends an SMS code to the user's phone; verifyPhoneCode marks the phone verified.
       sendPhoneCode: () => send<void>("POST", "/api/v1/auth/verification-code"),
