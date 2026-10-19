@@ -95,6 +95,14 @@ Java schema changes: add a SQL file under `backend/src/main/resources/db/` AND u
 - Results count toward **ratings only after both sides confirm** (or an admin resolves the dispute).
 - **Verified host:** 3 qualifying completed tournaments make a host eligible to apply. An admin approves it; it's never automatic.
 
+## Auth
+
+- Access token: stateless JWT, short-lived. Refresh token: opaque, stored hashed in `refresh_sessions` (Postgres),
+  rotated on every refresh, with a 60-second grace window for the token it replaced; reuse after that revokes the session.
+- The API answers **401** for a missing/expired/invalid access token and for a rejected refresh token; 403 means
+  signed in but not allowed. Clients refresh on 401 and sign the user out only when `/auth/refresh` returns 401/400.
+- Don't keep sessions or other durable state only in Redis; Redis is for caches, rate limits and the logout blacklist.
+
 ## Safety rails
 
 - Never commit secrets. `*.pem` and `.env*` are git-ignored; keep it that way. Use the `.env.example` files.

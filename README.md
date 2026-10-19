@@ -68,7 +68,7 @@ Set up the database:
 - **Existing database:** run any files in `backend/src/main/resources/db/` you haven't applied yet, for example
   `002_discovery_and_follows.sql` (club coordinates and player follows), `003_tournament_registrations.sql`
   (registration forms and UPI payments), `004_tournament_categories.sql` (categories inside an event) and
-  `005_tournament_feed.sql` (each tournament's own feed).
+  `005_tournament_feed.sql` (each tournament's own feed) and `006_refresh_sessions.sql` (sign-in sessions).
 
 The backend uses `ddl-auto: validate`, so it refuses to start until the schema matches the code. Every schema change
 needs a new SQL file in `db/` **and** an update to `schema.sql`.
@@ -81,6 +81,13 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-21'
 $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
 mvn spring-boot:run
 ```
+
+**Sign-in sessions.** The access token is a short-lived JWT (15 minutes, `JWT_EXPIRATION_MS`), checked without a
+database lookup. The refresh token is an opaque random string tied to a row in `refresh_sessions` (only its SHA-256
+hash is stored). Each refresh rotates it and extends the session (30 days, `JWT_REFRESH_EXPIRATION_MS`), so anyone who
+opens the app or site at least once a month stays signed in. The website and app refresh automatically when the API
+answers 401, and only sign the user out when the server rejects the refresh token, never because of a network error.
+Set `JWT_PRIVATE_KEY`/`JWT_PUBLIC_KEY` in every real deployment; without them a new key is generated on each start.
 
 **SMS codes (phone verification).** Players verify their phone before they register for or host a tournament. Codes
 are sent with [Twilio Verify](https://www.twilio.com/docs/verify): set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and
