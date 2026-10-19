@@ -23,6 +23,7 @@ import com.pickelton.backend.enums.RegistrationStatus;
 import com.pickelton.backend.enums.ScoreEventType;
 import com.pickelton.backend.enums.SportType;
 import com.pickelton.backend.enums.TournamentStatus;
+import com.pickelton.backend.community.service.TournamentFeedService;
 import com.pickelton.backend.mapper.MatchMapper;
 import com.pickelton.backend.match.dto.AcceptInviteRequest;
 import com.pickelton.backend.match.dto.AddPointRequest;
@@ -49,6 +50,8 @@ import com.pickelton.backend.match.repository.ScoreEventRepository;
 import com.pickelton.backend.match.repository.TournamentMatchRepository;
 import com.pickelton.backend.registration.repository.RegistrationRepository;
 import com.pickelton.backend.tournament.entity.Tournament;
+import com.pickelton.backend.tournament.entity.TournamentCategory;
+import com.pickelton.backend.tournament.repository.TournamentCategoryRepository;
 import com.pickelton.backend.tournament.repository.TournamentRepository;
 import com.pickelton.backend.user.entity.User;
 import com.pickelton.backend.user.repository.UserRepository;
@@ -68,6 +71,8 @@ public class MatchService {
     private final ScoreEventRepository scoreEventRepository;
     private final TournamentMatchRepository tournamentMatchRepository;
     private final TournamentRepository tournamentRepository;
+    private final TournamentCategoryRepository tournamentCategoryRepository;
+    private final TournamentFeedService tournamentFeedService;
     private final RegistrationRepository registrationRepository;
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
@@ -78,6 +83,7 @@ public class MatchService {
     public MatchResponse createMatch(CreateMatchRequest request) {
         MatchMode mode = request.mode() != null ? request.mode() : MatchMode.TOURNAMENT;
         Tournament tournament = null;
+        TournamentCategory category = null;
         if (mode == MatchMode.TOURNAMENT) {
             if (request.tournamentId() == null) {
                 throw new BadRequestException("Tournament is required for tournament matches");
@@ -86,6 +92,12 @@ public class MatchService {
             requireOrganizer(tournament);
             if (tournament.getStatus() == TournamentStatus.FINISHED || tournament.getStatus() == TournamentStatus.CANCELLED) {
                 throw new BadRequestException("Matches cannot be created for a closed tournament");
+            }
+            if (request.categoryId() != null) {
+                category = tournamentCategoryRepository.findByIdAndTournamentId(request.categoryId(), tournament.getId())
+                    .orElseThrow(() -> new BadRequestException("That category isn't part of this tournament"));
+            } else if (!tournament.getCategories().isEmpty()) {
+                throw new BadRequestException("Choose the category this match is played in");
             }
         }
 
@@ -104,6 +116,7 @@ public class MatchService {
         if (mode == MatchMode.TOURNAMENT) {
             tournamentMatchRepository.save(TournamentMatch.builder()
                 .tournament(tournament)
+                .category(category)
                 .match(match)
                 .round(match.getRound())
                 .build());
@@ -112,7 +125,7 @@ public class MatchService {
         List<ParticipantDraft> drafts = participantDrafts(request);
         for (ParticipantDraft draft : drafts) {
             User user = mode == MatchMode.TOURNAMENT && draft.role() == ParticipantRole.PLAYER
-                ? requireRegisteredPlayer(tournament.getId(), draft.userId(), "Player")
+                ? requireRegisteredPlayer(tournament.getId(), category, draft.userId(), "Player")
                 : requireUser(draft.userId(), "Participant");
             participantRepository.save(MatchParticipant.builder()
                 .match(match)
@@ -289,6 +302,7 @@ public class MatchService {
         match.setWinner(resolveWinner(match.getId(), request.score1(), request.score2()));
         appendEvent(match, state, ScoreEventType.POINT, payload);
         matchRepository.save(match);
+        postResult(match);
         publish(match, state);
         return toResponse(match, state);
     }
@@ -352,6 +366,7 @@ public class MatchService {
         match.setWinner(resolveWinner(match.getId(), scoreForTeam(state, "A"), scoreForTeam(state, "B")));
         appendEvent(match, state, ScoreEventType.END_MATCH, Map.of("finalScore", new LinkedHashMap<>(state.getCurrentScore())));
         matchRepository.save(match);
+        postResult(match);
         publish(match, state);
         return toResponse(match, state);
     }
@@ -427,6 +442,11 @@ public class MatchService {
         matchStateRepository.save(state);
     }
 
+    // A finished tournament match shows up as a result post in that tournament's feed.
+    private void postResult(Match match) {
+        tournamentMatchRepository.findByMatchId(match.getId()).ifPresent(tournamentFeedService::recordResult);
+    }
+
     private void publish(Match match, MatchState state) {
         LiveScoreResponse live = toLiveResponse(match, state);
         liveMatchStateService.cacheAndPublish(live);
@@ -434,11 +454,11 @@ public class MatchService {
     }
 
     private MatchResponse toResponse(Match match, MatchState state) {
-        UUID tournamentId = tournamentMatchRepository.findByMatchId(match.getId())
-            .map(link -> link.getTournament().getId())
-            .orElse(null);
+        TournamentMatch link = tournamentMatchRepository.findByMatchId(match.getId()).orElse(null);
+        UUID tournamentId = link != null ? link.getTournament().getId() : null;
+        UUID categoryId = link != null && link.getCategory() != null ? link.getCategory().getId() : null;
         List<MatchParticipant> participants = participantRepository.findByMatchIdOrderByCreatedAtAsc(match.getId());
-        return matchMapper.toResponse(match, tournamentId, participants, state);
+        return matchMapper.toResponse(match, tournamentId, categoryId, participants, state);
     }
 
     private MatchScorecardResponse toScorecardResponse(Match match, MatchState state) {
@@ -548,8 +568,12 @@ public class MatchService {
         }
     }
 
-    private User requireRegisteredPlayer(UUID tournamentId, UUID userId, String label) {
-        if (!registrationRepository.existsByTournamentIdAndUserIdAndStatus(tournamentId, userId, RegistrationStatus.REGISTERED)) {
+    private User requireRegisteredPlayer(UUID tournamentId, TournamentCategory category, UUID userId, String label) {
+        if (category != null) {
+            if (!registrationRepository.isRegisteredInCategory(tournamentId, userId, category.getId(), RegistrationStatus.REGISTERED)) {
+                throw new BadRequestException(label + " must be registered in " + category.getName());
+            }
+        } else if (!registrationRepository.existsByTournamentIdAndUserIdAndStatus(tournamentId, userId, RegistrationStatus.REGISTERED)) {
             throw new BadRequestException(label + " must be registered in the tournament");
         }
         return requireUser(userId, label);

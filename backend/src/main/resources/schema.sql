@@ -96,6 +96,12 @@ CREATE TABLE IF NOT EXISTS tournaments (
     entry_fee NUMERIC(12, 2),
     max_players INT NOT NULL DEFAULT 32,
     start_date TIMESTAMP NOT NULL,
+    venue VARCHAR(255),
+    registration_deadline TIMESTAMP,
+    upi_id VARCHAR(100),
+    payee_name VARCHAR(120),
+    payment_instructions TEXT,
+    registration_questions JSONB NOT NULL DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -135,6 +141,13 @@ CREATE TABLE IF NOT EXISTS registrations (
     user_id UUID NOT NULL REFERENCES users(id),
     tournament_id UUID NOT NULL REFERENCES tournaments(id),
     status VARCHAR(20) NOT NULL DEFAULT 'REGISTERED',
+    answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'NOT_REQUIRED',
+    amount_due NUMERIC(12, 2),
+    payment_reference VARCHAR(40),
+    payment_submitted_at TIMESTAMPTZ,
+    payment_reviewed_at TIMESTAMPTZ,
+    host_note VARCHAR(300),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT uk_registration UNIQUE (user_id, tournament_id)
@@ -159,6 +172,27 @@ CREATE TABLE IF NOT EXISTS matches (
     score2 INT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS match_teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+    team_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_match_team UNIQUE (match_id, team_no),
+    CONSTRAINT chk_match_team_no_allowed CHECK (team_no IN (1, 2))
+);
+
+CREATE TABLE IF NOT EXISTS match_team_players (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES match_teams(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    slot_no INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_match_team_player UNIQUE (team_id, user_id),
+    CONSTRAINT uk_match_team_slot UNIQUE (team_id, slot_no)
 );
 
 CREATE TABLE IF NOT EXISTS match_participants (
@@ -198,11 +232,46 @@ CREATE TABLE IF NOT EXISTS score_events (
     CONSTRAINT uk_score_event_sequence UNIQUE (match_id, sequence_number)
 );
 
+CREATE TABLE IF NOT EXISTS tournament_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    name VARCHAR(80) NOT NULL,
+    format VARCHAR(20) NOT NULL,
+    max_players INT NOT NULL,
+    entry_fee NUMERIC(12, 2),
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_tournament_category_format CHECK (format IN ('SINGLES', 'DOUBLES')),
+    CONSTRAINT chk_tournament_category_max_players CHECK (max_players >= 2)
+);
+
+CREATE TABLE IF NOT EXISTS registration_categories (
+    registration_id UUID NOT NULL REFERENCES registrations(id) ON DELETE CASCADE,
+    category_id UUID NOT NULL REFERENCES tournament_categories(id) ON DELETE CASCADE,
+    PRIMARY KEY (registration_id, category_id)
+);
+
 CREATE TABLE IF NOT EXISTS tournament_matches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     match_id UUID NOT NULL UNIQUE REFERENCES matches(id) ON DELETE CASCADE,
+    category_id UUID REFERENCES tournament_categories(id) ON DELETE SET NULL,
     round VARCHAR(50),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Sign-in sessions; only a SHA-256 hash of each refresh token is stored.
+CREATE TABLE IF NOT EXISTS refresh_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    previous_token_hash VARCHAR(64),
+    rotated_at TIMESTAMPTZ,
+    last_used_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -211,6 +280,8 @@ CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id),
     club_id UUID REFERENCES clubs(id) ON DELETE CASCADE,
+    tournament_id UUID REFERENCES tournaments(id) ON DELETE CASCADE,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE,
     content TEXT NOT NULL,
     metadata_json JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -242,9 +313,16 @@ CREATE INDEX IF NOT EXISTS idx_match_participants_user_id ON match_participants(
 CREATE INDEX IF NOT EXISTS idx_match_state_match_id ON match_state(match_id);
 CREATE INDEX IF NOT EXISTS idx_score_events_match_id_seq ON score_events(match_id, sequence_number);
 CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id ON tournament_matches(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_tournament_matches_category ON tournament_matches(category_id);
+CREATE INDEX IF NOT EXISTS idx_tournament_categories_tournament ON tournament_categories(tournament_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_registration_categories_category ON registration_categories(category_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_tournament_id_created_at ON posts(tournament_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_refresh_sessions_user ON refresh_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_sessions_previous ON refresh_sessions(previous_token_hash);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_user_follows_followed ON user_follows(followed_id);
 CREATE INDEX IF NOT EXISTS idx_clubs_coordinates ON clubs(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_registrations_tournament_payment ON registrations(tournament_id, payment_status);

@@ -21,6 +21,7 @@ import com.pickelton.backend.user.repository.UserFollowRepository;
 import com.pickelton.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.hibernate.Hibernate;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -41,9 +42,12 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    // The cache stores the user as JSON. If the same user was already loaded lazily in this transaction
+    // (e.g. as a tournament's host), findById returns a Hibernate proxy, which can't be serialized; unwrap it.
     @Cacheable(cacheNames = CacheConfig.USERS_BY_ID, key = "#id")
     public User findById(UUID id) {
         return userRepository.findById(id)
+            .map(user -> Hibernate.unproxy(user, User.class))
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
@@ -75,6 +79,15 @@ public class UserService {
             getUserStats(userId),
             user.getCreatedAt()
         );
+    }
+
+    // Loads the user from the database, not the cache: the cached copy has no password, and saving it would wipe it.
+    @Transactional
+    @CacheEvict(cacheNames = CacheConfig.USERS_BY_ID, allEntries = true)
+    public void markPhoneVerified(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setPhoneVerified(true);
     }
 
     @Transactional

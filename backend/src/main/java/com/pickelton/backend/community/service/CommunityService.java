@@ -31,9 +31,9 @@ public class CommunityService {
     public PageResponse<CommunityPostResponse> getPosts(UUID clubId, int page, int size) {
         var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), Sort.unsorted());
         var posts = clubId == null
-            ? postRepository.findAllByOrderByCreatedAtDesc(pageable)
+            ? postRepository.findByTournamentIsNullOrderByCreatedAtDesc(pageable)
             : postRepository.findByClubIdOrderByCreatedAtDesc(clubId, pageable);
-        return PageResponse.of(posts.map(this::toResponse));
+        return PageResponse.of(posts.map(CommunityService::toResponse));
     }
 
     @Transactional
@@ -48,7 +48,7 @@ public class CommunityService {
             .content(request.content().trim())
             .metadata(metadata)
             .build();
-        return toResponse(postRepository.save(post));
+        return toResponse(postRepository.saveAndFlush(post));
     }
 
     @Transactional
@@ -61,12 +61,14 @@ public class CommunityService {
         postRepository.delete(post);
     }
 
-    private CommunityPostResponse toResponse(Post post) {
+    public static CommunityPostResponse toResponse(Post post) {
         String tag = String.valueOf(post.getMetadata().getOrDefault("tag", "COMMUNITY"));
         return new CommunityPostResponse(
             post.getId(), post.getUser().getId(), post.getUser().getName(),
             post.getClub() == null ? null : post.getClub().getId(),
             post.getClub() == null ? null : post.getClub().getName(),
+            post.getTournament() == null ? null : post.getTournament().getId(),
+            post.isPinned(),
             tag, post.getContent(), post.getCreatedAt()
         );
     }

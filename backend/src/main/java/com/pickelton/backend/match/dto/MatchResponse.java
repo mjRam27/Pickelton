@@ -9,7 +9,7 @@ import com.pickelton.backend.enums.MatchStatus;
 import com.pickelton.backend.enums.MatchType;
 import com.pickelton.backend.enums.SportType;
 
-public record MatchResponse(UUID id, UUID tournamentId, UUID player1Id, UUID player2Id, Integer score1,
+public record MatchResponse(UUID id, UUID tournamentId, UUID categoryId, UUID player1Id, UUID player2Id, Integer score1,
                             Integer score2, UUID winnerId, String round, MatchStatus status,
                             SportType sport, MatchType matchType, String location, OffsetDateTime scheduledAt,
                             Map<String, Object> rules, List<MatchParticipantResponse> participants,

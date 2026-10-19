@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.pickelton.backend.club.entity.Club;
 import com.pickelton.backend.common.entity.BaseEntity;
+import com.pickelton.backend.tournament.entity.Tournament;
 import com.pickelton.backend.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,6 +39,16 @@ public class Post extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id")
     private Club club;
+
+    // Set for posts in a tournament's own feed; those stay out of the main community feed.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id")
+    private Tournament tournament;
+
+    // The host can pin one post to the top of their tournament's feed.
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean pinned = false;
 
     @Column(nullable = false, columnDefinition = "text")
     private String content;

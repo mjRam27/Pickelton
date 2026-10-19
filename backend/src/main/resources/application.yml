@@ -37,7 +37,8 @@ spring:
     redis:
       url: ${REDIS_URL}
       ssl:
-        enabled: true
+        # Upstash needs TLS; set SPRING_DATA_REDIS_SSL_ENABLED=false for a local redis-server.
+        enabled: ${SPRING_DATA_REDIS_SSL_ENABLED:true}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -49,6 +50,7 @@ jwt:
   refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}
 
 otp:
+  default-country-code: ${OTP_DEFAULT_COUNTRY_CODE:+91}
   expiration-minutes: ${OTP_EXPIRATION_MINUTES:10}
   resend-cooldown-seconds: ${OTP_RESEND_COOLDOWN_SECONDS:60}
   max-attempts: ${OTP_MAX_ATTEMPTS:5}
@@ -64,6 +66,12 @@ admin:
 
 google:
   client-id: ${GOOGLE_CLIENT_ID:}
+
+# SMS verification codes via Twilio Verify. Leave empty locally: codes are then logged (dev profile only).
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  verify-service-sid: ${TWILIO_VERIFY_SERVICE_SID:}
 
 # Private directory for host identity documents. Never expose it as static content.
 kyc:

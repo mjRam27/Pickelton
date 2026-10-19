@@ -25,7 +25,6 @@ export default function TournamentsPage() {
   return (
     <>
       <PageHeader title="Events">
-        <Link className="btn" href="/host">Host desk</Link>
         <Link className="btn primary" href="/tournaments/new"><Plus aria-hidden="true" size={18} />Host a tournament</Link>
       </PageHeader>
 
@@ -53,11 +52,11 @@ export default function TournamentsPage() {
               <DateBlock color={sportInk(item.sportType)} date={item.startDate} />
               <span className="grow" style={{ gap: 5 }}>
                 <strong style={{ whiteSpace: "normal" }}>{item.name}</strong>
-                <small>{[formatShortDate(item.startDate), item.clubName].filter(Boolean).join(" · ")}</small>
+                <small>{[formatShortDate(item.startDate), item.venue ?? item.clubName].filter(Boolean).join(" · ")}</small>
                 <span className="row" style={{ fontSize: 12, fontWeight: 700, gap: 10 }}>
                   <span style={{ color: sportInk(item.sportType) }}>{sportLabel(item.sportType)}</span>
                   <span>{item.entryFee ? formatCurrency(item.entryFee) : "Free"}</span>
-                  <span className="muted">{item.tournamentType === "DOUBLES" ? "Doubles" : "Singles"} · {item.maxPlayers} max</span>
+                  <span className="muted">{item.tournamentType === "DOUBLES" ? "Doubles" : "Singles"} · {item.registeredCount}/{item.maxPlayers} registered</span>
                 </span>
               </span>
             </Link>

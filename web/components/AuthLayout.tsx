@@ -1,7 +1,7 @@
 // web/components/AuthLayout.tsx
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "../lib/session";
@@ -11,7 +11,7 @@ import { Logo } from "./Logo";
 export function AuthLayout({ children }: { children: ReactNode }) {
   const session = useSession();
   const router = useRouter();
-  useEffect(() => { if (session) router.replace("/home"); }, [session, router]);
+  useEffect(() => { if (session) router.replace(nextPath()); }, [session, router]);
 
   return (
     <div className="authPage">
@@ -38,4 +38,11 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 export function nextPath() {
   const next = new URLSearchParams(window.location.search).get("next");
   return next && next.startsWith("/") && !next.startsWith("//") ? next : "/home";
+}
+
+// The current ?next=... query, read after mount so server and client render the same HTML.
+export function useNextQuery() {
+  const [query, setQuery] = useState("");
+  useEffect(() => { setQuery(window.location.search); }, []);
+  return query;
 }

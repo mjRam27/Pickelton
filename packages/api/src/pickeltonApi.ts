@@ -13,6 +13,7 @@ import type {
   CreatePostRequest,
   CreateTournamentRequest,
   FollowResponse,
+  HostRegistration,
   HostVerification,
   KycUpload,
   Leaderboard,
@@ -24,10 +25,14 @@ import type {
   PageResponse,
   PlayerSuggestion,
   RegisterRequest,
+  Registration,
+  ReviewPaymentRequest,
+  TournamentRegisterRequest,
   SubmitHostVerificationRequest,
   TeamCode,
   Tournament,
   TournamentParticipant,
+  UpdateTournamentRequest,
   UpdateUserRequest,
   User,
   UserSearchResult,
@@ -56,9 +61,13 @@ function query(params: Record<string, string | number | undefined | null>) {
 export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
   let refreshing: Promise<boolean> | null = null;
 
-  // Single-flight refresh so parallel 401s trigger only one /refresh call.
-  async function refreshAccessToken() {
+  // Single-flight refresh so parallel 401s trigger only one /refresh call. The user is signed out only when the
+  // server rejects the refresh token (401/400); a network error or server hiccup keeps the session for a retry.
+  async function refreshAccessToken(rejectedToken: string | null) {
     if (!session) return false;
+    // Another tab (or an earlier refresh) already replaced the token that was rejected: just retry with it.
+    const latest = await session.getAccessToken();
+    if (latest && latest !== rejectedToken) return true;
     refreshing ??= (async () => {
       const refreshToken = await session.getRefreshToken();
       if (!refreshToken) {
@@ -69,8 +78,9 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
         const auth = (await new ApiClient(baseUrl).request<ApiResponse<AuthResponse>>("/api/v1/auth/refresh", { method: "POST", body: JSON.stringify({ refreshToken }) })).data;
         await session.onTokensRefreshed(auth);
         return true;
-      } catch {
-        await session.onSessionExpired();
+      } catch (cause) {
+        const status = (cause as { status?: number } | undefined)?.status;
+        if (status === 401 || status === 400) await session.onSessionExpired();
         return false;
       } finally {
         refreshing = null;
@@ -89,7 +99,12 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
       login: (request: LoginRequest) => send<AuthResponse>("POST", "/api/v1/auth/login", request),
       register: (request: RegisterRequest) => send<AuthResponse>("POST", "/api/v1/auth/register", request),
       logout: (refreshToken?: string) => send<void>("POST", "/api/v1/auth/logout", { refreshToken }),
+      // Ends every session of this account (other devices sign out within minutes).
+      logoutEverywhere: () => send<void>("POST", "/api/v1/auth/logout-all"),
       me: () => get<MeResponse>("/api/v1/auth/me"),
+      // Sends an SMS code to the user's phone; verifyPhoneCode marks the phone verified.
+      sendPhoneCode: () => send<void>("POST", "/api/v1/auth/verification-code"),
+      verifyPhoneCode: (code: string) => send<void>("POST", "/api/v1/auth/verify-code", { code }),
     },
     users: {
       me: () => get<User>("/api/v1/users/me"),
@@ -120,10 +135,26 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
       hosted: () => get<Tournament[]>("/api/tournaments/me/hosted"),
       get: (id: string) => get<Tournament>(`/api/tournaments/${id}`),
       create: (request: CreateTournamentRequest) => send<Tournament>("POST", "/api/tournaments", request),
-      register: (id: string) => send<unknown>("POST", `/api/tournaments/${id}/register`),
+      update: (id: string, request: UpdateTournamentRequest) => send<Tournament>("PATCH", `/api/tournaments/${id}`, request),
+      register: (id: string, answers: Record<string, string> = {}, categoryIds?: string[]) =>
+        send<Registration>("POST", `/api/tournaments/${id}/register`, { answers, categoryIds } satisfies TournamentRegisterRequest),
+      // The signed-in player's registration for this tournament; null when not registered.
+      myRegistration: async (id: string) => (await get<Registration | null | undefined>(`/api/tournaments/${id}/registration`)) ?? null,
+      myRegistrations: () => get<Registration[]>("/api/tournaments/registrations/me"),
+      submitPayment: (id: string, reference: string) => send<Registration>("POST", `/api/tournaments/${id}/registration/payment`, { reference }),
+      // Host only.
+      registrations: (id: string) => get<HostRegistration[]>(`/api/tournaments/${id}/registrations`),
+      removePlayer: (id: string, userId: string) => send<Registration>("DELETE", `/api/tournaments/${id}/participants/${userId}`),
+      reviewPayment: (id: string, registrationId: string, request: ReviewPaymentRequest) =>
+        send<HostRegistration>("PATCH", `/api/tournaments/${id}/registrations/${registrationId}/payment`, request),
       cancelRegistration: (id: string) => send<void>("DELETE", `/api/tournaments/${id}/register`),
       participants: (id: string) => get<TournamentParticipant[]>(`/api/tournaments/${id}/participants`),
       leaderboard: (id: string) => get<Leaderboard>(`/api/tournaments/${id}/leaderboard`),
+      // The tournament's own feed: public to read; the host and registered players post.
+      feed: (id: string, page = 0, size = 20) => get<PageResponse<CommunityPost>>(`/api/tournaments/${id}/posts${query({ page, size })}`),
+      post: (id: string, content: string) => send<CommunityPost>("POST", `/api/tournaments/${id}/posts`, { content }),
+      pinPost: (id: string, postId: string, pinned: boolean) => send<CommunityPost>("PATCH", `/api/tournaments/${id}/posts/${postId}/pin`, { pinned }),
+      removePost: (id: string, postId: string) => send<void>("DELETE", `/api/tournaments/${id}/posts/${postId}`),
     },
     matches: {
       create: (request: CreateMatchRequest) => send<Match>("POST", "/api/matches", request),
@@ -131,6 +162,11 @@ export function createPickeltonApi(baseUrl: string, session?: SessionHandlers) {
       addPoint: (id: string, teamCode: TeamCode) => send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/point`, { teamCode }),
       undo: (id: string) => send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/undo`),
       complete: (id: string) => send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/complete`),
+      forTournament: (tournamentId: string) => get<Match[]>(`/api/matches/tournament/${tournamentId}`),
+      // Host enters a final score without live scoring; this completes the match.
+      enterResult: (id: string, scoreA: number, scoreB: number, reason = "Result entered by host") =>
+        send<MatchScorecard>("POST", `/api/matches/${id}/scorecard/correction`, { scoreA, scoreB, reason }),
+      cancel: (id: string) => send<Match>("PATCH", `/api/matches/${id}/cancel`),
     },
     host: {
       mine: () => get<HostVerification | null>("/api/v1/host-verifications/me"),

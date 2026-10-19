@@ -4,7 +4,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AuthLayout } from "../../../components/AuthLayout";
+import { AuthLayout, nextPath, useNextQuery } from "../../../components/AuthLayout";
 import { Notice, Spinner } from "../../../components/ui";
 import { api, errorMessage, signIn, updateSession } from "../../../lib/session";
 
@@ -16,6 +16,7 @@ function passwordStrength(value: string) {
 
 export default function SignupPage() {
   const router = useRouter();
+  const nextQuery = useNextQuery();
   const [form, setForm] = useState({ name: "", email: "", phoneNumber: "", dateOfBirth: "", password: "", city: "" });
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
@@ -36,7 +37,7 @@ export default function SignupPage() {
         const profile = await api.users.updateMe({ city: city.trim() }).catch(() => null);
         if (profile) updateSession({ city: profile.city });
       }
-      router.replace("/home");
+      router.replace(nextPath());
     } catch (cause) {
       setError(errorMessage(cause));
       setLoading(false);
@@ -68,7 +69,7 @@ export default function SignupPage() {
         <label className="check"><input checked={agreed} onChange={(event) => setAgreed(event.target.checked)} type="checkbox" />I agree to the Terms of Use and Privacy Policy.</label>
         <Notice message={error} />
         <button className="btn primary block" disabled={loading} type="submit">{loading ? <Spinner /> : null}Create account</button>
-        <p className="muted" style={{ margin: 0, textAlign: "center" }}>Already playing? <Link href="/login" style={{ fontWeight: 700 }}>Log in</Link></p>
+        <p className="muted" style={{ margin: 0, textAlign: "center" }}>Already playing? <Link href={`/login${nextQuery}`} style={{ fontWeight: 700 }}>Log in</Link></p>
       </form>
     </AuthLayout>
   );

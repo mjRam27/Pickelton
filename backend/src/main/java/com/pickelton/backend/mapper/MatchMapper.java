@@ -15,13 +15,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class MatchMapper {
 
-    public MatchResponse toResponse(Match match, UUID tournamentId, List<MatchParticipant> participants, MatchState state) {
+    public MatchResponse toResponse(Match match, UUID tournamentId, UUID categoryId, List<MatchParticipant> participants,
+                                    MatchState state) {
         UUID player1Id = playerForTeam(participants, "A");
         UUID player2Id = playerForTeam(participants, "B");
         Map<String, Object> currentScore = state != null ? state.getCurrentScore() : Map.of("A", 0, "B", 0);
         return new MatchResponse(
             match.getId(),
             tournamentId,
+            categoryId,
             player1Id,
             player2Id,
             scoreForTeam(currentScore, "A"),

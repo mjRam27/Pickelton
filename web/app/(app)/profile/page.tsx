@@ -5,9 +5,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, LogOut, ShieldCheck } from "lucide-react";
+import { PhoneVerify } from "../../../components/PhoneVerify";
 import { Avatar, Notice, PageHeader, Segmented, Spinner } from "../../../components/ui";
 import { getThemeMode, setThemeMode, type ThemeMode } from "../../../lib/theme";
-import { api, errorMessage, signOut, updateSession, useResource, useSession } from "../../../lib/session";
+import { api, errorMessage, signOut, signOutEverywhere, updateSession, useResource, useSession } from "../../../lib/session";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -47,6 +48,16 @@ export default function ProfilePage() {
     router.replace("/login");
   }
 
+  async function logoutEverywhere() {
+    setSaveError("");
+    try {
+      await signOutEverywhere();
+      router.replace("/login");
+    } catch (cause) {
+      setSaveError(errorMessage(cause));
+    }
+  }
+
   const user = data?.user;
   const stats = data?.stats;
   const winRate = stats && stats.totalMatches ? `${Math.round((stats.wins / stats.totalMatches) * 100)}%` : "–";
@@ -59,6 +70,7 @@ export default function ProfilePage() {
         <PageHeader sub={[user?.city, since ? `since ${since}` : null].filter(Boolean).join(" · ") || session?.email} title={session?.name || "Player"} />
       </div>
       <Notice message={error} />
+      <PhoneVerify reason="You need a verified number to register for or host tournaments." />
 
       <div className="statGrid">
         <div className="stat" style={{ background: "var(--text)", color: "var(--bg)" }}><span className="value">{stats ? stats.totalMatches : "–"}</span><span className="label" style={{ color: "var(--bg)", opacity: 0.75 }}>Matches</span></div>
@@ -98,7 +110,10 @@ export default function ProfilePage() {
             <span className="grow"><strong>Become a verified host</strong><small>Run paid tournaments with the blue badge</small></span>
             <ChevronRight aria-hidden="true" className="muted" size={20} />
           </Link>
-          <button className="btn" onClick={logout} type="button"><LogOut aria-hidden="true" size={18} />Log out</button>
+          <div className="row">
+            <button className="btn" onClick={logout} type="button"><LogOut aria-hidden="true" size={18} />Log out</button>
+            <button className="btn ghost" onClick={logoutEverywhere} style={{ color: "var(--muted)" }} type="button">Sign out on all devices</button>
+          </div>
         </section>
       </div>
     </>

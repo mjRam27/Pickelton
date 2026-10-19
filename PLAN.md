@@ -91,7 +91,11 @@ Not being built. See *Product focus* above.
 ### Batch 8: Player website
 - [x] Landing page · [x] Logged-in home · [x] Community feed · [x] Clubs list + club page · [x] Events list + detail
 - [x] Leaderboard · [x] Create tournament · [x] Create match · [x] Live scorer · [x] Profile + settings · [x] Host desk + apply
-- [ ] Tournament bracket · [ ] Organizer console · [ ] Public (no-login) pages for SEO · [ ] Player profile (public)
+- [x] Tournament registration (custom questions, UPI payment, UTR) · [x] Review registrations · [x] My tournaments
+- [x] Phone verification (SMS) · [x] Public (no-login) tournament page
+- [x] Event categories (own limit and fee each) · [x] Tournament matches (create, score live, enter result)
+- [x] Per-category leaderboard (public) · [x] Event feed (announcements, player posts, automatic results)
+- [ ] Tournament bracket · [ ] Organizer console · [ ] Public club and player pages · [ ] Player profile (public)
 
 ### Batch 9: Partner (parked)
 Parked with booking. Dashboard, Courts, Bookings + detail, Customers, Analytics and Settings were built and are
@@ -103,7 +107,9 @@ saved on branch `parked/partner-booking`.
 
 ## Rules every screen must respect
 
-- Up to **4 owned clubs** per user. Only club **owners/admins** create tournaments.
+- Up to **4 owned clubs** per user. Any player with a **verified phone** can host a tournament; a club is optional
+  (only that club's owners/admins can attach it).
+- Entry fees go **straight to the host by UPI**. A spot counts once registered; the host confirms the payment.
 - **TeamUp** = exactly 2 accepted players.
 - Match types: **Friendly, TeamUp, Club, Tournament**.
 - Results affect ratings **only after the opponent confirms**. Show "awaiting confirmation".

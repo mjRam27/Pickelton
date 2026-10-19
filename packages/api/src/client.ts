@@ -5,8 +5,9 @@ export type AccessTokenProvider = () => string | null | Promise<string | null>;
 
 export type ClientOptions = {
   getAccessToken?: AccessTokenProvider;
-  // Called once when a request gets 401. Return true if a new access token is now available.
-  refreshAccessToken?: () => Promise<boolean>;
+  // Called once when a request gets 401, with the access token that was rejected.
+  // Return true if a new access token is now available.
+  refreshAccessToken?: (rejectedToken: string | null) => Promise<boolean>;
 };
 
 const UNREACHABLE = "Can't reach Pickelton right now. Check your connection and try again.";
@@ -35,7 +36,7 @@ export class ApiClient {
       throw { message: UNREACHABLE, status: 0 } satisfies ApiError;
     }
 
-    if (response.status === 401 && !retried && this.options.refreshAccessToken && (await this.options.refreshAccessToken())) {
+    if (response.status === 401 && !retried && this.options.refreshAccessToken && (await this.options.refreshAccessToken(token ?? null))) {
       return this.request<T>(path, init, true);
     }
 

@@ -50,17 +50,26 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(authService.refresh(request), "Token refreshed"));
     }
 
+    // Public so signing out works even after the access token has expired.
     @PostMapping("/logout")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> logout(
         HttpServletRequest request,
         @RequestBody(required = false) LogoutRequest logoutRequest
     ) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            authService.logout(header.substring(7), logoutRequest == null ? null : logoutRequest.refreshToken());
-        }
+        authService.logout(bearer(request), logoutRequest == null ? null : logoutRequest.refreshToken());
         return ResponseEntity.ok(ApiResponse.ok(null, "Logged out"));
+    }
+
+    @PostMapping("/logout-all")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> logoutEverywhere(HttpServletRequest request) {
+        authService.logoutEverywhere(bearer(request));
+        return ResponseEntity.ok(ApiResponse.ok(null, "Signed out on all devices"));
+    }
+
+    private static String bearer(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        return header != null && header.startsWith("Bearer ") ? header.substring(7) : null;
     }
 
     @PostMapping("/verification-code")

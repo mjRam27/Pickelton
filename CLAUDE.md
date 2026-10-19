@@ -78,11 +78,30 @@ Java schema changes: add a SQL file under `backend/src/main/resources/db/` AND u
 ## Business rules the code must enforce (UI and backend)
 
 - A user can own **at most 4 active clubs**. The creator becomes the owner and can promote admins.
-- Only club **owners/admins** can create tournaments. Every tournament belongs to exactly one club.
+- Any user with a **verified phone** can host a tournament. Linking a club is optional, and only that club's
+  owners/admins can do it.
+- Entry fees are paid **directly to the host by UPI**. The player submits the UTR and the host confirms or rejects it;
+  Pickelton never holds the money. A paid tournament must have a UPI ID.
+- Players need a verified phone to register. Registration stops at the player limit or the closing time.
+- An event may have **categories** (each with its own format, player limit and fee). Players must pick at least one;
+  one registration and one payment cover all of them. Tournament matches in such an event belong to a category, and
+  only players registered in that category can play in it. A category with players can't be removed or shrunk below
+  its player count.
+- Each tournament has its own **feed**: public to read; only the host and registered players post. The host can pin
+  one post and delete any; others delete only their own. Completed tournament matches post their result automatically.
+  Feed posts never appear in the main community feed.
 - A **TeamUp** has exactly **two accepted members**. Invitations need acceptance, and a user can be in many TeamUps.
 - Match types are **Friendly, TeamUp, Club, Tournament** (there is no "practice" type). They share one scoring engine.
 - Results count toward **ratings only after both sides confirm** (or an admin resolves the dispute).
 - **Verified host:** 3 qualifying completed tournaments make a host eligible to apply. An admin approves it; it's never automatic.
+
+## Auth
+
+- Access token: stateless JWT, short-lived. Refresh token: opaque, stored hashed in `refresh_sessions` (Postgres),
+  rotated on every refresh, with a 60-second grace window for the token it replaced; reuse after that revokes the session.
+- The API answers **401** for a missing/expired/invalid access token and for a rejected refresh token; 403 means
+  signed in but not allowed. Clients refresh on 401 and sign the user out only when `/auth/refresh` returns 401/400.
+- Don't keep sessions or other durable state only in Redis; Redis is for caches, rate limits and the logout blacklist.
 
 ## Safety rails
 
