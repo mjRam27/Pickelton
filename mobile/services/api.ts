@@ -3,6 +3,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import { router } from "expo-router";
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://YOUR_LOCAL_IP:8080";
 
@@ -26,14 +27,31 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// On 401 the access token has expired: swap the refresh token for a new pair and retry once.
+// Only a rejected refresh token signs the user out; being offline doesn't.
 api.interceptors.response.use(undefined, async (error) => {
   const original = error.config as (typeof error.config & { _retried?: boolean }) | undefined;
-  if (error.response?.status !== 401 || !original || original._retried || /\/auth\/(login|register|refresh)$/.test(original.url ?? "")) throw error;
+  if (error.response?.status !== 401 || !original || original._retried || /\/auth\/(login|register|refresh|logout)$/.test(original.url ?? "")) throw error;
   original._retried = true;
-  const session = await refreshSession();
+  let session: AuthUser & { token: string };
+  try {
+    session = await refreshSession();
+  } catch (refreshError) {
+    if (sessionRejected(refreshError)) {
+      await clearSession();
+      router.replace("/(auth)/login");
+    }
+    throw error;
+  }
   original.headers.Authorization = `Bearer ${session.token}`;
   return api.request(original);
 });
+
+// The server said the refresh token is no longer valid (as opposed to the phone being offline).
+function sessionRejected(error: unknown) {
+  const status = (error as { response?: { status?: number } } | undefined)?.response?.status;
+  return status === 401 || status === 400 || (error instanceof Error && error.message === "No refresh token available");
+}
 
 function unwrap<T>(response: { data: { data: T } }) {
   return response.data.data;
@@ -145,12 +163,20 @@ export async function initializeSession() {
     const saved = JSON.parse(stored) as AuthUser & { token: string };
     accessToken = saved.token;
     currentUser = saved;
-    await refreshSession();
-    return true;
   } catch {
     await clearSession();
     return false;
   }
+  try {
+    await refreshSession();
+  } catch (error) {
+    // Offline or the server is down: keep the saved session and refresh later, when a request needs it.
+    if (sessionRejected(error)) {
+      await clearSession();
+      return false;
+    }
+  }
+  return true;
 }
 
 export type UserSearchResult = { userId: string; name: string; email: string; phoneNumber: string };
@@ -171,9 +197,19 @@ export async function fetchMyProfile() {
   return currentUser;
 }
 
+// Ends every session of this account: other phones and browsers sign out within minutes.
+export async function logoutEverywhere() {
+  try {
+    await api.post("/api/v1/auth/logout-all");
+  } finally {
+    await clearSession();
+  }
+}
+
 export async function logout() {
   try {
-    if (accessToken) await api.post("/api/v1/auth/logout", { refreshToken: currentUser?.refreshToken });
+    // Works even if the access token has expired: the refresh token alone ends this session.
+    if (currentUser?.refreshToken) await api.post("/api/v1/auth/logout", { refreshToken: currentUser.refreshToken });
   } catch {
     // Logging out locally must still work when the API is briefly unreachable.
   } finally {

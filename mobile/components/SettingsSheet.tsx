@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Modal, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { logout } from "../services/api";
+import { logout, logoutEverywhere } from "../services/api";
 import { fonts, type ThemeColors } from "../theme/colors";
 import { useTheme, useThemeStyles, type ThemeMode } from "../theme/ThemeProvider";
 import { Button } from "./Button";
@@ -15,6 +15,11 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
   const insets = useSafeAreaInsets();
   async function signOut() {
     await logout();
+    onClose();
+    router.replace("/(auth)/login");
+  }
+  async function signOutEverywhere() {
+    await logoutEverywhere().catch(() => undefined);
     onClose();
     router.replace("/(auth)/login");
   }
@@ -41,6 +46,7 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
             <Ionicons color={colors.muted} name="chevron-forward" size={20} />
           </Pressable>
           <Button icon="log-out-outline" label="Log out" onPress={signOut} variant="outline" />
+          <Button label="Sign out on all devices" onPress={signOutEverywhere} variant="ghost" />
         </Pressable>
       </Pressable>
     </Modal>
