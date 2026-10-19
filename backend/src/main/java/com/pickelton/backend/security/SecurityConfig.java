@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -40,9 +42,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // A missing, expired or invalid access token is 401 (not Spring's default 403), so the apps know to
+            // use their refresh token and retry instead of showing an error.
+            .exceptionHandling(e -> e.authenticationEntryPoint((request, response, ex) -> {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.getWriter().write("{\"success\":false,\"message\":\"Please sign in to continue\"}");
+            }))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login",
-                    "/api/v1/auth/google", "/api/v1/auth/refresh").permitAll()
+                    "/api/v1/auth/google", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                 // Tournament pages, standings and feeds are public so shared links work before signing in.
                 .requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.GET,
                     "^/api/tournaments(/[0-9a-fA-F-]{36}(/leaderboard|/posts)?)?(\\?.*)?$")).permitAll()
