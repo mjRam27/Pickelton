@@ -262,6 +262,20 @@ CREATE TABLE IF NOT EXISTS tournament_matches (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Sign-in sessions; only a SHA-256 hash of each refresh token is stored.
+CREATE TABLE IF NOT EXISTS refresh_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    previous_token_hash VARCHAR(64),
+    rotated_at TIMESTAMPTZ,
+    last_used_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id),
@@ -304,6 +318,8 @@ CREATE INDEX IF NOT EXISTS idx_tournament_categories_tournament ON tournament_ca
 CREATE INDEX IF NOT EXISTS idx_registration_categories_category ON registration_categories(category_id);
 CREATE INDEX IF NOT EXISTS idx_posts_club_id_created_at ON posts(club_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_tournament_id_created_at ON posts(tournament_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_refresh_sessions_user ON refresh_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_sessions_previous ON refresh_sessions(previous_token_hash);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_match_id ON score_history(match_id);

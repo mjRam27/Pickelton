@@ -8,6 +8,7 @@ import com.pickelton.backend.auth.dto.RefreshTokenRequest;
 import com.pickelton.backend.auth.dto.RegisterRequest;
 import com.pickelton.backend.auth.dto.VerifyCodeRequest;
 import com.pickelton.backend.common.exception.BadRequestException;
+import com.pickelton.backend.common.exception.UnauthorizedException;
 import com.pickelton.backend.common.service.CurrentUserService;
 import com.pickelton.backend.security.JwtBlacklistService;
 import com.pickelton.backend.security.JwtUtil;
@@ -116,21 +117,27 @@ public class AuthService {
         return issueSession(saved);
     }
 
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public AuthResponse refresh(RefreshTokenRequest request) {
-        java.util.UUID userId = refreshTokenService.consumeForRotation(request.refreshToken());
-        User user = userService.findById(userId);
-        return issueSession(user);
+        RefreshTokenService.IssuedRefreshToken refreshToken = refreshTokenService.rotate(request.refreshToken());
+        return session(userService.findById(refreshToken.userId()), refreshToken);
     }
 
+    // Works with an expired access token too: the refresh token alone ends this device's session.
     public void logout(String token, String refreshToken) {
-        if (token == null || token.isBlank()) {
-            return;
-        }
-        if (!jwtUtil.validateToken(token)) {
-            throw new BadRequestException("Invalid access token");
-        }
-        blacklistService.blacklist(token, jwtUtil.extractExpiration(token));
         refreshTokenService.revoke(refreshToken);
+        if (token != null && !token.isBlank() && jwtUtil.validateToken(token)) {
+            blacklistService.blacklist(token, jwtUtil.extractExpiration(token));
+        }
+    }
+
+    // Ends every session of the signed-in user (other phones and browsers sign out within minutes,
+    // when their short-lived access token runs out).
+    public void logoutEverywhere(String token) {
+        refreshTokenService.revokeAll(currentUserService.getUserId());
+        if (token != null && jwtUtil.validateToken(token)) {
+            blacklistService.blacklist(token, jwtUtil.extractExpiration(token));
+        }
     }
 
     @Transactional(readOnly = true)
@@ -160,8 +167,11 @@ public class AuthService {
     }
 
     private AuthResponse issueSession(User user) {
+        return session(user, refreshTokenService.issue(user.getId()));
+    }
+
+    private AuthResponse session(User user, RefreshTokenService.IssuedRefreshToken refreshToken) {
         String token = jwtUtil.generateToken(user.getId(), user.getEmail());
-        RefreshTokenService.IssuedRefreshToken refreshToken = refreshTokenService.issue(user.getId());
         return new AuthResponse(
             token,
             refreshToken.token(),
